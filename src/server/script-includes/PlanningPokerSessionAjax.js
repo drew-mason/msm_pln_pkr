@@ -3,11 +3,15 @@ PlanningPokerSessionAjax.prototype = Object.extendsObject(global.AbstractAjaxPro
     
     getSession: function() {
         try {
-            gs.info('[PlanningPokerSessionAjax] getSession called');
+            gs.debug('[PlanningPokerSessionAjax] getSession called');
             
             var sessionId = this.getParameter('session_id');
             if (!sessionId) {
                 return this._buildResponse(false, 'Session ID required', null);
+            }
+
+            if (!/^[0-9a-f]{32}$/i.test(sessionId)) {
+                return this._buildResponse(false, 'Invalid session ID format', null);
             }
             
             var userId = gs.getUserID();
@@ -53,6 +57,10 @@ PlanningPokerSessionAjax.prototype = Object.extendsObject(global.AbstractAjaxPro
             var sessionId = this.getParameter('session_id');
             if (!sessionId) {
                 return this._buildResponse(false, 'Session ID required', null);
+            }
+
+            if (!/^[0-9a-f]{32}$/i.test(sessionId)) {
+                return this._buildResponse(false, 'Invalid session ID format', null);
             }
             
             var userId = gs.getUserID();
@@ -274,6 +282,7 @@ PlanningPokerSessionAjax.prototype = Object.extendsObject(global.AbstractAjaxPro
         var votes = [];
         var voteGr = new GlideRecord('x_902080_planningw_planning_vote');
         voteGr.addQuery('story', storyId);
+        voteGr.setLimit(200); // Cap votes per story
         voteGr.query();
         
         while (voteGr.next()) {
@@ -311,6 +320,7 @@ PlanningPokerSessionAjax.prototype = Object.extendsObject(global.AbstractAjaxPro
         var storyGr = new GlideRecord('x_902080_planningw_session_stories');
         storyGr.addQuery('session', sessionId);
         storyGr.orderBy('order');
+        storyGr.setLimit(500); // Cap stories per session
         storyGr.query();
 
         while (storyGr.next()) {

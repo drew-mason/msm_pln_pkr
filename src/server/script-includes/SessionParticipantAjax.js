@@ -8,6 +8,12 @@ SessionParticipantAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
             if (!sessionCode) {
                 return this._buildResponse(false, 'Session code required', null);
             }
+
+            // Sanitize session code: cap length and allow only alphanumeric + dash
+            sessionCode = String(sessionCode).substring(0, 20).replace(/[^A-Za-z0-9\-]/g, '');
+            if (!sessionCode) {
+                return this._buildResponse(false, 'Invalid session code format', null);
+            }
             
             var userId = gs.getUserID();
             
@@ -66,7 +72,7 @@ SessionParticipantAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
                 participantGr.setValue('is_online', true);
                 participantGr.insert();
                 
-                gs.info('[SessionParticipantAjax] User ' + userId + ' joined session ' + sessionId + ' as ' + role);
+                gs.debug('[SessionParticipantAjax] User ' + userId + ' joined session ' + sessionId + ' as ' + role);
                 
                 return this._buildResponse(true, 'Joined session successfully', {
                     sessionId: sessionId,
@@ -119,6 +125,12 @@ SessionParticipantAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
             
             if (!sessionCode) {
                 return this._buildResponse(false, 'Session code required', null);
+            }
+
+            // Sanitize session code
+            sessionCode = String(sessionCode).substring(0, 20).replace(/[^A-Za-z0-9\-]/g, '');
+            if (!sessionCode) {
+                return this._buildResponse(false, 'Invalid session code format', null);
             }
             
             // Find session by code
@@ -233,6 +245,10 @@ SessionParticipantAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
             
             if (!sessionId || !participantUserId || !newRole) {
                 return this._buildResponse(false, 'Session ID, participant user ID, and new role required', null);
+            }
+
+            if (!/^[0-9a-f]{32}$/i.test(sessionId) || !/^[0-9a-f]{32}$/i.test(participantUserId)) {
+                return this._buildResponse(false, 'Invalid ID format', null);
             }
             
             var userId = gs.getUserID();

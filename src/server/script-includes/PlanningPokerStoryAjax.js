@@ -3,13 +3,17 @@ PlanningPokerStoryAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
     
     startVoting: function() {
         try {
-            gs.info('[PlanningPokerStoryAjax] startVoting called');
+            gs.debug('[PlanningPokerStoryAjax] startVoting called');
             
             var sessionId = this.getParameter('session_id');
             var storyId = this.getParameter('story_id');
             
             if (!sessionId || !storyId) {
                 return this._buildResponse(false, 'Session ID and story ID required', null);
+            }
+
+            if (!/^[0-9a-f]{32}$/i.test(sessionId) || !/^[0-9a-f]{32}$/i.test(storyId)) {
+                return this._buildResponse(false, 'Invalid session or story ID format', null);
             }
             
             var userId = gs.getUserID();
@@ -70,7 +74,7 @@ PlanningPokerStoryAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
     
     setStoryPoints: function() {
         try {
-            gs.info('[PlanningPokerStoryAjax] setStoryPoints called');
+            gs.debug('[PlanningPokerStoryAjax] setStoryPoints called');
             
             var sessionId = this.getParameter('session_id');
             var storyId = this.getParameter('story_id');
@@ -131,7 +135,7 @@ PlanningPokerStoryAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
     
     updateStoryDetails: function() {
         try {
-            gs.info('[PlanningPokerStoryAjax] updateStoryDetails called');
+            gs.debug('[PlanningPokerStoryAjax] updateStoryDetails called');
             
             var storyId = this.getParameter('story_id');
             var field = this.getParameter('field');
@@ -140,6 +144,13 @@ PlanningPokerStoryAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
             if (!storyId || !field || value === undefined) {
                 return this._buildResponse(false, 'Story ID, field, and value required', null);
             }
+
+            if (!/^[0-9a-f]{32}$/i.test(storyId)) {
+                return this._buildResponse(false, 'Invalid story ID format', null);
+            }
+
+            // Cap value length
+            value = String(value).substring(0, 4000);
             
             // Allowed fields for updates
             var allowedFields = ['story_title', 'story_description', 'acceptance_criteria', 'dealer_comments'];
@@ -181,7 +192,7 @@ PlanningPokerStoryAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
                     if (rmField) {
                         rmStoryGr.setValue(rmField, value);
                         rmStoryGr.update();
-                        gs.info('[PlanningPokerStoryAjax] Updated rm_story field: ' + rmField);
+                        gs.debug('[PlanningPokerStoryAjax] Updated rm_story field: ' + rmField);
                     }
                 }
             }

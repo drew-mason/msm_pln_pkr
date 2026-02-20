@@ -33,6 +33,7 @@ SessionStatisticsAjax.prototype = Object.extendsObject(global.AbstractAjaxProces
             var allVotesList = [];
             var voteGr = new GlideRecord('x_902080_planningw_planning_vote');
             voteGr.addQuery('session', sessionId);
+            voteGr.setLimit(5000); // Cap total votes per session
             voteGr.query();
             while (voteGr.next()) {
                 var vote = {

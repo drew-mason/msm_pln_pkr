@@ -67,11 +67,7 @@
             0%, 100% { transform: translateY(0) scale(1); opacity: 0.6; }
             50% { transform: translateY(-8px) scale(1.2); opacity: 1; }
         }
-        @keyframes hyperspaceStreak {
-            0% { transform: translateX(-100%) scaleX(0); opacity: 0; }
-            20% { opacity: 1; }
-            100% { transform: translateX(200vw) scaleX(3); opacity: 0; }
-        }
+        
         @keyframes lcarsSlide {
             0% { width: 0; }
             100% { width: 100%; }
@@ -732,26 +728,6 @@
             box-shadow: 0 0 30px rgba(0, 212, 255, 0.2);
         }
 
-        /* === THEME TOGGLE (red alert mode) === */
-        .theme-toggle {
-            background: rgba(255, 153, 0, 0.1);
-            border: 1px solid var(--lcars-orange);
-            border-radius: 50%;
-            width: 36px; height: 36px;
-            cursor: pointer;
-            font-size: 1rem;
-            color: var(--lcars-orange);
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .theme-toggle:hover {
-            box-shadow: 0 0 15px rgba(255, 153, 0, 0.3);
-            background: rgba(255, 153, 0, 0.2);
-        }
-
         /* === CANCEL ALL SECTION === */
         .cancel-all-section {
             background: linear-gradient(135deg, rgba(255, 51, 102, 0.08), rgba(255, 51, 102, 0.02));
@@ -959,91 +935,6 @@
             font-size: 0.85rem;
         }
 
-        /* === EASTER EGG ELEMENTS === */
-        .konami-activated .session-card {
-            border-color: var(--saber-green) !important;
-            box-shadow: 0 0 40px rgba(68, 255, 102, 0.3) !important;
-        }
-
-        #hyperspace-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none;
-            z-index: 9998;
-            overflow: hidden;
-        }
-
-        .hyperspace-line {
-            position: absolute;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, white, transparent);
-            animation: hyperspaceStreak 0.8s linear forwards;
-        }
-
-        #warp-flash {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: white;
-            opacity: 0;
-            pointer-events: none;
-            z-index: 9997;
-            transition: opacity 0.15s;
-        }
-
-        /* Red alert mode */
-        .red-alert .header { border-bottom-color: var(--saber-red) !important; }
-        .red-alert .header::after {
-            background: linear-gradient(90deg, transparent, var(--saber-red), var(--danger-color), var(--saber-red), transparent) !important;
-        }
-        .red-alert .session-card::before {
-            background: linear-gradient(90deg, var(--saber-red), var(--danger-color), var(--saber-red)) !important;
-        }
-        .red-alert body::before {
-            background:
-                linear-gradient(rgba(255, 40, 40, 0.04) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255, 40, 40, 0.04) 1px, transparent 1px) !important;
-        }
-
-        /* Hidden crawl */
-        #crawl-container {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: #000;
-            z-index: 10000;
-            perspective: 400px;
-            overflow: hidden;
-        }
-
-        #crawl-container.show { display: flex; align-items: center; justify-content: center; }
-
-        .crawl-text {
-            position: absolute;
-            width: 60%;
-            text-align: center;
-            color: #ffd700;
-            font-family: 'Rajdhani', sans-serif;
-            font-size: 1.6rem;
-            line-height: 2;
-            animation: crawlUp 15s linear forwards;
-            top: 100%;
-        }
-
-        @keyframes crawlUp {
-            0% { top: 100%; transform: rotateX(20deg); }
-            100% { top: -200%; transform: rotateX(25deg); }
-        }
-
-        .crawl-close {
-            position: absolute;
-            top: 20px; right: 30px;
-            color: #ffd700;
-            font-size: 2rem;
-            cursor: pointer;
-            z-index: 10001;
-            font-family: 'Orbitron', monospace;
-        }
-
         /* Scrollbar styling */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.3); }
@@ -1073,38 +964,6 @@
     <!-- Star field background -->
     <canvas id="starfield" aria-hidden="true"></canvas>
 
-    <!-- Hyperspace overlay -->
-    <div id="hyperspace-overlay"></div>
-    <div id="warp-flash"></div>
-
-    <!-- Star Wars crawl easter egg -->
-    <div id="crawl-container">
-        <span class="crawl-close" id="crawlClose">×</span>
-        <div class="crawl-text">
-            EPISODE XLII<br/><br/>
-            THE PLANNING POKER CHRONICLES<br/><br/>
-            It is a period of sprint planning.<br/>
-            Rebel developers, striking from<br/>
-            their standing desks, have won<br/>
-            their first victory against<br/>
-            the evil Scope Creep.<br/><br/>
-            During the ceremony, Agile spies<br/>
-            managed to steal secret plans<br/>
-            to the Empire's ultimate weapon,<br/>
-            the FEATURE BACKLOG, a mountain<br/>
-            of unestimated user stories with<br/>
-            enough complexity to destroy<br/>
-            an entire sprint...<br/><br/>
-            Pursued by the Empire's sinister<br/>
-            agents of waterfall methodology,<br/>
-            Princess Product Owner races home<br/>
-            aboard her starship, custodian of<br/>
-            the stolen user stories that can<br/>
-            save her people and restore<br/>
-            velocity to the galaxy...
-        </div>
-    </div>
-
     <div class="header">
         <div class="lcars-bar">
             <div class="lcars-block"></div>
@@ -1119,9 +978,6 @@
                 <div class="stardate" id="stardate"></div>
             </div>
             <div class="header-right">
-                <button class="theme-toggle" id="themeToggle" title="Red Alert Mode">
-                    ▲
-                </button>
             </div>
         </div>
     </div>
@@ -1336,8 +1192,6 @@
         
         // Event listeners
         function initializeEventListeners() {
-            document.getElementById('themeToggle').addEventListener('click', toggleTheme);
-            
             var tabs = document.querySelectorAll('.tab');
             tabs.forEach(function(tab) {
                 tab.addEventListener('click', function() {
@@ -2201,24 +2055,6 @@
             }, 3000);
         }
         
-        function toggleTheme() {
-            var body = document.body;
-            body.classList.toggle('red-alert');
-            var themeToggle = document.getElementById('themeToggle');
-            
-            if (body.classList.contains('red-alert')) {
-                themeToggle.textContent = '◆';
-                themeToggle.style.borderColor = 'var(--saber-red)';
-                themeToggle.style.color = 'var(--saber-red)';
-                showToast('RED ALERT — All hands to battle stations', 'error');
-            } else {
-                themeToggle.textContent = '▲';
-                themeToggle.style.borderColor = '';
-                themeToggle.style.color = '';
-                showToast('Standing down from Red Alert', 'info');
-            }
-        }
-        
         function escapeHtml(text) {
             if (!text) return '';
             var div = document.createElement('div');
@@ -2296,149 +2132,6 @@
             initStars();
             drawStars();
             window.addEventListener('resize', function() { resize(); initStars(); });
-        })();
-
-        // === KONAMI CODE EASTER EGG ===
-        // Up Up Down Down Left Right Left Right B A
-        (function() {
-            var konamiSequence = [38, 38, 40, 40, 37, 39, 37, 39, 66, 65];
-            var konamiIndex = 0;
-
-            document.addEventListener('keydown', function(e) {
-                if (e.keyCode === konamiSequence[konamiIndex]) {
-                    konamiIndex++;
-                    if (konamiIndex === konamiSequence.length) {
-                        konamiIndex = 0;
-                        activateKonami();
-                    }
-                } else {
-                    konamiIndex = 0;
-                }
-            });
-
-            function activateKonami() {
-                document.body.classList.toggle('konami-activated');
-                if (document.body.classList.contains('konami-activated')) {
-                    showToast('The Force is strong with this one...', 'success');
-                    triggerHyperspace();
-                } else {
-                    showToast('Exiting hyperspace', 'info');
-                }
-            }
-        })();
-
-        // === HYPERSPACE JUMP EFFECT ===
-        function triggerHyperspace() {
-            var overlay = document.getElementById('hyperspace-overlay');
-            var flash = document.getElementById('warp-flash');
-
-            // Create light streaks
-            for (var i = 0; i < 60; i++) {
-                var line = document.createElement('div');
-                line.className = 'hyperspace-line';
-                line.style.top = (Math.random() * 100) + '%';
-                line.style.left = '0';
-                line.style.width = (Math.random() * 30 + 20) + '%';
-                line.style.animationDelay = (Math.random() * 0.5) + 's';
-                line.style.opacity = Math.random() * 0.6 + 0.4;
-                overlay.appendChild(line);
-            }
-
-            // Flash at end
-            setTimeout(function() {
-                flash.style.opacity = '0.8';
-                setTimeout(function() {
-                    flash.style.opacity = '0';
-                }, 150);
-            }, 600);
-
-            // Cleanup
-            setTimeout(function() {
-                overlay.innerHTML = '';
-            }, 1500);
-        }
-
-        // === STAR WARS CRAWL — Triple-click the logo ===
-        (function() {
-            var clickCount = 0;
-            var clickTimer;
-            var logo = document.querySelector('.logo');
-            if (!logo) return;
-
-            logo.style.cursor = 'pointer';
-            logo.addEventListener('click', function() {
-                clickCount++;
-                clearTimeout(clickTimer);
-                clickTimer = setTimeout(function() { clickCount = 0; }, 500);
-
-                if (clickCount >= 3) {
-                    clickCount = 0;
-                    document.getElementById('crawl-container').classList.add('show');
-                }
-            });
-
-            document.getElementById('crawlClose').addEventListener('click', function() {
-                document.getElementById('crawl-container').classList.remove('show');
-            });
-        })();
-
-        // === HIDDEN MESSAGE — Type "help me obi-wan" ===
-        (function() {
-            var secretPhrase = 'help me obi-wan';
-            var typed = '';
-
-            document.addEventListener('keypress', function(e) {
-                // Don't capture if user is in an input
-                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
-
-                typed += e.key.toLowerCase();
-                if (typed.length > secretPhrase.length) {
-                    typed = typed.slice(-secretPhrase.length);
-                }
-                if (typed === secretPhrase) {
-                    typed = '';
-                    showToast("Help me, Obi-Wan Kenobi. You're my only hope.", 'info');
-                    triggerHyperspace();
-                }
-            });
-        })();
-
-        // === ENGAGE BUTTON — Press 'E' while not in input ===
-        (function() {
-            document.addEventListener('keydown', function(e) {
-                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
-                if (e.key === 'e' || e.key === 'E') {
-                    if (e.shiftKey) {
-                        showToast('Make it so, Number One.', 'info');
-                        triggerHyperspace();
-                    }
-                }
-            });
-        })();
-
-        // === HOVER SOUND DATA (visual-only flourish on card hover) ===
-        (function() {
-            var quotes = [
-                'I find your lack of story points disturbing.',
-                'Live long and estimate.',
-                'May the velocity be with you.',
-                'Resistance to Agile is futile.',
-                'These are not the story points you are looking for.',
-                'Engage the backlog, Number One.',
-                'Do, or do not. There is no try... except in sprint retro.',
-                'Set phasers to estimate.',
-                'I am altering the acceptance criteria. Pray I don\'t alter them further.',
-                'The needs of the many outweigh the needs of the one... who wrote the ticket.'
-            ];
-
-            // Double-click any session card for a random quote
-            document.addEventListener('dblclick', function(e) {
-                var card = e.target.closest('.session-card');
-                if (card) {
-                    var quote = quotes[Math.floor(Math.random() * quotes.length)];
-                    showToast(quote, 'info');
-                }
-            });
         })();
     //]]>
     </script>

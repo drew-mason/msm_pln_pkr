@@ -5,7 +5,7 @@ export function autoUpdateSessionStatus(current, previous) {
     try {
         var sessionId = current.getValue('session');
         if (!sessionId) {
-            gs.info('[autoUpdateSessionStatus] No session ID found for story: ' + String(current.getUniqueValue()));
+            gs.debug('[autoUpdateSessionStatus] No session ID found for story: ' + String(current.getUniqueValue()));
             return;
         }
 

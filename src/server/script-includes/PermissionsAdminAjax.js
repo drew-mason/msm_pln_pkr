@@ -3,7 +3,7 @@ PermissionsAdminAjax.prototype = Object.extendsObject(global.AbstractAjaxProcess
     
     getPermissionsData: function() {
         try {
-            gs.info('[PermissionsAdminAjax] Getting permissions data');
+            gs.debug('[PermissionsAdminAjax] Getting permissions data');
             
             var userId = gs.getUserID();
             
@@ -46,7 +46,7 @@ PermissionsAdminAjax.prototype = Object.extendsObject(global.AbstractAjaxProcess
             // Set system property
             gs.setProperty('x_902080_planningw.session.creation.restricted', restricted ? 'true' : 'false');
             
-            gs.info('[PermissionsAdminAjax] Session creation restricted mode set to: ' + restricted);
+            gs.debug('[PermissionsAdminAjax] Session creation restricted mode set to: ' + restricted);
             
             return this._buildResponse(true, 'Restricted mode updated successfully', {
                 restrictedMode: restricted
@@ -65,6 +65,10 @@ PermissionsAdminAjax.prototype = Object.extendsObject(global.AbstractAjaxProcess
             
             if (!groupId) {
                 return this._buildResponse(false, 'Group ID required', null);
+            }
+
+            if (!/^[0-9a-f]{32}$/i.test(groupId)) {
+                return this._buildResponse(false, 'Invalid group ID format', null);
             }
             
             // Check admin permissions
@@ -106,6 +110,10 @@ PermissionsAdminAjax.prototype = Object.extendsObject(global.AbstractAjaxProcess
             if (!groupId) {
                 return this._buildResponse(false, 'Group ID required', null);
             }
+
+            if (!/^[0-9a-f]{32}$/i.test(groupId)) {
+                return this._buildResponse(false, 'Invalid group ID format', null);
+            }
             
             // Check admin permissions
             if (!gs.hasRole('x_902080_planningw.admin') && !gs.hasRole('admin')) {
@@ -133,7 +141,7 @@ PermissionsAdminAjax.prototype = Object.extendsObject(global.AbstractAjaxProcess
     
     getUserGroups: function() {
         try {
-            var searchTerm = this.getParameter('search_term') || '';
+            var searchTerm = String(this.getParameter('search_term') || '').substring(0, 200);
             var userId = gs.getUserID();
             
             // Check admin permissions
@@ -178,6 +186,10 @@ PermissionsAdminAjax.prototype = Object.extendsObject(global.AbstractAjaxProcess
             
             if (!testUserId) {
                 return this._buildResponse(false, 'Test user ID required', null);
+            }
+
+            if (!/^[0-9a-f]{32}$/i.test(testUserId)) {
+                return this._buildResponse(false, 'Invalid user ID format', null);
             }
             
             // Check admin permissions
