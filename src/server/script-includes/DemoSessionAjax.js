@@ -347,11 +347,13 @@ DemoSessionAjax.prototype = Object.extendsObject(AbstractAjaxProcessor, {
     },
     
     _buildResponse: function(success, message, data) {
-        return {
+        var response = JSON.stringify({
             success: success,
             message: message,
             data: data
-        };
+        });
+        this.setAnswer(response);
+        return response;
     },
 
     type: 'DemoSessionAjax'
