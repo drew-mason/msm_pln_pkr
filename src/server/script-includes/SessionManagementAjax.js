@@ -411,6 +411,106 @@ SessionManagementAjax.prototype = Object.extendsObject(global.AbstractAjaxProces
         }
     },
     
+    updateSession: function() {
+        try {
+            var sessionId = this.getParameter('session_id');
+            if (!sessionId) {
+                return this._buildResponse(false, 'Session ID required', null);
+            }
+            
+            var userId = gs.getUserID();
+            
+            var sessionGr = new GlideRecord('x_902080_planningw_planning_session');
+            if (!sessionGr.get(sessionId)) {
+                return this._buildResponse(false, 'Session not found', null);
+            }
+            
+            var security = new PlanningPokerSecurity();
+            if (!security.canManageSession(sessionGr, userId)) {
+                return this._buildResponse(false, 'Access denied', null);
+            }
+            
+            if (sessionGr.getValue('status') !== 'ready') {
+                return this._buildResponse(false, 'Only sessions in planning (ready) status can be edited', null);
+            }
+            
+            // Update fields that were provided
+            var sessionName = this.getParameter('session_name');
+            var description = this.getParameter('description');
+            var scoringMethodId = this.getParameter('scoring_method');
+            var dealerGroupId = this.getParameter('dealer_group');
+            var allowSpectators = this.getParameter('allow_spectators');
+            var easyMode = this.getParameter('easy_mode');
+            
+            if (sessionName !== null && sessionName !== undefined && sessionName !== '') {
+                sessionGr.setValue('name', sessionName);
+            }
+            if (description !== null && description !== undefined) {
+                sessionGr.setValue('description', description);
+            }
+            if (scoringMethodId) {
+                sessionGr.setValue('scoring_method', scoringMethodId);
+            }
+            // Allow clearing the dealer group
+            if (dealerGroupId !== null && dealerGroupId !== undefined) {
+                sessionGr.setValue('dealer_group', dealerGroupId);
+            }
+            if (allowSpectators !== null && allowSpectators !== undefined) {
+                sessionGr.setValue('allow_spectators', allowSpectators == 'true');
+            }
+            if (easyMode !== null && easyMode !== undefined) {
+                sessionGr.setValue('easy_mode', easyMode == 'true');
+            }
+            
+            sessionGr.update();
+            
+            gs.info('[SessionManagementAjax] Updated session: ' + sessionId);
+            return this._buildResponse(true, 'Session updated successfully', null);
+            
+        } catch (e) {
+            gs.error('[SessionManagementAjax] updateSession error: ' + e);
+            return this._buildResponse(false, 'Error updating session: ' + e, null);
+        }
+    },
+    
+    reorderStories: function() {
+        try {
+            var sessionId = this.getParameter('session_id');
+            var storyOrder = this.getParameter('story_order'); // JSON array of {sys_id, order}
+            
+            if (!sessionId || !storyOrder) {
+                return this._buildResponse(false, 'Session ID and story order required', null);
+            }
+            
+            var userId = gs.getUserID();
+            
+            var sessionGr = new GlideRecord('x_902080_planningw_planning_session');
+            if (!sessionGr.get(sessionId)) {
+                return this._buildResponse(false, 'Session not found', null);
+            }
+            
+            var security = new PlanningPokerSecurity();
+            if (!security.canManageSession(sessionGr, userId)) {
+                return this._buildResponse(false, 'Access denied', null);
+            }
+            
+            var orderArray = JSON.parse(storyOrder);
+            for (var i = 0; i < orderArray.length; i++) {
+                var storyGr = new GlideRecord('x_902080_planningw_session_stories');
+                if (storyGr.get(orderArray[i].sys_id)) {
+                    storyGr.setValue('order', orderArray[i].order);
+                    storyGr.update();
+                }
+            }
+            
+            return this._buildResponse(true, 'Story order updated', null);
+            
+        } catch (e) {
+            gs.error('[SessionManagementAjax] reorderStories error: ' + e);
+            return this._buildResponse(false, 'Error reordering stories: ' + e, null);
+        }
+    },
+    
     goLiveSession: function() {
         try {
             var sessionId = this.getParameter('session_id');

@@ -382,6 +382,195 @@
             color: var(--danger-color);
             margin-bottom: 0.5rem;
         }
+
+        .modal-content.modal-lg {
+            max-width: 900px;
+        }
+
+        .edit-tabs {
+            display: flex;
+            border-bottom: 2px solid var(--border-color);
+            margin-bottom: 1.5rem;
+        }
+
+        .edit-tab {
+            padding: 0.75rem 1.25rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 0.95rem;
+            color: var(--dark-color);
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.2s ease;
+        }
+
+        .edit-tab.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+            font-weight: bold;
+        }
+
+        .edit-tab-content {
+            display: none;
+        }
+
+        .edit-tab-content.active {
+            display: block;
+        }
+
+        .story-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .story-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            margin-bottom: 0.5rem;
+            background: var(--secondary-color);
+            transition: background 0.15s;
+        }
+
+        .story-item:hover {
+            background: var(--light-color);
+        }
+
+        .story-item .drag-handle {
+            cursor: grab;
+            color: #999;
+            font-size: 1.2rem;
+            user-select: none;
+        }
+
+        .story-item .drag-handle:active {
+            cursor: grabbing;
+        }
+
+        .story-item.dragging {
+            opacity: 0.5;
+            background: var(--light-color);
+        }
+
+        .story-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .story-number {
+            font-weight: bold;
+            font-size: 0.85rem;
+            color: var(--primary-color);
+        }
+
+        .story-title-text {
+            font-size: 0.95rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .story-status {
+            font-size: 0.75rem;
+            padding: 0.15rem 0.5rem;
+            border-radius: 10px;
+            background: #e9ecef;
+            color: #495057;
+            text-transform: capitalize;
+        }
+
+        .story-search-container {
+            position: relative;
+            margin-bottom: 1rem;
+        }
+
+        .story-search-input {
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            font-size: 0.95rem;
+        }
+
+        .story-search-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(0,115,230,0.25);
+        }
+
+        .story-search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--light-color);
+            border: 1px solid var(--border-color);
+            border-radius: 0 0 var(--radius) var(--radius);
+            max-height: 250px;
+            overflow-y: auto;
+            z-index: 10;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: none;
+        }
+
+        .story-search-results.show {
+            display: block;
+        }
+
+        .search-result-item {
+            padding: 0.6rem 0.75rem;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+
+        .search-result-item:hover {
+            background: var(--secondary-color);
+        }
+
+        .search-result-item.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .manual-story-form {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            align-items: flex-end;
+        }
+
+        .manual-story-form .form-group {
+            margin-bottom: 0;
+            flex: 1;
+        }
+
+        .story-count-badge {
+            display: inline-block;
+            padding: 0.15rem 0.6rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            background: var(--primary-color);
+            color: white;
+            margin-left: 0.5rem;
+        }
+
+        .empty-stories {
+            text-align: center;
+            padding: 2rem;
+            color: #999;
+        }
         
         @media (max-width: 768px) {
             .session-grid {
@@ -499,6 +688,83 @@
         <span id="toastMessage"></span>
     </div>
 
+    <!-- Edit Session Modal -->
+    <div class="modal" id="editSessionModal">
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <h3 class="modal-title">Edit Session</h3>
+                <button class="btn btn-secondary" data-dismiss="modal">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="edit-tabs">
+                    <button class="edit-tab active" data-edit-tab="details">Session Details</button>
+                    <button class="edit-tab" data-edit-tab="stories">Stories <span class="story-count-badge" id="storyCountBadge">0</span></button>
+                </div>
+
+                <div class="edit-tab-content active" id="editDetailsTab">
+                    <input type="hidden" id="editSessionId" />
+                    <div class="form-group">
+                        <label class="form-label">Session Name *</label>
+                        <input type="text" class="form-control" id="editSessionName" placeholder="Enter session name" required />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" id="editSessionDescription" placeholder="Optional session description"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Scoring Method *</label>
+                        <select class="form-control" id="editScoringMethod" required>
+                            <option value="">Select scoring method...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Dealer Group</label>
+                        <select class="form-control" id="editDealerGroup">
+                            <option value="">Select dealer group (optional)...</option>
+                        </select>
+                        <small>Group members will be automatically added as dealers</small>
+                    </div>
+                    <div class="form-check">
+                        <input type="checkbox" id="editAllowSpectators" />
+                        <label for="editAllowSpectators">Allow Spectators</label>
+                    </div>
+                    <div class="form-check">
+                        <input type="checkbox" id="editEasyMode" />
+                        <label for="editEasyMode">Easy Mode (Allow quick story creation)</label>
+                    </div>
+                </div>
+
+                <div class="edit-tab-content" id="editStoriesTab">
+                    <div class="story-search-container">
+                        <input type="text" class="story-search-input" id="storySearchInput" placeholder="Search stories by number or title..." autocomplete="off" />
+                        <div class="story-search-results" id="storySearchResults"></div>
+                    </div>
+
+                    <div class="manual-story-form" id="manualStoryForm" style="display: none;">
+                        <div class="form-group">
+                            <label class="form-label">Title</label>
+                            <input type="text" class="form-control" id="manualStoryTitle" placeholder="Story title" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Description</label>
+                            <input type="text" class="form-control" id="manualStoryDesc" placeholder="Optional description" />
+                        </div>
+                        <button class="btn btn-success btn-sm" id="addManualStoryBtn" style="margin-bottom:1rem;">Add</button>
+                    </div>
+
+                    <h4 style="margin-bottom: 0.75rem;">Session Stories</h4>
+                    <ul class="story-list" id="editStoryList">
+                        <li class="empty-stories">No stories added yet. Search above to add stories.</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button class="btn btn-primary" id="saveSessionBtn">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
     <script>
     //<![CDATA[
         // Safe AJAX response parser
@@ -542,6 +808,9 @@
         };
         var scoringMethods = [];
         var userGroups = [];
+        var editingSessionId = null;
+        var editingStories = [];
+        var searchDebounceTimer = null;
 
         // Initialize page
         document.addEventListener('DOMContentLoaded', function() {
@@ -578,6 +847,45 @@
                     hideAllModals();
                 });
             });
+            
+            // Edit session modal tabs
+            var editTabs = document.querySelectorAll('.edit-tab');
+            editTabs.forEach(function(tab) {
+                tab.addEventListener('click', function() {
+                    switchEditTab(tab.getAttribute('data-edit-tab'));
+                });
+            });
+            
+            // Save session button
+            document.getElementById('saveSessionBtn').addEventListener('click', saveSession);
+            
+            // Story search
+            document.getElementById('storySearchInput').addEventListener('input', function() {
+                clearTimeout(searchDebounceTimer);
+                var term = this.value.trim();
+                if (term.length < 2) {
+                    document.getElementById('storySearchResults').classList.remove('show');
+                    return;
+                }
+                searchDebounceTimer = setTimeout(function() {
+                    searchStoriesForEdit(term);
+                }, 300);
+            });
+            
+            // Close search results on outside click
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.story-search-container')) {
+                    document.getElementById('storySearchResults').classList.remove('show');
+                }
+            });
+            
+            // Easy mode toggle in edit modal
+            document.getElementById('editEasyMode').addEventListener('change', function() {
+                document.getElementById('manualStoryForm').style.display = this.checked ? 'flex' : 'none';
+            });
+            
+            // Add manual story button
+            document.getElementById('addManualStoryBtn').addEventListener('click', addManualStoryToSession);
         }
         
         // Load initial data
@@ -922,7 +1230,49 @@
         }
         
         function editSession(sessionId) {
-            showToast('Edit session functionality coming soon', 'info');
+            editingSessionId = sessionId;
+            editingStories = [];
+            
+            // Populate scoring methods and groups dropdowns in edit modal
+            populateEditDropdowns();
+            
+            // Load session details
+            var ga = new GlideAjax('SessionManagementAjax');
+            ga.addParam('sysparm_name', 'getSessionDetails');
+            ga.addParam('session_id', sessionId);
+            ga.getXMLAnswer(function(answer) {
+                try {
+                    if (!answer) { showToast('Error loading session details', 'error'); return; }
+                    var result = JSON.parse(answer);
+                    if (!result.success) { showToast(result.message, 'error'); return; }
+                    
+                    var data = result.data;
+                    
+                    // Populate form
+                    document.getElementById('editSessionId').value = data.sys_id;
+                    document.getElementById('editSessionName').value = data.name || '';
+                    document.getElementById('editSessionDescription').value = data.description || '';
+                    document.getElementById('editScoringMethod').value = data.scoringMethod || '';
+                    document.getElementById('editDealerGroup').value = data.dealerGroup || '';
+                    document.getElementById('editAllowSpectators').checked = data.allowSpectators;
+                    document.getElementById('editEasyMode').checked = data.easyMode;
+                    
+                    // Show/hide manual story form
+                    document.getElementById('manualStoryForm').style.display = data.easyMode ? 'flex' : 'none';
+                    
+                    // Populate stories
+                    editingStories = data.stories || [];
+                    renderEditStories();
+                    
+                    // Reset to details tab
+                    switchEditTab('details');
+                    
+                    showModal('editSessionModal');
+                } catch (e) {
+                    console.error('Error loading session details:', e);
+                    showToast('Error loading session details', 'error');
+                }
+            });
         }
         
         function viewStatistics(sessionId) {
@@ -948,6 +1298,360 @@
         }
         
         // Utility functions
+        
+        // --- Edit Session Functions ---
+        
+        function switchEditTab(tabName) {
+            var tabs = document.querySelectorAll('.edit-tab');
+            tabs.forEach(function(tab) {
+                tab.classList.toggle('active', tab.getAttribute('data-edit-tab') === tabName);
+            });
+            
+            var contents = document.querySelectorAll('.edit-tab-content');
+            contents.forEach(function(content) {
+                content.classList.toggle('active', content.id === 'edit' + tabName.charAt(0).toUpperCase() + tabName.slice(1) + 'Tab');
+            });
+        }
+        
+        function populateEditDropdowns() {
+            // Scoring methods
+            var smSelect = document.getElementById('editScoringMethod');
+            smSelect.innerHTML = '<option value="">Select scoring method...</option>';
+            scoringMethods.forEach(function(method) {
+                var option = document.createElement('option');
+                option.value = method.sys_id;
+                option.textContent = method.name;
+                smSelect.appendChild(option);
+            });
+            
+            // User groups
+            var groupSelect = document.getElementById('editDealerGroup');
+            groupSelect.innerHTML = '<option value="">Select dealer group (optional)...</option>';
+            userGroups.forEach(function(group) {
+                var option = document.createElement('option');
+                option.value = group.sys_id;
+                option.textContent = group.name;
+                groupSelect.appendChild(option);
+            });
+        }
+        
+        function renderEditStories() {
+            var list = document.getElementById('editStoryList');
+            var badge = document.getElementById('storyCountBadge');
+            badge.textContent = editingStories.length;
+            
+            if (editingStories.length === 0) {
+                list.innerHTML = '<li class="empty-stories">No stories added yet. Search above to add stories.</li>';
+                return;
+            }
+            
+            list.innerHTML = '';
+            
+            editingStories.forEach(function(story, index) {
+                var li = document.createElement('li');
+                li.className = 'story-item';
+                li.setAttribute('draggable', 'true');
+                li.setAttribute('data-index', index);
+                li.setAttribute('data-story-id', story.sys_id);
+                
+                li.innerHTML = 
+                    '<span class="drag-handle" title="Drag to reorder">⠿</span>' +
+                    '<div class="story-info">' +
+                        '<span class="story-number">' + escapeHtml(story.story_number || '') + '</span> ' +
+                        '<span class="story-title-text">' + escapeHtml(story.story_title || '') + '</span>' +
+                    '</div>' +
+                    '<span class="story-status">' + escapeHtml(story.status || 'pending') + '</span>' +
+                    '<button class="btn btn-danger btn-sm" data-remove-story="' + story.sys_id + '" title="Remove story">✕</button>';
+                
+                // Drag events
+                li.addEventListener('dragstart', handleDragStart);
+                li.addEventListener('dragover', handleDragOver);
+                li.addEventListener('dragenter', handleDragEnter);
+                li.addEventListener('dragleave', handleDragLeave);
+                li.addEventListener('drop', handleDrop);
+                li.addEventListener('dragend', handleDragEnd);
+                
+                // Remove button
+                li.querySelector('[data-remove-story]').addEventListener('click', function() {
+                    removeStoryFromSession(story.sys_id);
+                });
+                
+                list.appendChild(li);
+            });
+        }
+        
+        // Drag and drop support
+        var dragSrcIndex = null;
+        
+        function handleDragStart(e) {
+            dragSrcIndex = parseInt(this.getAttribute('data-index'));
+            this.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', dragSrcIndex);
+        }
+        
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+        }
+        
+        function handleDragEnter(e) {
+            e.preventDefault();
+            this.style.borderTop = '2px solid var(--primary-color)';
+        }
+        
+        function handleDragLeave() {
+            this.style.borderTop = '';
+        }
+        
+        function handleDrop(e) {
+            e.preventDefault();
+            this.style.borderTop = '';
+            var targetIndex = parseInt(this.getAttribute('data-index'));
+            
+            if (dragSrcIndex !== null && dragSrcIndex !== targetIndex) {
+                // Reorder array
+                var moved = editingStories.splice(dragSrcIndex, 1)[0];
+                editingStories.splice(targetIndex, 0, moved);
+                renderEditStories();
+            }
+        }
+        
+        function handleDragEnd() {
+            this.classList.remove('dragging');
+            var items = document.querySelectorAll('.story-item');
+            items.forEach(function(item) {
+                item.style.borderTop = '';
+            });
+        }
+        
+        function searchStoriesForEdit(searchTerm) {
+            var ga = new GlideAjax('SessionManagementAjax');
+            ga.addParam('sysparm_name', 'searchStories');
+            ga.addParam('search_term', searchTerm);
+            ga.addParam('limit', '15');
+            ga.getXMLAnswer(function(answer) {
+                try {
+                    if (!answer) return;
+                    var result = JSON.parse(answer);
+                    if (!result.success) return;
+                    
+                    var container = document.getElementById('storySearchResults');
+                    container.innerHTML = '';
+                    
+                    if (result.data.length === 0) {
+                        container.innerHTML = '<div class="search-result-item disabled">No stories found</div>';
+                        container.classList.add('show');
+                        return;
+                    }
+                    
+                    // Build set of already-added story IDs (by rm_story reference)
+                    var addedStoryIds = {};
+                    editingStories.forEach(function(s) {
+                        if (s.story) addedStoryIds[s.story] = true;
+                    });
+                    
+                    result.data.forEach(function(story) {
+                        var div = document.createElement('div');
+                        var isAdded = addedStoryIds[story.sys_id] || false;
+                        div.className = 'search-result-item' + (isAdded ? ' disabled' : '');
+                        div.innerHTML = 
+                            '<div>' +
+                                '<strong>' + escapeHtml(story.number) + '</strong> - ' +
+                                escapeHtml(story.short_description || '') +
+                            '</div>' +
+                            '<div>' + (isAdded ? '<span style="color:#999;">Already added</span>' : '') + '</div>';
+                        
+                        if (!isAdded) {
+                            div.addEventListener('click', function() {
+                                addStoryToSession(story.sys_id);
+                                container.classList.remove('show');
+                                document.getElementById('storySearchInput').value = '';
+                            });
+                        }
+                        
+                        container.appendChild(div);
+                    });
+                    
+                    container.classList.add('show');
+                } catch (e) {
+                    console.error('Error handling search results:', e);
+                }
+            });
+        }
+        
+        function addStoryToSession(storyId) {
+            if (!editingSessionId) return;
+            
+            var ga = new GlideAjax('SessionManagementAjax');
+            ga.addParam('sysparm_name', 'addStories');
+            ga.addParam('session_id', editingSessionId);
+            ga.addParam('story_ids', storyId);
+            ga.getXMLAnswer(function(answer) {
+                try {
+                    if (!answer) { showToast('Error adding story', 'error'); return; }
+                    var result = JSON.parse(answer);
+                    if (result.success) {
+                        showToast('Story added', 'success');
+                        refreshEditStories();
+                    } else {
+                        showToast(result.message, 'error');
+                    }
+                } catch (e) {
+                    showToast('Error adding story', 'error');
+                }
+            });
+        }
+        
+        function removeStoryFromSession(sessionStoryId) {
+            if (!editingSessionId) return;
+            if (!confirm('Remove this story from the session?')) return;
+            
+            var ga = new GlideAjax('SessionManagementAjax');
+            ga.addParam('sysparm_name', 'removeStory');
+            ga.addParam('session_id', editingSessionId);
+            ga.addParam('session_story_id', sessionStoryId);
+            ga.getXMLAnswer(function(answer) {
+                try {
+                    if (!answer) { showToast('Error removing story', 'error'); return; }
+                    var result = JSON.parse(answer);
+                    if (result.success) {
+                        showToast('Story removed', 'success');
+                        refreshEditStories();
+                    } else {
+                        showToast(result.message, 'error');
+                    }
+                } catch (e) {
+                    showToast('Error removing story', 'error');
+                }
+            });
+        }
+        
+        function addManualStoryToSession() {
+            if (!editingSessionId) return;
+            
+            var title = document.getElementById('manualStoryTitle').value.trim();
+            var desc = document.getElementById('manualStoryDesc').value.trim();
+            
+            if (!title) {
+                showToast('Story title is required', 'error');
+                return;
+            }
+            
+            var ga = new GlideAjax('SessionManagementAjax');
+            ga.addParam('sysparm_name', 'addManualStory');
+            ga.addParam('session_id', editingSessionId);
+            ga.addParam('title', title);
+            ga.addParam('description', desc);
+            ga.getXMLAnswer(function(answer) {
+                try {
+                    if (!answer) { showToast('Error adding manual story', 'error'); return; }
+                    var result = JSON.parse(answer);
+                    if (result.success) {
+                        showToast('Manual story added', 'success');
+                        document.getElementById('manualStoryTitle').value = '';
+                        document.getElementById('manualStoryDesc').value = '';
+                        refreshEditStories();
+                    } else {
+                        showToast(result.message, 'error');
+                    }
+                } catch (e) {
+                    showToast('Error adding manual story', 'error');
+                }
+            });
+        }
+        
+        function refreshEditStories() {
+            var ga = new GlideAjax('SessionManagementAjax');
+            ga.addParam('sysparm_name', 'getSessionDetails');
+            ga.addParam('session_id', editingSessionId);
+            ga.getXMLAnswer(function(answer) {
+                try {
+                    if (!answer) return;
+                    var result = JSON.parse(answer);
+                    if (result.success) {
+                        editingStories = result.data.stories || [];
+                        renderEditStories();
+                    }
+                } catch (e) {
+                    console.error('Error refreshing stories:', e);
+                }
+            });
+        }
+        
+        function saveSession() {
+            var sessionId = document.getElementById('editSessionId').value;
+            var sessionName = document.getElementById('editSessionName').value.trim();
+            var scoringMethod = document.getElementById('editScoringMethod').value;
+            
+            if (!sessionName) {
+                showToast('Session name is required', 'error');
+                return;
+            }
+            if (!scoringMethod) {
+                showToast('Scoring method is required', 'error');
+                return;
+            }
+            
+            // Save session properties
+            var ga = new GlideAjax('SessionManagementAjax');
+            ga.addParam('sysparm_name', 'updateSession');
+            ga.addParam('session_id', sessionId);
+            ga.addParam('session_name', sessionName);
+            ga.addParam('description', document.getElementById('editSessionDescription').value);
+            ga.addParam('scoring_method', scoringMethod);
+            ga.addParam('dealer_group', document.getElementById('editDealerGroup').value);
+            ga.addParam('allow_spectators', document.getElementById('editAllowSpectators').checked.toString());
+            ga.addParam('easy_mode', document.getElementById('editEasyMode').checked.toString());
+            ga.getXMLAnswer(function(answer) {
+                try {
+                    if (!answer) { showToast('Error saving session', 'error'); return; }
+                    var result = JSON.parse(answer);
+                    if (result.success) {
+                        // Save story order if stories were reordered
+                        saveStoryOrder(sessionId, function() {
+                            showToast('Session saved successfully', 'success');
+                            hideAllModals();
+                            loadSessions();
+                        });
+                    } else {
+                        showToast(result.message, 'error');
+                    }
+                } catch (e) {
+                    showToast('Error saving session', 'error');
+                }
+            });
+        }
+        
+        function saveStoryOrder(sessionId, callback) {
+            if (editingStories.length === 0) {
+                callback();
+                return;
+            }
+            
+            var orderData = editingStories.map(function(story, index) {
+                return { sys_id: story.sys_id, order: index + 1 };
+            });
+            
+            var ga = new GlideAjax('SessionManagementAjax');
+            ga.addParam('sysparm_name', 'reorderStories');
+            ga.addParam('session_id', sessionId);
+            ga.addParam('story_order', JSON.stringify(orderData));
+            ga.getXMLAnswer(function(answer) {
+                try {
+                    if (answer) {
+                        var result = JSON.parse(answer);
+                        if (!result.success) {
+                            console.error('Error saving story order:', result.message);
+                        }
+                    }
+                } catch (e) {
+                    console.error('Error saving story order:', e);
+                }
+                callback();
+            });
+        }
+
         function clearCreateSessionForm() {
             document.getElementById('sessionName').value = '';
             document.getElementById('sessionDescription').value = '';
