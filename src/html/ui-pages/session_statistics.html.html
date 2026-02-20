@@ -697,13 +697,25 @@
         // Safe AJAX response parser
         function parseAjaxResponse(response) {
             try {
+                // Handle string response (from getXMLAnswer)
+                if (typeof response === 'string') {
+                    return response ? JSON.parse(response) : null;
+                }
                 var xml = response.responseXML;
                 if (!xml) return null;
                 var answer = xml.documentElement.getAttribute('answer');
                 if (!answer) {
+                    // Fallback: try to find answer element in batched response
                     var answerEl = xml.getElementsByTagName('answer');
                     if (answerEl && answerEl.length > 0) {
                         answer = answerEl[0].textContent || answerEl[0].text;
+                    }
+                }
+                if (!answer) {
+                    // Additional fallback: check result elements (batched response format)
+                    var resultEl = xml.getElementsByTagName('result');
+                    if (resultEl && resultEl.length > 0) {
+                        answer = resultEl[0].getAttribute('answer');
                     }
                 }
                 if (!answer) return null;
