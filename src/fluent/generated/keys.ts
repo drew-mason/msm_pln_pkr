@@ -5,6 +5,14 @@ declare global {
         namespace Internal {
             interface Keys extends KeysRegistry {
                 explicit: {
+                    '67e8f47b83877a50c97cc2d6feaad382': {
+                        table: 'sys_scope_privilege'
+                        id: '67e8f47b83877a50c97cc2d6feaad382'
+                    }
+                    '6be8f47b83877a50c97cc2d6feaad3a4': {
+                        table: 'sys_scope_privilege'
+                        id: '6be8f47b83877a50c97cc2d6feaad3a4'
+                    }
                     app_menu_planning_poker: {
                         table: 'sys_app_application'
                         id: '3931fc1d1d114bf3a2cda21e0735b002'
@@ -13,6 +21,14 @@ declare global {
                         table: 'sys_script'
                         id: '4819105fa3de414cb449d99e87ad2782'
                     }
+                    bd09b87b83877a50c97cc2d6feaad383: {
+                        table: 'sys_scope_privilege'
+                        id: 'bd09b87b83877a50c97cc2d6feaad383'
+                    }
+                    bd09b87b83877a50c97cc2d6feaad387: {
+                        table: 'sys_scope_privilege'
+                        id: 'bd09b87b83877a50c97cc2d6feaad387'
+                    }
                     bom_json: {
                         table: 'sys_module'
                         id: '06387b2f5fd6457bac96006a65042c7a'
@@ -20,6 +36,10 @@ declare global {
                     br_session_state_manager: {
                         table: 'sys_script'
                         id: '86d5ba2e2d834352ab32d4d84a006068'
+                    }
+                    fd09f47b83877a50c97cc2d6feaad3ad: {
+                        table: 'sys_scope_privilege'
+                        id: 'fd09f47b83877a50c97cc2d6feaad3ad'
                     }
                     fibonacci_method: {
                         table: 'x_902080_planningw_scoring_method'
