@@ -501,6 +501,27 @@
 
     <script>
     //<![CDATA[
+        // Safe AJAX response parser
+        function parseAjaxResponse(response) {
+            try {
+                var xml = response.responseXML;
+                if (!xml) return null;
+                var answer = xml.documentElement.getAttribute('answer');
+                if (!answer) {
+                    // Fallback: try to find answer element in batched response
+                    var answerEl = xml.getElementsByTagName('answer');
+                    if (answerEl && answerEl.length > 0) {
+                        answer = answerEl[0].textContent || answerEl[0].text;
+                    }
+                }
+                if (!answer) return null;
+                return JSON.parse(answer);
+            } catch (e) {
+                console.error('Error parsing AJAX response:', e);
+                return null;
+            }
+        }
+
         // Global variables
         var currentTab = 'live';
         var sessions = {
@@ -560,8 +581,8 @@
             var ga = new GlideAjax('SessionManagementAjax');
             ga.addParam('sysparm_name', 'getScoringMethods');
             ga.getXML(function(response) {
-                var answer = response.responseXML.documentElement.getAttribute('answer');
-                var result = JSON.parse(answer);
+                var result = parseAjaxResponse(response);
+                if (!result) { showToast('Error loading scoring methods', 'error'); return; }
                 
                 if (result.success) {
                     scoringMethods = result.data;
@@ -577,8 +598,8 @@
             var ga = new GlideAjax('SessionManagementAjax');
             ga.addParam('sysparm_name', 'getUserGroups');
             ga.getXML(function(response) {
-                var answer = response.responseXML.documentElement.getAttribute('answer');
-                var result = JSON.parse(answer);
+                var result = parseAjaxResponse(response);
+                if (!result) { console.error('Failed to load user groups: null response'); return; }
                 
                 if (result.success) {
                     userGroups = result.data;
@@ -598,8 +619,8 @@
                 ga.addParam('sysparm_name', 'getMySessions');
                 ga.addParam('status', status);
                 ga.getXML(function(response) {
-                    var answer = response.responseXML.documentElement.getAttribute('answer');
-                    var result = JSON.parse(answer);
+                    var result = parseAjaxResponse(response);
+                    if (!result) { showToast('Error loading ' + status + ' sessions', 'error'); return; }
                     
                     if (result.success) {
                         if (status === 'ready') {
@@ -807,8 +828,8 @@
             ga.addParam('allow_spectators', allowSpectators);
             ga.addParam('easy_mode', easyMode);
             ga.getXML(function(response) {
-                var answer = response.responseXML.documentElement.getAttribute('answer');
-                var result = JSON.parse(answer);
+                var result = parseAjaxResponse(response);
+                if (!result) { showToast('Error creating session', 'error'); return; }
                 
                 if (result.success) {
                     showToast('Session created successfully', 'success');
@@ -826,8 +847,8 @@
             ga.addParam('sysparm_name', 'goLiveSession');
             ga.addParam('session_id', sessionId);
             ga.getXML(function(response) {
-                var answer = response.responseXML.documentElement.getAttribute('answer');
-                var result = JSON.parse(answer);
+                var result = parseAjaxResponse(response);
+                if (!result) { showToast('Error going live', 'error'); return; }
                 
                 if (result.success) {
                     showToast('Session is now live', 'success');
@@ -847,8 +868,8 @@
             ga.addParam('sysparm_name', 'cancelSession');
             ga.addParam('session_id', sessionId);
             ga.getXML(function(response) {
-                var answer = response.responseXML.documentElement.getAttribute('answer');
-                var result = JSON.parse(answer);
+                var result = parseAjaxResponse(response);
+                if (!result) { showToast('Error cancelling session', 'error'); return; }
                 
                 if (result.success) {
                     showToast('Session cancelled', 'success');

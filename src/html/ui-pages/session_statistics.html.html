@@ -393,6 +393,26 @@
 
     <script>
     //<![CDATA[
+        // Safe AJAX response parser
+        function parseAjaxResponse(response) {
+            try {
+                var xml = response.responseXML;
+                if (!xml) return null;
+                var answer = xml.documentElement.getAttribute('answer');
+                if (!answer) {
+                    var answerEl = xml.getElementsByTagName('answer');
+                    if (answerEl && answerEl.length > 0) {
+                        answer = answerEl[0].textContent || answerEl[0].text;
+                    }
+                }
+                if (!answer) return null;
+                return JSON.parse(answer);
+            } catch (e) {
+                console.error('Error parsing AJAX response:', e);
+                return null;
+            }
+        }
+
         var sessionId = getUrlParameter('session_id');
 
         document.addEventListener('DOMContentLoaded', function() {
@@ -411,8 +431,8 @@
             ga.getXML(function(response) {
                 hideLoading();
                 
-                var answer = response.responseXML.documentElement.getAttribute('answer');
-                var result = JSON.parse(answer);
+                var result = parseAjaxResponse(response);
+                if (!result) { showError('Error loading statistics'); return; }
                 
                 if (result.success) {
                     renderStatistics(result.data);

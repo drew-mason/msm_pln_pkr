@@ -695,6 +695,26 @@
     </script>
     <script>
     //<![CDATA[
+        // Safe AJAX response parser
+        function parseAjaxResponse(response) {
+            try {
+                var xml = response.responseXML;
+                if (!xml) return null;
+                var answer = xml.documentElement.getAttribute('answer');
+                if (!answer) {
+                    var answerEl = xml.getElementsByTagName('answer');
+                    if (answerEl && answerEl.length > 0) {
+                        answer = answerEl[0].textContent || answerEl[0].text;
+                    }
+                }
+                if (!answer) return null;
+                return JSON.parse(answer);
+            } catch (e) {
+                console.error('Error parsing AJAX response:', e);
+                return null;
+            }
+        }
+
         // Global variables
         var sessionData = null;
         var pollInterval = null;
@@ -767,8 +787,8 @@
             ga.addParam('sysparm_name', 'getSession');
             ga.addParam('session_id', sessionId);
             ga.getXML(function(response) {
-                var answer = response.responseXML.documentElement.getAttribute('answer');
-                var result = JSON.parse(answer);
+                var result = parseAjaxResponse(response);
+                if (!result) { showToast('Error loading session', 'error'); return; }
                 
                 if (result.success) {
                     sessionData = result.data;
@@ -902,8 +922,8 @@
             ga.addParam('story_id', currentStory.sys_id);
             ga.addParam('vote_value', voteValue);
             ga.getXML(function(response) {
-                var answer = response.responseXML.documentElement.getAttribute('answer');
-                var result = JSON.parse(answer);
+                var result = parseAjaxResponse(response);
+                if (!result) { return; }
                 
                 if (result.success) {
                     showToast('Vote cast: ' + voteValue, 'success');
@@ -927,8 +947,8 @@
             ga.addParam('sysparm_name', 'getVotingStatus');
             ga.addParam('session_id', sessionId);
             ga.getXML(function(response) {
-                var answer = response.responseXML.documentElement.getAttribute('answer');
-                var result = JSON.parse(answer);
+                var result = parseAjaxResponse(response);
+                if (!result) { return; }
                 
                 if (result.success && result.data.hasCurrentStory) {
                     updateVotingIndicators(result.data.participants);
@@ -1023,8 +1043,8 @@
             ga.addParam('session_id', sessionId);
             ga.addParam('story_id', currentStory.sys_id);
             ga.getXML(function(response) {
-                var answer = response.responseXML.documentElement.getAttribute('answer');
-                var result = JSON.parse(answer);
+                var result = parseAjaxResponse(response);
+                if (!result) { showToast('Error starting voting', 'error'); return; }
                 
                 if (result.success) {
                     showToast('Voting started', 'success');
@@ -1047,8 +1067,8 @@
             ga.addParam('session_id', sessionId);
             ga.addParam('story_id', currentStory.sys_id);
             ga.getXML(function(response) {
-                var answer = response.responseXML.documentElement.getAttribute('answer');
-                var result = JSON.parse(answer);
+                var result = parseAjaxResponse(response);
+                if (!result) { showToast('Error revealing votes', 'error'); return; }
                 
                 if (result.success) {
                     showToast('Votes revealed', 'success');
@@ -1075,8 +1095,8 @@
             ga.addParam('session_id', sessionId);
             ga.addParam('story_id', currentStory.sys_id);
             ga.getXML(function(response) {
-                var answer = response.responseXML.documentElement.getAttribute('answer');
-                var result = JSON.parse(answer);
+                var result = parseAjaxResponse(response);
+                if (!result) { showToast('Error resetting votes', 'error'); return; }
                 
                 if (result.success) {
                     showToast('Votes reset', 'success');
@@ -1098,8 +1118,8 @@
             ga.addParam('story_id', currentStory.sys_id);
             ga.addParam('comments', comments);
             ga.getXML(function(response) {
-                var answer = response.responseXML.documentElement.getAttribute('answer');
-                var result = JSON.parse(answer);
+                var result = parseAjaxResponse(response);
+                if (!result) { showToast('Error skipping story', 'error'); return; }
                 
                 if (result.success) {
                     showToast('Story skipped', 'success');
@@ -1128,8 +1148,8 @@
             ga.addParam('story_points', points);
             ga.addParam('comments', comments);
             ga.getXML(function(response) {
-                var answer = response.responseXML.documentElement.getAttribute('answer');
-                var result = JSON.parse(answer);
+                var result = parseAjaxResponse(response);
+                if (!result) { showToast('Error completing story', 'error'); return; }
                 
                 if (result.success) {
                     showToast('Story completed with ' + points + ' points', 'success');
