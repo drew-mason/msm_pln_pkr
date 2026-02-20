@@ -62,6 +62,10 @@ PresenterManagementAjax.prototype = Object.extendsObject(global.AbstractAjaxProc
             if (!sessionId || !presenterId) {
                 return this._buildResponse(false, 'Session ID and presenter ID required', null);
             }
+
+            if (!/^[0-9a-f]{32}$/i.test(sessionId) || !/^[0-9a-f]{32}$/i.test(presenterId)) {
+                return this._buildResponse(false, 'Invalid ID format', null);
+            }
             
             var userId = gs.getUserID();
             
@@ -111,7 +115,7 @@ PresenterManagementAjax.prototype = Object.extendsObject(global.AbstractAjaxProc
                 presenterName = presenterUserGr.getValue('name');
             }
             
-            gs.info('[PresenterManagementAjax] Set presenter: ' + presenterName + ' for session: ' + sessionId);
+            gs.debug('[PresenterManagementAjax] Set presenter: ' + presenterName + ' for session: ' + sessionId);
             
             return this._buildResponse(true, 'Presenter set successfully', {
                 presenterId: presenterId,
@@ -131,6 +135,10 @@ PresenterManagementAjax.prototype = Object.extendsObject(global.AbstractAjaxProc
             
             if (!sessionId || !dealerGroupId) {
                 return this._buildResponse(false, 'Session ID and dealer group ID required', null);
+            }
+
+            if (!/^[0-9a-f]{32}$/i.test(sessionId) || !/^[0-9a-f]{32}$/i.test(dealerGroupId)) {
+                return this._buildResponse(false, 'Invalid ID format', null);
             }
             
             var userId = gs.getUserID();
@@ -170,6 +178,14 @@ PresenterManagementAjax.prototype = Object.extendsObject(global.AbstractAjaxProc
             
             if (!storyId) {
                 return this._buildResponse(false, 'Story ID required', null);
+            }
+
+            if (!/^[0-9a-f]{32}$/i.test(storyId)) {
+                return this._buildResponse(false, 'Invalid story ID format', null);
+            }
+
+            if (presenterId && !/^[0-9a-f]{32}$/i.test(presenterId)) {
+                return this._buildResponse(false, 'Invalid presenter ID format', null);
             }
             
             var userId = gs.getUserID();

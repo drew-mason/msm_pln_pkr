@@ -3,7 +3,7 @@ PlanningPokerVotingAjax.prototype = Object.extendsObject(global.AbstractAjaxProc
     
     castVote: function() {
         try {
-            gs.info('[PlanningPokerVotingAjax] castVote called');
+            gs.debug('[PlanningPokerVotingAjax] castVote called');
             
             var sessionId = this.getParameter('session_id');
             var storyId = this.getParameter('story_id');
@@ -12,6 +12,14 @@ PlanningPokerVotingAjax.prototype = Object.extendsObject(global.AbstractAjaxProc
             if (!sessionId || !storyId || !voteValue) {
                 return this._buildResponse(false, 'Session ID, story ID, and vote value required', null);
             }
+
+            // Validate sys_id format
+            if (!/^[0-9a-f]{32}$/i.test(sessionId) || !/^[0-9a-f]{32}$/i.test(storyId)) {
+                return this._buildResponse(false, 'Invalid session or story ID format', null);
+            }
+
+            // Cap vote value length
+            voteValue = String(voteValue).substring(0, 20);
             
             var userId = gs.getUserID();
             
@@ -19,6 +27,21 @@ PlanningPokerVotingAjax.prototype = Object.extendsObject(global.AbstractAjaxProc
             var sessionGr = new GlideRecord('x_902080_planningw_planning_session');
             if (!sessionGr.get(sessionId)) {
                 return this._buildResponse(false, 'Session not found', null);
+            }
+            
+            // Validate vote value against scoring method
+            var scoringMethodId = sessionGr.getValue('scoring_method');
+            if (scoringMethodId) {
+                var validValues = [];
+                var svGr = new GlideRecord('x_902080_planningw_scoring_value');
+                svGr.addQuery('scoring_method', scoringMethodId);
+                svGr.query();
+                while (svGr.next()) {
+                    validValues.push(svGr.getValue('display_value'));
+                }
+                if (validValues.length > 0 && validValues.indexOf(voteValue) === -1) {
+                    return this._buildResponse(false, 'Invalid vote value. Allowed values: ' + validValues.join(', '), null);
+                }
             }
             
             // Check permissions
@@ -56,7 +79,7 @@ PlanningPokerVotingAjax.prototype = Object.extendsObject(global.AbstractAjaxProc
                 voteGr.setValue('vote_numeric_value', numericValue);
                 voteGr.setValue('vote_time', new GlideDateTime());
                 voteGr.update();
-                gs.info('[PlanningPokerVotingAjax] Updated existing vote for user: ' + userId);
+                gs.debug('[PlanningPokerVotingAjax] Updated existing vote for user: ' + userId);
             } else {
                 // Create new vote
                 voteGr.initialize();
@@ -67,7 +90,7 @@ PlanningPokerVotingAjax.prototype = Object.extendsObject(global.AbstractAjaxProc
                 voteGr.setValue('vote_numeric_value', numericValue);
                 voteGr.setValue('vote_time', new GlideDateTime());
                 voteGr.insert();
-                gs.info('[PlanningPokerVotingAjax] Created new vote for user: ' + userId);
+                gs.debug('[PlanningPokerVotingAjax] Created new vote for user: ' + userId);
             }
             
             return this._buildResponse(true, 'Vote cast successfully', {
@@ -83,13 +106,17 @@ PlanningPokerVotingAjax.prototype = Object.extendsObject(global.AbstractAjaxProc
     
     revealVotes: function() {
         try {
-            gs.info('[PlanningPokerVotingAjax] revealVotes called');
+            gs.debug('[PlanningPokerVotingAjax] revealVotes called');
             
             var sessionId = this.getParameter('session_id');
             var storyId = this.getParameter('story_id');
             
             if (!sessionId || !storyId) {
                 return this._buildResponse(false, 'Session ID and story ID required', null);
+            }
+
+            if (!/^[0-9a-f]{32}$/i.test(sessionId) || !/^[0-9a-f]{32}$/i.test(storyId)) {
+                return this._buildResponse(false, 'Invalid session or story ID format', null);
             }
             
             var userId = gs.getUserID();
@@ -151,13 +178,17 @@ PlanningPokerVotingAjax.prototype = Object.extendsObject(global.AbstractAjaxProc
     
     resetVotes: function() {
         try {
-            gs.info('[PlanningPokerVotingAjax] resetVotes called');
+            gs.debug('[PlanningPokerVotingAjax] resetVotes called');
             
             var sessionId = this.getParameter('session_id');
             var storyId = this.getParameter('story_id');
             
             if (!sessionId || !storyId) {
                 return this._buildResponse(false, 'Session ID and story ID required', null);
+            }
+
+            if (!/^[0-9a-f]{32}$/i.test(sessionId) || !/^[0-9a-f]{32}$/i.test(storyId)) {
+                return this._buildResponse(false, 'Invalid session or story ID format', null);
             }
             
             var userId = gs.getUserID();
@@ -197,7 +228,7 @@ PlanningPokerVotingAjax.prototype = Object.extendsObject(global.AbstractAjaxProc
                 storyGr.update();
             }
             
-            gs.info('[PlanningPokerVotingAjax] Reset ' + deletedCount + ' votes for story: ' + storyId);
+            gs.debug('[PlanningPokerVotingAjax] Reset ' + deletedCount + ' votes for story: ' + storyId);
             
             return this._buildResponse(true, 'Votes reset successfully', {
                 deletedVotes: deletedCount,

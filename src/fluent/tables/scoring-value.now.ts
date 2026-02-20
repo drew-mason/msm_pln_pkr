@@ -9,7 +9,8 @@ export const x_902080_planningw_scoring_value = Table({
         scoring_method: ReferenceColumn({
             label: 'Scoring Method',
             referenceTable: 'x_902080_planningw_scoring_method',
-            mandatory: true
+            mandatory: true,
+            cascadeRule: 'cascade'
         }),
         display_value: StringColumn({ 
             label: 'Display Value', 

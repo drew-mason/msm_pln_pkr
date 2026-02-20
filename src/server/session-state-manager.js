@@ -2,7 +2,7 @@ import { gs, GlideRecord } from '@servicenow/glide'
 
 export function sessionStateManager(current, previous) {
     try {
-        gs.info('[SessionStateManager] Processing session state change for: ' + current.getValue('sys_id'));
+        gs.debug('[SessionStateManager] Processing session state change for: ' + current.getValue('sys_id'));
         
         var sessionId = current.getValue('sys_id');
         var newStatus = current.getValue('status');
@@ -13,7 +13,7 @@ export function sessionStateManager(current, previous) {
             return;
         }
         
-        gs.info('[SessionStateManager] Status changed from "' + previousStatus + '" to "' + newStatus + '"');
+        gs.debug('[SessionStateManager] Status changed from "' + previousStatus + '" to "' + newStatus + '"');
         
         // When session status changes to completed: mark remaining stories as skipped
         if (newStatus === 'completed') {
@@ -31,13 +31,13 @@ export function sessionStateManager(current, previous) {
             }
             
             if (skippedCount > 0) {
-                gs.info('[SessionStateManager] Auto-skipped ' + skippedCount + ' remaining stories');
+                gs.debug('[SessionStateManager] Auto-skipped ' + skippedCount + ' remaining stories');
             }
         }
         
         // When session status changes to cancelled: log cancellation
         if (newStatus === 'cancelled') {
-            gs.info('[SessionStateManager] Session cancelled: ' + current.getValue('name') + ' (ID: ' + sessionId + ')');
+            gs.debug('[SessionStateManager] Session cancelled: ' + current.getValue('name') + ' (ID: ' + sessionId + ')');
         }
         
     } catch (e) {

@@ -9,7 +9,8 @@ export const x_902080_planningw_session_voter_groups = Table({
         session: ReferenceColumn({
             label: 'Session',
             referenceTable: 'x_902080_planningw_planning_session',
-            mandatory: true
+            mandatory: true,
+            cascadeRule: 'cascade'
         }),
         voter_group: ReferenceColumn({
             label: 'Voter Group',

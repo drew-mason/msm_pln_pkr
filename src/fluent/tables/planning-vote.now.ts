@@ -9,12 +9,14 @@ export const x_902080_planningw_planning_vote = Table({
         session: ReferenceColumn({
             label: 'Session',
             referenceTable: 'x_902080_planningw_planning_session',
-            mandatory: true
+            mandatory: true,
+            cascadeRule: 'cascade'
         }),
         story: ReferenceColumn({
             label: 'Story',
             referenceTable: 'x_902080_planningw_session_stories',
-            mandatory: true
+            mandatory: true,
+            cascadeRule: 'cascade'
         }),
         voter: ReferenceColumn({
             label: 'Voter',

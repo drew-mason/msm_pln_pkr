@@ -52,8 +52,8 @@ SessionManagementAjax.prototype = Object.extendsObject(global.AbstractAjaxProces
     
     createSession: function() {
         try {
-            var sessionName = this.getParameter('session_name');
-            var description = this.getParameter('description') || '';
+            var sessionName = this._sanitizeString(this.getParameter('session_name'), 200);
+            var description = this._sanitizeString(this.getParameter('description') || '', 4000);
             var scoringMethodId = this.getParameter('scoring_method');
             var dealerGroupId = this.getParameter('dealer_group');
             var allowSpectators = this.getParameter('allow_spectators') == 'true';
@@ -61,6 +61,14 @@ SessionManagementAjax.prototype = Object.extendsObject(global.AbstractAjaxProces
             
             if (!sessionName || !scoringMethodId) {
                 return this._buildResponse(false, 'Session name and scoring method required', null);
+            }
+
+            if (!this._isValidSysId(scoringMethodId)) {
+                return this._buildResponse(false, 'Invalid scoring method ID', null);
+            }
+
+            if (dealerGroupId && !this._isValidSysId(dealerGroupId)) {
+                return this._buildResponse(false, 'Invalid dealer group ID', null);
             }
             
             var userId = gs.getUserID();
@@ -111,7 +119,7 @@ SessionManagementAjax.prototype = Object.extendsObject(global.AbstractAjaxProces
                     this._addDealerGroupMembers(sessionId, dealerGroupId, userId);
                 }
                 
-                gs.info('[SessionManagementAjax] Created session: ' + sessionId);
+                gs.debug('[SessionManagementAjax] Created session: ' + sessionId);
                 
                 return this._buildResponse(true, 'Session created successfully', {
                     sessionId: sessionId,
@@ -131,6 +139,12 @@ SessionManagementAjax.prototype = Object.extendsObject(global.AbstractAjaxProces
         try {
             var userId = gs.getUserID();
             var status = this.getParameter('status') || 'all';
+            
+            // Validate status parameter
+            var validStatuses = ['all', 'ready', 'live', 'completed', 'cancelled'];
+            if (validStatuses.indexOf(status) === -1) {
+                status = 'all';
+            }
             
             var sessions = [];
             var sessionGr = new GlideRecord('x_902080_planningw_planning_session');
@@ -155,6 +169,7 @@ SessionManagementAjax.prototype = Object.extendsObject(global.AbstractAjaxProces
             }
             
             sessionGr.orderByDesc('sys_created_on');
+            sessionGr.setLimit(100); // Cap results to prevent unbounded queries
             sessionGr.query();
             
             // Collect session IDs and base data first
@@ -266,6 +281,7 @@ SessionManagementAjax.prototype = Object.extendsObject(global.AbstractAjaxProces
             var storyGr = new GlideRecord('x_902080_planningw_session_stories');
             storyGr.addQuery('session', sessionId);
             storyGr.orderBy('order');
+            storyGr.setLimit(500); // Cap stories per session
             storyGr.query();
             
             while (storyGr.next()) {
@@ -309,6 +325,10 @@ SessionManagementAjax.prototype = Object.extendsObject(global.AbstractAjaxProces
             
             if (!sessionId || !storyIds) {
                 return this._buildResponse(false, 'Session ID and story IDs required', null);
+            }
+
+            if (!this._isValidSysId(sessionId)) {
+                return this._buildResponse(false, 'Invalid session ID', null);
             }
             
             var userId = gs.getUserID();
@@ -429,11 +449,14 @@ SessionManagementAjax.prototype = Object.extendsObject(global.AbstractAjaxProces
     searchStories: function() {
         try {
             var searchTerm = this.getParameter('search_term');
-            var limit = parseInt(this.getParameter('limit') || '20', 10);
+            var limit = Math.min(parseInt(this.getParameter('limit') || '20', 10), 100);
             
             if (!searchTerm || searchTerm.length < 2) {
                 return this._buildResponse(true, 'Stories retrieved', []);
             }
+            
+            // Cap search term length to prevent expensive queries
+            searchTerm = searchTerm.substring(0, 200);
             
             var stories = [];
             var storyGr = new GlideRecord('rm_story');
@@ -471,6 +494,10 @@ SessionManagementAjax.prototype = Object.extendsObject(global.AbstractAjaxProces
             var sessionId = this.getParameter('session_id');
             if (!sessionId) {
                 return this._buildResponse(false, 'Session ID required', null);
+            }
+            
+            if (!this._isValidSysId(sessionId)) {
+                return this._buildResponse(false, 'Invalid session ID', null);
             }
             
             var userId = gs.getUserID();
@@ -519,7 +546,7 @@ SessionManagementAjax.prototype = Object.extendsObject(global.AbstractAjaxProces
             
             sessionGr.update();
             
-            gs.info('[SessionManagementAjax] Updated session: ' + sessionId);
+            gs.debug('[SessionManagementAjax] Updated session: ' + sessionId);
             return this._buildResponse(true, 'Session updated successfully', null);
             
         } catch (e) {
@@ -549,7 +576,15 @@ SessionManagementAjax.prototype = Object.extendsObject(global.AbstractAjaxProces
                 return this._buildResponse(false, 'Access denied', null);
             }
             
-            var orderArray = JSON.parse(storyOrder);
+            var orderArray;
+            try {
+                orderArray = JSON.parse(storyOrder);
+            } catch (parseErr) {
+                return this._buildResponse(false, 'Invalid story order format', null);
+            }
+            if (!Array.isArray(orderArray)) {
+                return this._buildResponse(false, 'Story order must be an array', null);
+            }
             for (var i = 0; i < orderArray.length; i++) {
                 var storyGr = new GlideRecord('x_902080_planningw_session_stories');
                 if (storyGr.get(orderArray[i].sys_id)) {
@@ -640,11 +675,15 @@ SessionManagementAjax.prototype = Object.extendsObject(global.AbstractAjaxProces
     addManualStory: function() {
         try {
             var sessionId = this.getParameter('session_id');
-            var title = this.getParameter('title');
-            var description = this.getParameter('description') || '';
+            var title = this._sanitizeString(this.getParameter('title'), 200);
+            var description = this._sanitizeString(this.getParameter('description') || '', 4000);
             
             if (!sessionId || !title) {
                 return this._buildResponse(false, 'Session ID and title required', null);
+            }
+
+            if (!this._isValidSysId(sessionId)) {
+                return this._buildResponse(false, 'Invalid session ID', null);
             }
             
             var userId = gs.getUserID();
@@ -725,7 +764,13 @@ SessionManagementAjax.prototype = Object.extendsObject(global.AbstractAjaxProces
     },
     
     // Helper methods
-    _generateSessionCode: function() {
+    _generateSessionCode: function(attempt) {
+        attempt = attempt || 0;
+        if (attempt >= 10) {
+            gs.error('[SessionManagementAjax] Could not generate unique session code after 10 attempts');
+            return 'ERR-' + Math.floor(Math.random() * 10000);
+        }
+
         var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
         var code = '';
         for (var i = 0; i < 3; i++) {
@@ -739,10 +784,11 @@ SessionManagementAjax.prototype = Object.extendsObject(global.AbstractAjaxProces
         // Ensure uniqueness
         var sessionGr = new GlideRecord('x_902080_planningw_planning_session');
         sessionGr.addQuery('session_code', code);
+        sessionGr.setLimit(1);
         sessionGr.query();
         
         if (sessionGr.hasNext()) {
-            return this._generateSessionCode(); // Recursive retry
+            return this._generateSessionCode(attempt + 1);
         }
         
         return code;
@@ -846,6 +892,15 @@ SessionManagementAjax.prototype = Object.extendsObject(global.AbstractAjaxProces
         });
         this.setAnswer(response);
         return response;
+    },
+
+    _isValidSysId: function(val) {
+        return val && /^[0-9a-f]{32}$/i.test(val);
+    },
+
+    _sanitizeString: function(val, maxLen) {
+        if (!val) return '';
+        return String(val).substring(0, maxLen || 500);
     },
 
     _getStoryCounts: function(sessionId) {

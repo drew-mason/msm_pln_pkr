@@ -3,7 +3,7 @@ DemoSessionAjax.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
     
     createDemoSession: function() {
         try {
-            gs.info('[DemoSessionAjax] Creating demo session');
+            gs.debug('[DemoSessionAjax] Creating demo session');
             
             var userId = gs.getUserID();
             
@@ -62,7 +62,7 @@ DemoSessionAjax.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
                 this._createDemoVotes(sessionId, demoStories[0], demoParticipants);
             }
             
-            gs.info('[DemoSessionAjax] Demo session created: ' + sessionId);
+            gs.debug('[DemoSessionAjax] Demo session created: ' + sessionId);
             
             return this._buildResponse(true, 'Demo session created successfully', {
                 sessionId: sessionId,
@@ -80,7 +80,7 @@ DemoSessionAjax.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
     
     cleanupDemoSessions: function() {
         try {
-            gs.info('[DemoSessionAjax] Cleaning up demo sessions');
+            gs.debug('[DemoSessionAjax] Cleaning up demo sessions');
             
             var userId = gs.getUserID();
             
@@ -123,7 +123,7 @@ DemoSessionAjax.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
                 deletedCount++;
             }
             
-            gs.info('[DemoSessionAjax] Cleaned up ' + deletedCount + ' demo sessions');
+            gs.debug('[DemoSessionAjax] Cleaned up ' + deletedCount + ' demo sessions');
             
             return this._buildResponse(true, 'Demo sessions cleaned up', {
                 deletedCount: deletedCount
@@ -337,12 +337,29 @@ DemoSessionAjax.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
         }
     },
     
-    _generateSessionCode: function() {
+    _generateSessionCode: function(attempt) {
+        attempt = attempt || 0;
+        if (attempt >= 10) {
+            gs.error('[DemoSessionAjax] Could not generate unique demo session code after 10 attempts');
+            return 'DEMO-ERR' + Math.floor(Math.random() * 10);
+        }
+
         var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
         var code = 'DEMO-';
         for (var i = 0; i < 4; i++) {
             code += chars.charAt(Math.floor(Math.random() * chars.length));
         }
+
+        // Ensure uniqueness
+        var sessionGr = new GlideRecord('x_902080_planningw_planning_session');
+        sessionGr.addQuery('session_code', code);
+        sessionGr.setLimit(1);
+        sessionGr.query();
+
+        if (sessionGr.hasNext()) {
+            return this._generateSessionCode(attempt + 1);
+        }
+
         return code;
     },
     
