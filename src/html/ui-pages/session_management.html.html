@@ -1071,7 +1071,7 @@
 </head>
 <body>
     <!-- Star field background -->
-    <canvas id="starfield"></canvas>
+    <canvas id="starfield" aria-hidden="true"></canvas>
 
     <!-- Hyperspace overlay -->
     <div id="hyperspace-overlay"></div>
@@ -1157,29 +1157,29 @@
     </div>
 
     <!-- Create Session Modal -->
-    <div class="modal" id="createSessionModal">
+    <div class="modal" id="createSessionModal" role="dialog" aria-modal="true" aria-labelledby="createSessionModalTitle">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 class="modal-title">⟐ Initialize New Mission</h3>
-                <button class="btn btn-secondary" data-dismiss="modal">×</button>
+                <h3 class="modal-title" id="createSessionModalTitle">⟐ Initialize New Mission</h3>
+                <button class="btn btn-secondary" data-dismiss="modal" aria-label="Close">×</button>
             </div>
             <div class="modal-body">
                 <div class="form-group">
-                    <label class="form-label">Mission Designation *</label>
-                    <input type="text" class="form-control" id="sessionName" placeholder="Enter mission designation" required />
+                    <label class="form-label" for="sessionName">Mission Designation *</label>
+                    <input type="text" class="form-control" id="sessionName" placeholder="Enter mission designation" maxlength="200" required />
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Mission Briefing</label>
+                    <label class="form-label" for="sessionDescription">Mission Briefing</label>
                     <textarea class="form-control" id="sessionDescription" placeholder="Optional mission briefing"></textarea>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Scoring Protocol *</label>
+                    <label class="form-label" for="scoringMethod">Scoring Protocol *</label>
                     <select class="form-control" id="scoringMethod" required>
                         <option value="">Select scoring protocol...</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Command Crew</label>
+                    <label class="form-label" for="dealerGroup">Command Crew</label>
                     <select class="form-control" id="dealerGroup">
                         <option value="">Select command crew (optional)...</option>
                     </select>
@@ -1202,41 +1202,41 @@
     </div>
 
     <!-- Toast Notifications -->
-    <div class="toast" id="toast">
+    <div class="toast" id="toast" role="alert" aria-live="assertive">
         <span id="toastMessage"></span>
     </div>
 
     <!-- Edit Session Modal -->
-    <div class="modal" id="editSessionModal">
+    <div class="modal" id="editSessionModal" role="dialog" aria-modal="true" aria-labelledby="editSessionModalTitle">
         <div class="modal-content modal-lg">
             <div class="modal-header">
-                <h3 class="modal-title">◈ Mission Configuration</h3>
-                <button class="btn btn-secondary" data-dismiss="modal">×</button>
+                <h3 class="modal-title" id="editSessionModalTitle">◈ Mission Configuration</h3>
+                <button class="btn btn-secondary" data-dismiss="modal" aria-label="Close">×</button>
             </div>
             <div class="modal-body">
                 <div class="edit-tabs">
-                    <button class="edit-tab active" data-edit-tab="details">Mission Parameters</button>
-                    <button class="edit-tab" data-edit-tab="stories">Objectives <span class="story-count-badge" id="storyCountBadge">0</span></button>
+                    <button class="edit-tab active" data-edit-tab="details" role="tab" aria-selected="true">Mission Parameters</button>
+                    <button class="edit-tab" data-edit-tab="stories" role="tab" aria-selected="false">Objectives <span class="story-count-badge" id="storyCountBadge">0</span></button>
                 </div>
 
-                <div class="edit-tab-content active" id="editDetailsTab">
+                <div class="edit-tab-content active" id="editDetailsTab" role="tabpanel">
                     <input type="hidden" id="editSessionId" />
                     <div class="form-group">
-                        <label class="form-label">Mission Designation *</label>
-                        <input type="text" class="form-control" id="editSessionName" placeholder="Enter mission designation" required />
+                        <label class="form-label" for="editSessionName">Mission Designation *</label>
+                        <input type="text" class="form-control" id="editSessionName" placeholder="Enter mission designation" maxlength="200" required />
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Mission Briefing</label>
+                        <label class="form-label" for="editSessionDescription">Mission Briefing</label>
                         <textarea class="form-control" id="editSessionDescription" placeholder="Optional mission briefing"></textarea>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Scoring Protocol *</label>
+                        <label class="form-label" for="editScoringMethod">Scoring Protocol *</label>
                         <select class="form-control" id="editScoringMethod" required>
                             <option value="">Select scoring protocol...</option>
                         </select>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Command Crew</label>
+                        <label class="form-label" for="editDealerGroup">Command Crew</label>
                         <select class="form-control" id="editDealerGroup">
                             <option value="">Select command crew (optional)...</option>
                         </select>
@@ -1252,7 +1252,7 @@
                     </div>
                 </div>
 
-                <div class="edit-tab-content" id="editStoriesTab">
+                <div class="edit-tab-content" id="editStoriesTab" role="tabpanel">
                     <div class="story-search-container">
                         <input type="text" class="story-search-input" id="storySearchInput" placeholder="Scan database for objectives..." autocomplete="off" />
                         <div class="story-search-results" id="storySearchResults"></div>
@@ -1685,6 +1685,10 @@
         }
         
         function goLive(sessionId) {
+            if (!confirm('Launch this mission? Crew will be able to join and vote.')) {
+                return;
+            }
+            
             var ga = new GlideAjax('SessionManagementAjax');
             ga.addParam('sysparm_name', 'goLiveSession');
             ga.addParam('session_id', sessionId);
@@ -1723,23 +1727,43 @@
         }
         
         function cancelAllSessions() {
-            var planningSessions = sessions.planning;
+            var planningSessions = sessions.planning.filter(function(s) { return s.status === 'ready'; });
+            
+            if (planningSessions.length === 0) {
+                showToast('No planned missions to terminate', 'info');
+                return;
+            }
+            
+            if (!confirm('Confirm: Terminate all ' + planningSessions.length + ' planned missions? This cannot be undone.')) {
+                return;
+            }
+            
+            var completed = 0;
+            var failed = 0;
+            var total = planningSessions.length;
             
             planningSessions.forEach(function(session) {
-                if (session.status === 'ready') {
-                    var ga = new GlideAjax('SessionManagementAjax');
-                    ga.addParam('sysparm_name', 'cancelSession');
-                    ga.addParam('session_id', session.sys_id);
-                    ga.getXML(function(response) {
-                        // Individual response handling
-                    });
-                }
+                var ga = new GlideAjax('SessionManagementAjax');
+                ga.addParam('sysparm_name', 'cancelSession');
+                ga.addParam('session_id', session.sys_id);
+                ga.getXML(function(response) {
+                    var result = parseAjaxResponse(response);
+                    if (result && result.success) {
+                        completed++;
+                    } else {
+                        failed++;
+                    }
+                    
+                    if (completed + failed === total) {
+                        if (failed === 0) {
+                            showToast('All ' + completed + ' missions terminated', 'success');
+                        } else {
+                            showToast(completed + ' terminated, ' + failed + ' failed', 'error');
+                        }
+                        loadSessions();
+                    }
+                });
             });
-            
-            setTimeout(function() {
-                showToast('All planned missions have been terminated', 'success');
-                loadSessions();
-            }, 1000);
         }
         
         function openVoting(sessionId) {
@@ -1797,6 +1821,8 @@
             if (navigator.clipboard) {
                 navigator.clipboard.writeText(joinUrl).then(function() {
                     showToast('Transmission coordinates copied to clipboard', 'success');
+                }).catch(function() {
+                    showToast('Unable to copy — try manually', 'error');
                 });
             } else {
                 var textArea = document.createElement('textarea');

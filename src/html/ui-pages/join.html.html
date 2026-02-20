@@ -401,7 +401,7 @@
     </style>
 </head>
 <body>
-    <canvas id="starfield"></canvas>
+    <canvas id="starfield" aria-hidden="true"></canvas>
 
     <div class="join-container">
         <div class="logo">🃏</div>
@@ -413,7 +413,7 @@
 
         <form id="joinForm">
             <div class="form-group">
-                <label class="form-label">Docking Code</label>
+                <label class="form-label" for="sessionCode">Docking Code</label>
                 <input 
                     type="text" 
                     class="form-control" 
@@ -559,6 +559,7 @@
             }
 
             if (sessionCode.length < 7) {
+                hideSessionInfo();
                 showError('Invalid docking code format — use ABC-1234');
                 return;
             }
@@ -622,12 +623,14 @@
 
             showLoading(true);
             hideMessages();
+            document.getElementById('joinSessionBtn').disabled = true;
 
             var ga = new GlideAjax('SessionParticipantAjax');
             ga.addParam('sysparm_name', 'joinSession');
             ga.addParam('session_code', foundSession.sessionCode);
             ga.getXML(function(response) {
                 showLoading(false);
+                document.getElementById('joinSessionBtn').disabled = false;
                 
                 var result = parseAjaxResponse(response);
                 if (!result) { showError('Comm link failure — docking error'); return; }

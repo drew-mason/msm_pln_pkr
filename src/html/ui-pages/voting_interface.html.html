@@ -871,7 +871,7 @@
     </style>
 </head>
 <body>
-    <canvas id="starfield"></canvas>
+    <canvas id="starfield" aria-hidden="true"></canvas>
 
     <div class="header">
         <div class="lcars-bar">
@@ -991,11 +991,11 @@
     </div>
 
     <!-- Modals -->
-    <div class="modal" id="addStoryModal">
+    <div class="modal" id="addStoryModal" role="dialog" aria-modal="true" aria-labelledby="addStoryModalTitle">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 class="modal-title">Add Objective</h3>
-                <button class="btn btn-secondary" data-dismiss="modal">×</button>
+                <h3 class="modal-title" id="addStoryModalTitle">Add Objective</h3>
+                <button class="btn btn-secondary" data-dismiss="modal" aria-label="Close">×</button>
             </div>
             <div class="modal-body">
                 <div class="form-group">
@@ -1018,11 +1018,11 @@
         </div>
     </div>
 
-    <div class="modal" id="skipStoryModal">
+    <div class="modal" id="skipStoryModal" role="dialog" aria-modal="true" aria-labelledby="skipStoryModalTitle">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 class="modal-title">Bypass Objective</h3>
-                <button class="btn btn-secondary" data-dismiss="modal">×</button>
+                <h3 class="modal-title" id="skipStoryModalTitle">Bypass Objective</h3>
+                <button class="btn btn-secondary" data-dismiss="modal" aria-label="Close">×</button>
             </div>
             <div class="modal-body">
                 <div class="form-group">
@@ -1037,11 +1037,11 @@
         </div>
     </div>
 
-    <div class="modal" id="completeStoryModal">
+    <div class="modal" id="completeStoryModal" role="dialog" aria-modal="true" aria-labelledby="completeStoryModalTitle">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 class="modal-title">Lock Estimate</h3>
-                <button class="btn btn-secondary" data-dismiss="modal">×</button>
+                <h3 class="modal-title" id="completeStoryModalTitle">Lock Estimate</h3>
+                <button class="btn btn-secondary" data-dismiss="modal" aria-label="Close">×</button>
             </div>
             <div class="modal-body">
                 <div class="form-group">
@@ -1063,7 +1063,7 @@
     </div>
 
     <!-- Toast Notifications -->
-    <div class="toast" id="toast">
+    <div class="toast" id="toast" role="alert" aria-live="assertive">
         <span id="toastMessage"></span>
     </div>
 
@@ -1143,6 +1143,7 @@
         // Global variables
         var sessionData = null;
         var pollInterval = null;
+        var pollFailCount = 0;
         var sessionId = getUrlParameter('session_id');
         var storySearchDebounce = null;
         var selectedStoryIds = [];
@@ -1179,6 +1180,17 @@
                 showModal('skipStoryModal');
             });
             document.getElementById('completeStoryBtn').addEventListener('click', function() {
+                // Populate scoring values dropdown
+                var select = document.getElementById('finalStoryPoints');
+                select.innerHTML = '<option value="">Select points...</option>';
+                if (sessionData && sessionData.scoringValues) {
+                    sessionData.scoringValues.forEach(function(sv) {
+                        var opt = document.createElement('option');
+                        opt.value = sv.displayValue;
+                        opt.textContent = sv.displayValue;
+                        select.appendChild(opt);
+                    });
+                }
                 showModal('completeStoryModal');
             });
             
@@ -1383,7 +1395,7 @@
             ga.addParam('vote_value', voteValue);
             ga.getXML(function(response) {
                 var result = parseAjaxResponse(response);
-                if (!result) { return; }
+                if (!result) { showToast('Comm failure — vote not registered', 'error'); return; }
                 
                 if (result.success) {
                     showToast('Vote registered: ' + voteValue, 'success');
@@ -1408,8 +1420,15 @@
             ga.addParam('session_id', sessionId);
             ga.getXML(function(response) {
                 var result = parseAjaxResponse(response);
-                if (!result) { return; }
+                if (!result) {
+                    pollFailCount++;
+                    if (pollFailCount >= 3) {
+                        showToast('Connection lost \u2014 retrying...', 'error');
+                    }
+                    return;
+                }
                 
+                pollFailCount = 0;
                 if (result.success && result.data.hasCurrentStory) {
                     updateVotingIndicators(result.data.participants);
                 }
@@ -1498,11 +1517,16 @@
                 return;
             }
             
+            var btn = document.getElementById('startVotingBtn');
+            btn.disabled = true;
+            btn.textContent = 'Engaging...';
+            
             var ga = new GlideAjax('PlanningPokerStoryAjax');
             ga.addParam('sysparm_name', 'startVoting');
             ga.addParam('session_id', sessionId);
             ga.addParam('story_id', currentStory.sys_id);
             ga.getXML(function(response) {
+                btn.disabled = false;
                 var result = parseAjaxResponse(response);
                 if (!result) { showToast('Comm failure — unable to engage', 'error'); return; }
                 
@@ -1522,11 +1546,16 @@
                 return;
             }
             
+            var btn = document.getElementById('revealVotesBtn');
+            btn.disabled = true;
+            btn.textContent = 'Decloaking...';
+            
             var ga = new GlideAjax('PlanningPokerVotingAjax');
             ga.addParam('sysparm_name', 'revealVotes');
             ga.addParam('session_id', sessionId);
             ga.addParam('story_id', currentStory.sys_id);
             ga.getXML(function(response) {
+                btn.disabled = false;
                 var result = parseAjaxResponse(response);
                 if (!result) { showToast('Comm failure — unable to decloak', 'error'); return; }
                 
@@ -1629,22 +1658,25 @@
             var summary = voteData.summary;
             var votes = voteData.votes;
             
-            // Render summary statistics
+            // Render summary statistics (escape all server-sourced values to prevent XSS)
             var summaryHtml = '';
             if (summary.validVotes > 0) {
-                summaryHtml += '<div class="stat-card"><div class="stat-value">' + summary.min.display + '</div><div class="stat-label">Min</div></div>';
-                summaryHtml += '<div class="stat-card"><div class="stat-value">' + summary.max.display + '</div><div class="stat-label">Max</div></div>';
-                summaryHtml += '<div class="stat-card"><div class="stat-value">' + summary.avg + '</div><div class="stat-label">Average</div></div>';
-                summaryHtml += '<div class="stat-card"><div class="stat-value">' + summary.median.display + '</div><div class="stat-label">Median</div></div>';
+                summaryHtml += '<div class="stat-card"><div class="stat-value">' + escapeHtml(String(summary.min.display)) + '</div><div class="stat-label">Min</div></div>';
+                summaryHtml += '<div class="stat-card"><div class="stat-value">' + escapeHtml(String(summary.max.display)) + '</div><div class="stat-label">Max</div></div>';
+                summaryHtml += '<div class="stat-card"><div class="stat-value">' + escapeHtml(String(summary.avg)) + '</div><div class="stat-label">Average</div></div>';
+                summaryHtml += '<div class="stat-card"><div class="stat-value">' + escapeHtml(String(summary.median.display)) + '</div><div class="stat-label">Median</div></div>';
             }
             document.getElementById('voteSummary').innerHTML = summaryHtml;
             
-            // Render vote distribution
-            var distributionHtml = '';
+            // Render vote distribution using DOM API to prevent XSS
+            var distributionContainer = document.getElementById('voteDistribution');
+            distributionContainer.innerHTML = '';
             votes.forEach(function(vote) {
-                distributionHtml += '<span class="vote-chip">' + vote.voterName + ': ' + vote.voteValue + '</span>';
+                var chip = document.createElement('span');
+                chip.className = 'vote-chip';
+                chip.textContent = vote.voterName + ': ' + vote.voteValue;
+                distributionContainer.appendChild(chip);
             });
-            document.getElementById('voteDistribution').innerHTML = distributionHtml;
         }
         
         // Update dealer controls based on story status
@@ -1892,6 +1924,8 @@
             if (navigator.clipboard) {
                 navigator.clipboard.writeText(joinUrl).then(function() {
                     showToast('Docking coordinates transmitted', 'success');
+                }).catch(function() {
+                    showToast('Unable to copy — try manually: ' + joinUrl, 'error');
                 });
             } else {
                 // Fallback for older browsers
@@ -1911,7 +1945,25 @@
         }
         
         function switchRole() {
-            showToast('Role switching not yet operational', 'info');
+            if (!sessionData || !sessionData.userRole) return;
+            var currentRole = sessionData.userRole.effectiveRole;
+            var newRole = currentRole === 'dealer' ? 'voter' : 'dealer';
+            
+            var ga = new GlideAjax('SessionParticipantAjax');
+            ga.addParam('sysparm_name', 'switchRole');
+            ga.addParam('session_id', sessionId);
+            ga.addParam('new_role', newRole);
+            ga.getXML(function(response) {
+                var result = parseAjaxResponse(response);
+                if (!result) { showToast('Comm failure — role switch error', 'error'); return; }
+                
+                if (result.success) {
+                    showToast('Role switched to ' + newRole, 'success');
+                    loadSession();
+                } else {
+                    showToast(result.message, 'error');
+                }
+            });
         }
         
         function getUrlParameter(name) {
