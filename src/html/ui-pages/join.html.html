@@ -1,0 +1,458 @@
+<?xml version="1.0" encoding="utf-8"?>
+<j:jelly trim="false" xmlns:j="jelly:core" xmlns:g="glide">
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Planning Poker - Join Session</title>
+    <style>
+        :root {
+            --primary-color: #0073e6;
+            --secondary-color: #f8f9fa;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --dark-color: #343a40;
+            --light-color: #ffffff;
+            --border-color: #dee2e6;
+            --shadow: 0 2px 4px rgba(0,0,0,0.1);
+            --radius: 8px;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, var(--primary-color) 0%, #0056b3 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--dark-color);
+        }
+        
+        .join-container {
+            background: var(--light-color);
+            border-radius: var(--radius);
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+        }
+        
+        .logo {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        
+        .title {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 2rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius);
+            font-size: 1.2rem;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-family: monospace;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(0,115,230,0.25);
+        }
+        
+        .btn {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: bold;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-block;
+            width: 100%;
+        }
+        
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .btn-success {
+            background: var(--success-color);
+            color: white;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .session-info {
+            background: var(--secondary-color);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            text-align: left;
+            display: none;
+        }
+        
+        .session-name {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+        
+        .session-details {
+            color: #666;
+            margin-bottom: 1rem;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        
+        .status-ready { background: #e9ecef; color: #495057; }
+        .status-live { background: #d4edda; color: #155724; }
+        .status-completed { background: #cce5ff; color: #004085; }
+        
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 1rem;
+            border-radius: var(--radius);
+            margin-bottom: 1rem;
+            display: none;
+        }
+        
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 1rem;
+            border-radius: var(--radius);
+            margin-bottom: 1rem;
+            display: none;
+        }
+        
+        .loading {
+            display: none;
+            margin: 1rem 0;
+        }
+        
+        .spinner {
+            border: 3px solid var(--border-color);
+            border-top: 3px solid var(--primary-color);
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .help-text {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 1rem;
+        }
+        
+        .back-link {
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .back-link a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+        
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+        
+        @media (max-width: 768px) {
+            .join-container {
+                margin: 1rem;
+                padding: 1.5rem;
+            }
+            
+            .title {
+                font-size: 1.5rem;
+            }
+            
+            .logo {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="join-container">
+        <div class="logo">🃏</div>
+        <h1 class="title">Planning Poker</h1>
+        <p class="subtitle">Join a session to start estimating</p>
+
+        <div class="error-message" id="errorMessage"></div>
+        <div class="success-message" id="successMessage"></div>
+
+        <form id="joinForm">
+            <div class="form-group">
+                <label class="form-label">Session Code</label>
+                <input 
+                    type="text" 
+                    class="form-control" 
+                    id="sessionCode" 
+                    placeholder="ABC-1234"
+                    maxlength="9"
+                    pattern="[A-Z0-9]{3}-[A-Z0-9]{4}"
+                    required 
+                />
+                <div class="help-text">
+                    Enter the session code provided by your facilitator
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary" id="findSessionBtn">
+                Find Session
+            </button>
+        </form>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Finding session...</p>
+        </div>
+
+        <div class="session-info" id="sessionInfo">
+            <div class="session-name" id="sessionName"></div>
+            <div class="session-details">
+                <div>Facilitator: <span id="dealerName"></span></div>
+                <div>Status: <span class="status-badge" id="sessionStatus"></span></div>
+                <div id="sessionDescription"></div>
+            </div>
+            <button class="btn btn-success" id="joinSessionBtn">
+                Join Session
+            </button>
+        </div>
+
+        <div class="back-link">
+            <a href="x_902080_planningw_session_management.do">← Back to Session Management</a>
+        </div>
+    </div>
+
+    <script>
+        var foundSession = null;
+        var urlSessionCode = getUrlParameter('session_code');
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeEventListeners();
+            
+            // Auto-populate from URL parameter
+            if (urlSessionCode) {
+                document.getElementById('sessionCode').value = urlSessionCode;
+                findSession();
+            }
+        });
+
+        function initializeEventListeners() {
+            document.getElementById('joinForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                findSession();
+            });
+
+            document.getElementById('joinSessionBtn').addEventListener('click', joinSession);
+
+            // Format session code as user types
+            document.getElementById('sessionCode').addEventListener('input', function(e) {
+                var value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+                
+                if (value.length > 3 && value.indexOf('-') === -1) {
+                    value = value.substring(0, 3) + '-' + value.substring(3, 7);
+                }
+                
+                e.target.value = value;
+            });
+        }
+
+        function findSession() {
+            var sessionCode = document.getElementById('sessionCode').value.trim();
+            
+            if (!sessionCode) {
+                showError('Please enter a session code');
+                return;
+            }
+
+            if (sessionCode.length < 7) {
+                showError('Session code must be in format ABC-1234');
+                return;
+            }
+
+            showLoading(true);
+            hideMessages();
+
+            var ga = new GlideAjax('SessionParticipantAjax');
+            ga.addParam('sysparm_name', 'getSessionByCode');
+            ga.addParam('session_code', sessionCode);
+            ga.getXML(function(response) {
+                showLoading(false);
+                
+                var answer = response.responseXML.documentElement.getAttribute('answer');
+                var result = JSON.parse(answer);
+                
+                if (result.success) {
+                    foundSession = result.data;
+                    displaySessionInfo(foundSession);
+                } else {
+                    showError(result.message);
+                    hideSessionInfo();
+                }
+            });
+        }
+
+        function displaySessionInfo(session) {
+            document.getElementById('sessionName').textContent = session.name;
+            document.getElementById('dealerName').textContent = session.dealerName;
+            document.getElementById('sessionStatus').textContent = session.status;
+            document.getElementById('sessionStatus').className = 'status-badge status-' + session.status;
+            
+            var descriptionEl = document.getElementById('sessionDescription');
+            if (session.description) {
+                descriptionEl.innerHTML = '<div style="margin-top: 0.5rem;">' + escapeHtml(session.description) + '</div>';
+            } else {
+                descriptionEl.innerHTML = '';
+            }
+
+            // Update join button based on session status
+            var joinBtn = document.getElementById('joinSessionBtn');
+            if (session.status === 'completed') {
+                joinBtn.textContent = 'Session Completed';
+                joinBtn.disabled = true;
+            } else if (session.status === 'cancelled') {
+                joinBtn.textContent = 'Session Cancelled';
+                joinBtn.disabled = true;
+            } else {
+                joinBtn.textContent = 'Join Session';
+                joinBtn.disabled = false;
+            }
+
+            document.getElementById('sessionInfo').style.display = 'block';
+        }
+
+        function joinSession() {
+            if (!foundSession) {
+                showError('No session selected');
+                return;
+            }
+
+            showLoading(true);
+            hideMessages();
+
+            var ga = new GlideAjax('SessionParticipantAjax');
+            ga.addParam('sysparm_name', 'joinSession');
+            ga.addParam('session_code', foundSession.sessionCode);
+            ga.getXML(function(response) {
+                showLoading(false);
+                
+                var answer = response.responseXML.documentElement.getAttribute('answer');
+                var result = JSON.parse(answer);
+                
+                if (result.success) {
+                    showSuccess('Successfully joined session as ' + result.data.role);
+                    
+                    // Redirect to voting interface after short delay
+                    setTimeout(function() {
+                        window.location.href = 'x_902080_planningw_voting_interface.do?session_id=' + result.data.sessionId;
+                    }, 1500);
+                } else {
+                    showError(result.message);
+                }
+            });
+        }
+
+        function showLoading(show) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+            document.getElementById('findSessionBtn').disabled = show;
+        }
+
+        function hideMessages() {
+            document.getElementById('errorMessage').style.display = 'none';
+            document.getElementById('successMessage').style.display = 'none';
+        }
+
+        function showError(message) {
+            var errorEl = document.getElementById('errorMessage');
+            errorEl.textContent = message;
+            errorEl.style.display = 'block';
+        }
+
+        function showSuccess(message) {
+            var successEl = document.getElementById('successMessage');
+            successEl.textContent = message;
+            successEl.style.display = 'block';
+        }
+
+        function hideSessionInfo() {
+            document.getElementById('sessionInfo').style.display = 'none';
+        }
+
+        function escapeHtml(text) {
+            var div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function getUrlParameter(name) {
+            name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+            var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+            var results = regex.exec(location.search);
+            return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+        }
+    </script>
+</body>
+</html>
+</j:jelly>

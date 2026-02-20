@@ -1,0 +1,573 @@
+<?xml version="1.0" encoding="utf-8"?>
+<j:jelly trim="false" xmlns:j="jelly:core" xmlns:g="glide">
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Planning Poker - Session Statistics</title>
+    <style>
+        :root {
+            --primary-color: #0073e6;
+            --secondary-color: #f8f9fa;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --dark-color: #343a40;
+            --light-color: #ffffff;
+            --border-color: #dee2e6;
+            --shadow: 0 2px 4px rgba(0,0,0,0.1);
+            --radius: 8px;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--secondary-color);
+            color: var(--dark-color);
+            line-height: 1.5;
+        }
+        
+        .header {
+            background: var(--light-color);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow);
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        
+        .main-content {
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .page-title {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+        
+        .spinner {
+            border: 3px solid var(--border-color);
+            border-top: 3px solid var(--primary-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 2rem;
+            border-radius: var(--radius);
+            text-align: center;
+            margin: 2rem 0;
+        }
+        
+        .session-info {
+            background: var(--light-color);
+            border-radius: var(--radius);
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        
+        .session-name {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+        
+        .session-details {
+            color: #666;
+            margin-bottom: 1rem;
+        }
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .metric-card {
+            background: var(--light-color);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: var(--shadow);
+        }
+        
+        .metric-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+        
+        .metric-label {
+            font-size: 0.9rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .section {
+            background: var(--light-color);
+            border-radius: var(--radius);
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+        }
+        
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            color: var(--primary-color);
+        }
+        
+        .vote-distribution {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .vote-chip {
+            background: var(--primary-color);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+        
+        .insights {
+            background: var(--secondary-color);
+            padding: 1rem;
+            border-radius: var(--radius);
+            margin-top: 1rem;
+        }
+        
+        .insight-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        
+        .insight-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .insight-icon {
+            margin-right: 0.5rem;
+            font-size: 1.2rem;
+        }
+        
+        .stories-grid {
+            display: grid;
+            gap: 1rem;
+        }
+        
+        .story-card {
+            background: var(--secondary-color);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .story-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+        
+        .story-number {
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        
+        .story-points {
+            background: var(--success-color);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+        
+        .story-meta {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        
+        .badge-low { background: #d4edda; color: #155724; }
+        .badge-medium { background: #fff3cd; color: #856404; }
+        .badge-high { background: #f8d7da; color: #721c24; }
+        .badge-yes { background: #d4edda; color: #155724; }
+        .badge-no { background: #f8d7da; color: #721c24; }
+        .badge-partial { background: #fff3cd; color: #856404; }
+        
+        .team-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .team-table th,
+        .team-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .team-table th {
+            background: var(--secondary-color);
+            font-weight: bold;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: var(--border-color);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: var(--success-color);
+            transition: width 0.3s ease;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 1rem;
+            }
+            
+            .metrics-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .story-header {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            
+            .story-meta {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">🃏 Planning Poker - Statistics</div>
+        <button onclick="window.close()" style="padding: 0.5rem 1rem; border: none; border-radius: 4px; cursor: pointer;">
+            ✕ Close
+        </button>
+    </div>
+
+    <div class="main-content">
+        <h1 class="page-title">Session Statistics</h1>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Loading session statistics...</p>
+        </div>
+
+        <div class="error-message" id="errorMessage" style="display: none;"></div>
+
+        <div id="statisticsContent" style="display: none;">
+            <!-- Session Info -->
+            <div class="session-info">
+                <div class="session-name" id="sessionName"></div>
+                <div class="session-details">
+                    <div>Facilitator: <span id="dealerName"></span></div>
+                    <div>Scoring Method: <span id="scoringMethod"></span></div>
+                    <div>Completed: <span id="completedOn"></span></div>
+                    <div>Duration: <span id="duration"></span></div>
+                </div>
+            </div>
+
+            <!-- Key Metrics -->
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-value" id="totalStories">0</div>
+                    <div class="metric-label">Total Stories</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="completedStories">0</div>
+                    <div class="metric-label">Completed Stories</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="totalPoints">0</div>
+                    <div class="metric-label">Total Points</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="totalVotes">0</div>
+                    <div class="metric-label">Total Votes</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="uniqueVoters">0</div>
+                    <div class="metric-label">Unique Voters</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="averageRounds">0</div>
+                    <div class="metric-label">Avg Rounds</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="consensusRate">0%</div>
+                    <div class="metric-label">Consensus Rate</div>
+                </div>
+            </div>
+
+            <!-- Voting Patterns -->
+            <div class="section">
+                <h2 class="section-title">Voting Patterns</h2>
+                <div class="vote-distribution" id="voteDistribution"></div>
+                <div class="insights" id="insights"></div>
+            </div>
+
+            <!-- Story Details -->
+            <div class="section">
+                <h2 class="section-title">Story Estimations</h2>
+                <div class="stories-grid" id="storiesGrid"></div>
+            </div>
+
+            <!-- Team Performance -->
+            <div class="section">
+                <h2 class="section-title">Team Performance</h2>
+                <table class="team-table">
+                    <thead>
+                        <tr>
+                            <th>Team Member</th>
+                            <th>Stories Voted</th>
+                            <th>Participation Rate</th>
+                        </tr>
+                    </thead>
+                    <tbody id="teamPerformance"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var sessionId = getUrlParameter('session_id');
+
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!sessionId) {
+                showError('Session ID not provided');
+                return;
+            }
+            
+            loadStatistics();
+        });
+
+        function loadStatistics() {
+            var ga = new GlideAjax('SessionStatisticsAjax');
+            ga.addParam('sysparm_name', 'getSessionStatistics');
+            ga.addParam('session_id', sessionId);
+            ga.getXML(function(response) {
+                hideLoading();
+                
+                var answer = response.responseXML.documentElement.getAttribute('answer');
+                var result = JSON.parse(answer);
+                
+                if (result.success) {
+                    renderStatistics(result.data);
+                } else {
+                    showError(result.message);
+                }
+            });
+        }
+
+        function renderStatistics(data) {
+            renderSessionInfo(data.sessionInfo);
+            renderMetrics(data.metrics);
+            renderVotingPatterns(data.votingPatterns);
+            renderStoryDetails(data.storyDetails);
+            renderTeamPerformance(data.teamPerformance);
+            
+            document.getElementById('statisticsContent').style.display = 'block';
+        }
+
+        function renderSessionInfo(sessionInfo) {
+            document.getElementById('sessionName').textContent = sessionInfo.name;
+            document.getElementById('dealerName').textContent = sessionInfo.dealerName;
+            document.getElementById('scoringMethod').textContent = sessionInfo.scoringMethod;
+            document.getElementById('completedOn').textContent = formatDate(sessionInfo.updatedOn);
+            document.getElementById('duration').textContent = sessionInfo.duration;
+        }
+
+        function renderMetrics(metrics) {
+            document.getElementById('totalStories').textContent = metrics.totalStories;
+            document.getElementById('completedStories').textContent = metrics.completedStories;
+            document.getElementById('totalPoints').textContent = metrics.totalPoints;
+            document.getElementById('totalVotes').textContent = metrics.totalVotes;
+            document.getElementById('uniqueVoters').textContent = metrics.uniqueVoters;
+            document.getElementById('averageRounds').textContent = metrics.averageRounds;
+            document.getElementById('consensusRate').textContent = metrics.consensusRate + '%';
+        }
+
+        function renderVotingPatterns(patterns) {
+            var distributionEl = document.getElementById('voteDistribution');
+            distributionEl.innerHTML = '';
+            
+            for (var value in patterns.distribution) {
+                var chip = document.createElement('div');
+                chip.className = 'vote-chip';
+                chip.textContent = value + ': ' + patterns.distribution[value];
+                distributionEl.appendChild(chip);
+            }
+            
+            var insightsEl = document.getElementById('insights');
+            insightsEl.innerHTML = '';
+            
+            patterns.insights.forEach(function(insight) {
+                var item = document.createElement('div');
+                item.className = 'insight-item';
+                item.innerHTML = '<span class="insight-icon">💡</span>' + escapeHtml(insight);
+                insightsEl.appendChild(item);
+            });
+        }
+
+        function renderStoryDetails(stories) {
+            var storiesGrid = document.getElementById('storiesGrid');
+            storiesGrid.innerHTML = '';
+            
+            stories.forEach(function(story) {
+                var card = document.createElement('div');
+                card.className = 'story-card';
+                
+                var pointsHtml = '';
+                if (story.status === 'completed' && story.storyPoints) {
+                    pointsHtml = '<div class="story-points">' + story.storyPoints + ' pts</div>';
+                }
+                
+                var varianceBadge = 'badge-' + story.variance.toLowerCase();
+                var consensusBadge = 'badge-' + (story.consensus === 'Yes' ? 'yes' : story.consensus === 'No' ? 'no' : 'partial');
+                
+                var distributionHtml = '';
+                for (var value in story.voteDistribution) {
+                    distributionHtml += '<span class="vote-chip" style="margin-right: 0.5rem; margin-bottom: 0.5rem;">' + 
+                                     value + ': ' + story.voteDistribution[value] + '</span>';
+                }
+                
+                card.innerHTML = 
+                    '<div class="story-header">' +
+                        '<div>' +
+                            '<div class="story-number">' + escapeHtml(story.storyNumber) + '</div>' +
+                            '<div style="margin-top: 0.25rem;">' + escapeHtml(story.storyTitle) + '</div>' +
+                        '</div>' +
+                        pointsHtml +
+                    '</div>' +
+                    '<div class="story-meta">' +
+                        '<span>Votes: ' + story.voteCount + '</span>' +
+                        '<span>Rounds: ' + story.rounds + '</span>' +
+                        '<span>Variance: <span class="badge ' + varianceBadge + '">' + story.variance + '</span></span>' +
+                        '<span>Consensus: <span class="badge ' + consensusBadge + '">' + story.consensus + '</span></span>' +
+                    '</div>' +
+                    '<div>' + distributionHtml + '</div>';
+                
+                storiesGrid.appendChild(card);
+            });
+        }
+
+        function renderTeamPerformance(team) {
+            var tbody = document.getElementById('teamPerformance');
+            tbody.innerHTML = '';
+            
+            team.forEach(function(member) {
+                if (member.role === 'spectator') return; // Skip spectators
+                
+                var row = document.createElement('tr');
+                
+                var progressBarHtml = 
+                    '<div class="progress-bar">' +
+                        '<div class="progress-fill" style="width: ' + member.participationRate + '%"></div>' +
+                    '</div>';
+                
+                row.innerHTML = 
+                    '<td>' + escapeHtml(member.name) + ' <small>(' + member.role + ')</small></td>' +
+                    '<td>' + member.storiesVoted + '</td>' +
+                    '<td>' +
+                        '<div style="display: flex; align-items: center; gap: 0.5rem;">' +
+                            progressBarHtml +
+                            '<span>' + member.participationRate + '%</span>' +
+                        '</div>' +
+                    '</td>';
+                
+                tbody.appendChild(row);
+            });
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        function showError(message) {
+            document.getElementById('errorMessage').textContent = message;
+            document.getElementById('errorMessage').style.display = 'block';
+        }
+
+        function escapeHtml(text) {
+            var div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function formatDate(dateString) {
+            var date = new Date(dateString);
+            return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        }
+
+        function getUrlParameter(name) {
+            name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+            var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+            var results = regex.exec(location.search);
+            return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+        }
+    </script>
+</body>
+</html>
+</j:jelly>

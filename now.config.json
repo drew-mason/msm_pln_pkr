@@ -1,0 +1,6 @@
+{
+  "scope": "x_902080_planningw",
+  "scopeId": "46b4342783c7f650c97cc2d6feaad328",
+  "name": "Planningwsis",
+  "tsconfigPath": "./src/server/tsconfig.json"
+}

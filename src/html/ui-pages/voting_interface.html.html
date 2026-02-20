@@ -1,0 +1,1283 @@
+<?xml version="1.0" encoding="utf-8"?>
+<j:jelly trim="false" xmlns:j="jelly:core" xmlns:g="glide">
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Planning Poker - Voting Interface</title>
+    <style>
+        :root {
+            --primary-color: #0073e6;
+            --secondary-color: #f8f9fa;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --dark-color: #343a40;
+            --light-color: #ffffff;
+            --border-color: #dee2e6;
+            --shadow: 0 2px 4px rgba(0,0,0,0.1);
+            --radius: 8px;
+        }
+        
+        [data-theme="dark"] {
+            --secondary-color: #2c3e50;
+            --light-color: #34495e;
+            --dark-color: #ecf0f1;
+            --border-color: #34495e;
+            background-color: #2c3e50;
+            color: #ecf0f1;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--secondary-color);
+            color: var(--dark-color);
+            line-height: 1.5;
+        }
+        
+        .header {
+            background: var(--light-color);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow);
+        }
+        
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        
+        .session-code {
+            background: var(--primary-color);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius);
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-primary { background: var(--primary-color); color: white; }
+        .btn-success { background: var(--success-color); color: white; }
+        .btn-warning { background: var(--warning-color); color: black; }
+        .btn-danger { background: var(--danger-color); color: white; }
+        .btn-secondary { background: var(--border-color); color: var(--dark-color); }
+        
+        .btn:hover { transform: translateY(-1px); box-shadow: var(--shadow); }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        
+        .main-content {
+            display: flex;
+            height: calc(100vh - 80px);
+            gap: 1rem;
+            padding: 1rem 2rem;
+        }
+        
+        .story-panel {
+            flex: 2;
+            background: var(--light-color);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow-y: auto;
+        }
+        
+        .sidebar {
+            flex: 1;
+            max-width: 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .session-card {
+            background: var(--light-color);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+        }
+        
+        .session-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        
+        .status-ready { background: #e9ecef; color: #495057; }
+        .status-live { background: #d4edda; color: #155724; }
+        .status-completed { background: #cce5ff; color: #004085; }
+        
+        .dealer-controls {
+            background: var(--light-color);
+            border-radius: var(--radius);
+            padding: 1rem;
+            box-shadow: var(--shadow);
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+        
+        .story-card {
+            background: var(--light-color);
+            border-radius: var(--radius);
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            margin-bottom: 1rem;
+        }
+        
+        .story-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .story-number {
+            font-size: 1.2rem;
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+        
+        .story-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+        
+        .story-description {
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+        
+        .acceptance-criteria {
+            background: var(--secondary-color);
+            padding: 1rem;
+            border-radius: var(--radius);
+            margin-bottom: 1.5rem;
+        }
+        
+        .acceptance-criteria h4 {
+            margin-bottom: 0.5rem;
+            color: var(--primary-color);
+        }
+        
+        .voting-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        
+        .voting-card {
+            background: var(--light-color);
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+        
+        .voting-card:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+        
+        .voting-card.selected {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+        
+        .voting-card.special {
+            background: var(--warning-color);
+            color: black;
+        }
+        
+        .sidebar-section {
+            background: var(--light-color);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 1rem;
+        }
+        
+        .section-header {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+        
+        .section-content {
+            padding: 1rem;
+        }
+        
+        .participant-list {
+            list-style: none;
+        }
+        
+        .participant-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .participant-item:last-child {
+            border-bottom: none;
+        }
+        
+        .participant-name {
+            font-weight: 500;
+        }
+        
+        .participant-role {
+            font-size: 0.8rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 12px;
+            background: var(--secondary-color);
+        }
+        
+        .vote-indicator {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            color: white;
+        }
+        
+        .vote-indicator.voted {
+            background: var(--success-color);
+        }
+        
+        .vote-results {
+            margin-bottom: 1rem;
+        }
+        
+        .vote-summary {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .stat-card {
+            text-align: center;
+            padding: 1rem;
+            background: var(--secondary-color);
+            border-radius: var(--radius);
+        }
+        
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--dark-color);
+            opacity: 0.7;
+        }
+        
+        .vote-distribution {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        
+        .vote-chip {
+            background: var(--primary-color);
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+        }
+        
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .modal.show {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: var(--light-color);
+            border-radius: var(--radius);
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+        
+        .modal-body {
+            padding: 1.5rem;
+        }
+        
+        .modal-footer {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            gap: 0.5rem;
+            justify-content: flex-end;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            font-size: 1rem;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(0,115,230,0.25);
+        }
+        
+        textarea.form-control {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            z-index: 2000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+        }
+        
+        .toast.show {
+            transform: translateX(0);
+        }
+        
+        .toast-success {
+            background: var(--success-color);
+            color: white;
+        }
+        
+        .toast-error {
+            background: var(--danger-color);
+            color: white;
+        }
+        
+        .toast-info {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .collapsible {
+            cursor: pointer;
+        }
+        
+        .collapsed .section-content {
+            display: none;
+        }
+        
+        .theme-toggle {
+            background: none;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 0.5rem;
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+                padding: 1rem;
+            }
+            
+            .sidebar {
+                max-width: none;
+            }
+            
+            .header {
+                padding: 1rem;
+                flex-wrap: wrap;
+                gap: 1rem;
+            }
+            
+            .voting-cards {
+                grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <div class="logo">🃏 Planning Poker</div>
+            <button class="btn btn-secondary" id="backBtn">← Back</button>
+            <div class="session-code" id="sessionCode" title="Click to copy join link">
+                Loading...
+            </div>
+        </div>
+        <div class="header-right">
+            <button class="btn btn-secondary" id="roleSwitch" style="display: none;">
+                Switch Role
+            </button>
+            <button class="theme-toggle" id="themeToggle" title="Toggle dark/light theme">
+                🌙
+            </button>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="story-panel">
+            <!-- Session Info Card -->
+            <div class="session-card">
+                <div class="session-title" id="sessionTitle">Loading...</div>
+                <span class="status-badge" id="sessionStatus">Ready</span>
+                <div id="sessionDescription" style="margin-top: 0.5rem; color: #666;"></div>
+            </div>
+
+            <!-- Dealer Controls (visible only to dealers) -->
+            <div class="dealer-controls" id="dealerControls" style="display: none;">
+                <button class="btn btn-success" id="startVotingBtn">Start Voting</button>
+                <button class="btn btn-primary" id="revealVotesBtn">Reveal Votes</button>
+                <button class="btn btn-warning" id="resetVotesBtn">Reset Votes</button>
+                <button class="btn btn-secondary" id="skipStoryBtn">Skip Story</button>
+                <button class="btn btn-success" id="completeStoryBtn">Complete Story</button>
+            </div>
+
+            <!-- Current Story -->
+            <div class="story-card" id="currentStoryCard" style="display: none;">
+                <div class="story-header">
+                    <span class="story-number" id="storyNumber">#123</span>
+                    <div id="storyPresenter" style="font-size: 0.9rem; color: #666;"></div>
+                </div>
+                <div class="story-title" id="storyTitle">Story Title</div>
+                <div class="story-description" id="storyDescription">Story description goes here...</div>
+                <div class="acceptance-criteria" id="acceptanceCriteria" style="display: none;">
+                    <h4>Acceptance Criteria</h4>
+                    <div id="acceptanceCriteriaContent"></div>
+                </div>
+                <div id="dealerComments" style="display: none;">
+                    <h4>Dealer Comments</h4>
+                    <div id="dealerCommentsContent"></div>
+                </div>
+            </div>
+
+            <!-- Voting Cards -->
+            <div class="voting-cards" id="votingCards"></div>
+        </div>
+
+        <div class="sidebar">
+            <!-- Vote Results -->
+            <div class="sidebar-section" id="voteResultsSection" style="display: none;">
+                <div class="section-header">
+                    <span>Vote Results</span>
+                </div>
+                <div class="section-content">
+                    <div class="vote-summary" id="voteSummary"></div>
+                    <div class="vote-distribution" id="voteDistribution"></div>
+                </div>
+            </div>
+
+            <!-- Dealers -->
+            <div class="sidebar-section">
+                <div class="section-header collapsible" data-target="dealersContent">
+                    <span>Dealers</span>
+                    <span>▼</span>
+                </div>
+                <div class="section-content" id="dealersContent">
+                    <ul class="participant-list" id="dealersList"></ul>
+                </div>
+            </div>
+
+            <!-- Participants -->
+            <div class="sidebar-section">
+                <div class="section-header">
+                    <span>Participants</span>
+                    <span id="participantCount">0</span>
+                </div>
+                <div class="section-content">
+                    <ul class="participant-list" id="participantsList"></ul>
+                </div>
+            </div>
+
+            <!-- Story Queue -->
+            <div class="sidebar-section">
+                <div class="section-header collapsible" data-target="storyQueueContent">
+                    <span>Story Queue</span>
+                    <span>▼</span>
+                </div>
+                <div class="section-content collapsed" id="storyQueueContent">
+                    <div id="storyQueue"></div>
+                    <button class="btn btn-secondary btn-sm" id="addStoryBtn" style="margin-top: 1rem;">
+                        + Add Story
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div class="modal" id="addStoryModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Add Story</h3>
+                <button class="btn btn-secondary" data-dismiss="modal">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Search Stories</label>
+                    <input type="text" class="form-control" id="storySearch" placeholder="Search by title or number...">
+                </div>
+                <div id="storySearchResults"></div>
+                <hr />
+                <div class="form-group">
+                    <label class="form-label">Quick Add (Easy Mode)</label>
+                    <input type="text" class="form-control" id="quickStoryTitle" placeholder="Story title">
+                    <textarea class="form-control" id="quickStoryDescription" placeholder="Story description" style="margin-top: 0.5rem;"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button class="btn btn-primary" id="addSelectedStoriesBtn">Add Selected</button>
+                <button class="btn btn-success" id="quickAddStoryBtn">Quick Add</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="skipStoryModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Skip Story</h3>
+                <button class="btn btn-secondary" data-dismiss="modal">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Reason for Skipping (Optional)</label>
+                    <textarea class="form-control" id="skipComments" placeholder="Enter reason for skipping this story..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button class="btn btn-warning" id="confirmSkipStoryBtn">Skip Story</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="completeStoryModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Complete Story</h3>
+                <button class="btn btn-secondary" data-dismiss="modal">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Final Story Points</label>
+                    <select class="form-control" id="finalStoryPoints">
+                        <option value="">Select points...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Comments (Optional)</label>
+                    <textarea class="form-control" id="completionComments" placeholder="Add any notes about the estimation..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button class="btn btn-success" id="confirmCompleteStoryBtn">Complete Story</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast" id="toast">
+        <span id="toastMessage"></span>
+    </div>
+
+    <!-- Hidden form for navigation -->
+    <form id="navigationForm" method="post" style="display: none;">
+        <input type="hidden" name="sysparm_goto_url" value="" />
+    </form>
+
+    <script>
+        // Global variables
+        var sessionData = null;
+        var currentUser = {
+            id: '${gs.getUserID()}',
+            name: '${gs.getUserName()}'
+        };
+        var pollInterval = null;
+        var sessionId = getUrlParameter('session_id');
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!sessionId) {
+                showToast('Session ID not provided', 'error');
+                return;
+            }
+            
+            initializeEventListeners();
+            loadSession();
+            startPolling();
+        });
+        
+        // Event listeners setup
+        function initializeEventListeners() {
+            // Header controls
+            document.getElementById('backBtn').addEventListener('click', function() {
+                window.location.href = 'session_management.do';
+            });
+            
+            document.getElementById('sessionCode').addEventListener('click', copyJoinLink);
+            document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+            document.getElementById('roleSwitch').addEventListener('click', switchRole);
+            
+            // Dealer controls
+            document.getElementById('startVotingBtn').addEventListener('click', startVoting);
+            document.getElementById('revealVotesBtn').addEventListener('click', revealVotes);
+            document.getElementById('resetVotesBtn').addEventListener('click', resetVotes);
+            document.getElementById('skipStoryBtn').addEventListener('click', function() {
+                showModal('skipStoryModal');
+            });
+            document.getElementById('completeStoryBtn').addEventListener('click', function() {
+                showModal('completeStoryModal');
+            });
+            
+            // Modal actions
+            document.getElementById('confirmSkipStoryBtn').addEventListener('click', skipStory);
+            document.getElementById('confirmCompleteStoryBtn').addEventListener('click', completeStory);
+            
+            // Modal dismiss
+            var dismissBtns = document.querySelectorAll('[data-dismiss="modal"]');
+            dismissBtns.forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    hideAllModals();
+                });
+            });
+            
+            // Collapsible sections
+            var collapsibles = document.querySelectorAll('.collapsible');
+            collapsibles.forEach(function(elem) {
+                elem.addEventListener('click', function() {
+                    var targetId = elem.getAttribute('data-target');
+                    var target = document.getElementById(targetId);
+                    var section = elem.closest('.sidebar-section');
+                    
+                    section.classList.toggle('collapsed');
+                    var arrow = elem.querySelector('span:last-child');
+                    arrow.textContent = section.classList.contains('collapsed') ? '▶' : '▼';
+                });
+            });
+        }
+        
+        // Load session data
+        function loadSession() {
+            var ga = new GlideAjax('PlanningPokerAjax');
+            ga.addParam('sysparm_name', 'getSession');
+            ga.addParam('session_id', sessionId);
+            ga.getXML(function(response) {
+                var answer = response.responseXML.documentElement.getAttribute('answer');
+                var result = JSON.parse(answer);
+                
+                if (result.success) {
+                    sessionData = result.data;
+                    renderSession();
+                } else {
+                    showToast(result.message, 'error');
+                }
+            });
+        }
+        
+        // Render session data
+        function renderSession() {
+            if (!sessionData) return;
+            
+            var session = sessionData.session;
+            var currentStory = sessionData.currentStory;
+            var participants = sessionData.participants;
+            var scoringValues = sessionData.scoringValues;
+            var userRole = sessionData.userRole;
+            var revealedVotes = sessionData.revealedVotes;
+            
+            // Update header
+            document.getElementById('sessionCode').textContent = session.sessionCode;
+            document.getElementById('sessionTitle').textContent = session.name;
+            document.getElementById('sessionStatus').textContent = session.status;
+            document.getElementById('sessionStatus').className = 'status-badge status-' + session.status;
+            
+            if (session.description) {
+                document.getElementById('sessionDescription').textContent = session.description;
+            }
+            
+            // Show role switch if applicable
+            if (userRole.canSwitchToVoter || userRole.canSwitchToDealer) {
+                var roleSwitchBtn = document.getElementById('roleSwitch');
+                roleSwitchBtn.style.display = 'block';
+                roleSwitchBtn.textContent = userRole.effectiveRole === 'dealer' ? 'Switch to Voter' : 'Switch to Dealer';
+            }
+            
+            // Show dealer controls if user can manage
+            if (userRole.effectiveRole === 'dealer' || userRole.isDealer) {
+                document.getElementById('dealerControls').style.display = 'block';
+                updateDealerControls(currentStory);
+            }
+            
+            // Render current story
+            if (currentStory) {
+                renderCurrentStory(currentStory);
+                renderVotingCards(scoringValues, currentStory);
+                
+                if (revealedVotes) {
+                    renderVoteResults(revealedVotes);
+                }
+            } else {
+                document.getElementById('currentStoryCard').style.display = 'none';
+                document.getElementById('votingCards').innerHTML = '<p style="text-align: center; color: #666; padding: 2rem;">No active story. Waiting for dealer to start voting.</p>';
+            }
+            
+            // Render participants
+            renderParticipants(participants);
+        }
+        
+        // Render current story
+        function renderCurrentStory(story) {
+            document.getElementById('currentStoryCard').style.display = 'block';
+            document.getElementById('storyNumber').textContent = story.story_number || 'N/A';
+            document.getElementById('storyTitle').textContent = story.story_title || 'Untitled Story';
+            document.getElementById('storyDescription').innerHTML = story.story_description || 'No description provided.';
+            
+            if (story.acceptance_criteria) {
+                document.getElementById('acceptanceCriteria').style.display = 'block';
+                document.getElementById('acceptanceCriteriaContent').innerHTML = story.acceptance_criteria;
+            } else {
+                document.getElementById('acceptanceCriteria').style.display = 'none';
+            }
+            
+            if (story.dealer_comments) {
+                document.getElementById('dealerComments').style.display = 'block';
+                document.getElementById('dealerCommentsContent').textContent = story.dealer_comments;
+            } else {
+                document.getElementById('dealerComments').style.display = 'none';
+            }
+            
+            if (story.presenter) {
+                document.getElementById('storyPresenter').textContent = 'Presented by: ' + story.presenter;
+            }
+        }
+        
+        // Render voting cards
+        function renderVotingCards(scoringValues, currentStory) {
+            var votingCardsContainer = document.getElementById('votingCards');
+            votingCardsContainer.innerHTML = '';
+            
+            if (!currentStory || currentStory.status !== 'voting') {
+                votingCardsContainer.innerHTML = '<p style="text-align: center; color: #666; padding: 2rem;">Voting is not active for this story.</p>';
+                return;
+            }
+            
+            scoringValues.forEach(function(value) {
+                var card = document.createElement('div');
+                card.className = 'voting-card';
+                if (value.isSpecial) {
+                    card.className += ' special';
+                }
+                
+                card.textContent = value.displayValue;
+                card.addEventListener('click', function() {
+                    castVote(value.displayValue);
+                    
+                    // Update UI immediately
+                    document.querySelectorAll('.voting-card').forEach(function(c) {
+                        c.classList.remove('selected');
+                    });
+                    card.classList.add('selected');
+                });
+                
+                votingCardsContainer.appendChild(card);
+            });
+        }
+        
+        // Cast vote
+        function castVote(voteValue) {
+            var currentStory = sessionData.currentStory;
+            if (!currentStory) {
+                showToast('No active story', 'error');
+                return;
+            }
+            
+            var ga = new GlideAjax('PlanningPokerAjax');
+            ga.addParam('sysparm_name', 'castVote');
+            ga.addParam('session_id', sessionId);
+            ga.addParam('story_id', currentStory.sys_id);
+            ga.addParam('vote_value', voteValue);
+            ga.getXML(function(response) {
+                var answer = response.responseXML.documentElement.getAttribute('answer');
+                var result = JSON.parse(answer);
+                
+                if (result.success) {
+                    showToast('Vote cast: ' + voteValue, 'success');
+                } else {
+                    showToast(result.message, 'error');
+                }
+            });
+        }
+        
+        // Polling for real-time updates
+        function startPolling() {
+            pollInterval = setInterval(function() {
+                if (sessionData && sessionData.currentStory && sessionData.currentStory.status === 'voting') {
+                    pollVotingStatus();
+                }
+            }, 3000);
+        }
+        
+        function pollVotingStatus() {
+            var ga = new GlideAjax('PlanningPokerAjax');
+            ga.addParam('sysparm_name', 'getVotingStatus');
+            ga.addParam('session_id', sessionId);
+            ga.getXML(function(response) {
+                var answer = response.responseXML.documentElement.getAttribute('answer');
+                var result = JSON.parse(answer);
+                
+                if (result.success && result.data.hasCurrentStory) {
+                    updateVotingIndicators(result.data.participants);
+                }
+            });
+        }
+        
+        // Update voting indicators
+        function updateVotingIndicators(participants) {
+            participants.forEach(function(participant) {
+                var indicator = document.getElementById('vote-indicator-' + participant.userId);
+                if (indicator) {
+                    if (participant.hasVoted) {
+                        indicator.classList.add('voted');
+                        indicator.textContent = '✓';
+                    } else {
+                        indicator.classList.remove('voted');
+                        indicator.textContent = '';
+                    }
+                }
+            });
+        }
+        
+        // Render participants
+        function renderParticipants(participants) {
+            var dealersList = document.getElementById('dealersList');
+            var participantsList = document.getElementById('participantsList');
+            var participantCount = document.getElementById('participantCount');
+            
+            dealersList.innerHTML = '';
+            participantsList.innerHTML = '';
+            
+            var dealers = participants.filter(function(p) { return p.role === 'dealer'; });
+            var others = participants.filter(function(p) { return p.role !== 'dealer'; });
+            
+            // Render dealers
+            dealers.forEach(function(participant) {
+                var li = createParticipantItem(participant);
+                dealersList.appendChild(li);
+            });
+            
+            // Render other participants
+            others.forEach(function(participant) {
+                var li = createParticipantItem(participant);
+                participantsList.appendChild(li);
+            });
+            
+            participantCount.textContent = participants.length;
+        }
+        
+        function createParticipantItem(participant) {
+            var li = document.createElement('li');
+            li.className = 'participant-item';
+            
+            var nameDiv = document.createElement('div');
+            nameDiv.className = 'participant-name';
+            nameDiv.textContent = participant.firstName + ' ' + participant.lastName;
+            
+            var roleSpan = document.createElement('span');
+            roleSpan.className = 'participant-role';
+            roleSpan.textContent = participant.role;
+            
+            var indicator = document.createElement('div');
+            indicator.className = 'vote-indicator';
+            indicator.id = 'vote-indicator-' + participant.userId;
+            
+            if (participant.hasVoted) {
+                indicator.classList.add('voted');
+                indicator.textContent = '✓';
+            }
+            
+            var leftDiv = document.createElement('div');
+            leftDiv.appendChild(nameDiv);
+            leftDiv.appendChild(roleSpan);
+            
+            li.appendChild(leftDiv);
+            li.appendChild(indicator);
+            
+            return li;
+        }
+        
+        // Dealer actions
+        function startVoting() {
+            var currentStory = sessionData.currentStory;
+            if (!currentStory) {
+                showToast('No story selected', 'error');
+                return;
+            }
+            
+            var ga = new GlideAjax('PlanningPokerAjax');
+            ga.addParam('sysparm_name', 'startVoting');
+            ga.addParam('session_id', sessionId);
+            ga.addParam('story_id', currentStory.sys_id);
+            ga.getXML(function(response) {
+                var answer = response.responseXML.documentElement.getAttribute('answer');
+                var result = JSON.parse(answer);
+                
+                if (result.success) {
+                    showToast('Voting started', 'success');
+                    loadSession(); // Reload to update UI
+                } else {
+                    showToast(result.message, 'error');
+                }
+            });
+        }
+        
+        function revealVotes() {
+            var currentStory = sessionData.currentStory;
+            if (!currentStory) {
+                showToast('No story selected', 'error');
+                return;
+            }
+            
+            var ga = new GlideAjax('PlanningPokerAjax');
+            ga.addParam('sysparm_name', 'revealVotes');
+            ga.addParam('session_id', sessionId);
+            ga.addParam('story_id', currentStory.sys_id);
+            ga.getXML(function(response) {
+                var answer = response.responseXML.documentElement.getAttribute('answer');
+                var result = JSON.parse(answer);
+                
+                if (result.success) {
+                    showToast('Votes revealed', 'success');
+                    renderVoteResults(result.data);
+                } else {
+                    showToast(result.message, 'error');
+                }
+            });
+        }
+        
+        function resetVotes() {
+            var currentStory = sessionData.currentStory;
+            if (!currentStory) {
+                showToast('No story selected', 'error');
+                return;
+            }
+            
+            if (!confirm('Are you sure you want to reset all votes for this story?')) {
+                return;
+            }
+            
+            var ga = new GlideAjax('PlanningPokerAjax');
+            ga.addParam('sysparm_name', 'resetVotes');
+            ga.addParam('session_id', sessionId);
+            ga.addParam('story_id', currentStory.sys_id);
+            ga.getXML(function(response) {
+                var answer = response.responseXML.documentElement.getAttribute('answer');
+                var result = JSON.parse(answer);
+                
+                if (result.success) {
+                    showToast('Votes reset', 'success');
+                    loadSession(); // Reload to update UI
+                    hideModal('voteResultsSection');
+                } else {
+                    showToast(result.message, 'error');
+                }
+            });
+        }
+        
+        function skipStory() {
+            var currentStory = sessionData.currentStory;
+            var comments = document.getElementById('skipComments').value;
+            
+            var ga = new GlideAjax('PlanningPokerAjax');
+            ga.addParam('sysparm_name', 'skipStory');
+            ga.addParam('session_id', sessionId);
+            ga.addParam('story_id', currentStory.sys_id);
+            ga.addParam('comments', comments);
+            ga.getXML(function(response) {
+                var answer = response.responseXML.documentElement.getAttribute('answer');
+                var result = JSON.parse(answer);
+                
+                if (result.success) {
+                    showToast('Story skipped', 'success');
+                    hideAllModals();
+                    loadSession(); // Reload to update UI
+                } else {
+                    showToast(result.message, 'error');
+                }
+            });
+        }
+        
+        function completeStory() {
+            var currentStory = sessionData.currentStory;
+            var points = document.getElementById('finalStoryPoints').value;
+            var comments = document.getElementById('completionComments').value;
+            
+            if (!points) {
+                showToast('Please select story points', 'error');
+                return;
+            }
+            
+            var ga = new GlideAjax('PlanningPokerAjax');
+            ga.addParam('sysparm_name', 'setStoryPoints');
+            ga.addParam('session_id', sessionId);
+            ga.addParam('story_id', currentStory.sys_id);
+            ga.addParam('story_points', points);
+            ga.addParam('comments', comments);
+            ga.getXML(function(response) {
+                var answer = response.responseXML.documentElement.getAttribute('answer');
+                var result = JSON.parse(answer);
+                
+                if (result.success) {
+                    showToast('Story completed with ' + points + ' points', 'success');
+                    hideAllModals();
+                    loadSession(); // Reload to update UI
+                } else {
+                    showToast(result.message, 'error');
+                }
+            });
+        }
+        
+        // Render vote results
+        function renderVoteResults(voteData) {
+            var voteResultsSection = document.getElementById('voteResultsSection');
+            voteResultsSection.style.display = 'block';
+            
+            var summary = voteData.summary;
+            var votes = voteData.votes;
+            
+            // Render summary statistics
+            var summaryHtml = '';
+            if (summary.validVotes > 0) {
+                summaryHtml += '<div class="stat-card"><div class="stat-value">' + summary.min.display + '</div><div class="stat-label">Min</div></div>';
+                summaryHtml += '<div class="stat-card"><div class="stat-value">' + summary.max.display + '</div><div class="stat-label">Max</div></div>';
+                summaryHtml += '<div class="stat-card"><div class="stat-value">' + summary.avg + '</div><div class="stat-label">Average</div></div>';
+                summaryHtml += '<div class="stat-card"><div class="stat-value">' + summary.median.display + '</div><div class="stat-label">Median</div></div>';
+            }
+            document.getElementById('voteSummary').innerHTML = summaryHtml;
+            
+            // Render vote distribution
+            var distributionHtml = '';
+            votes.forEach(function(vote) {
+                distributionHtml += '<span class="vote-chip">' + vote.voterName + ': ' + vote.voteValue + '</span>';
+            });
+            document.getElementById('voteDistribution').innerHTML = distributionHtml;
+        }
+        
+        // Update dealer controls based on story status
+        function updateDealerControls(currentStory) {
+            var startBtn = document.getElementById('startVotingBtn');
+            var revealBtn = document.getElementById('revealVotesBtn');
+            var resetBtn = document.getElementById('resetVotesBtn');
+            var skipBtn = document.getElementById('skipStoryBtn');
+            var completeBtn = document.getElementById('completeStoryBtn');
+            
+            if (!currentStory) {
+                startBtn.disabled = true;
+                revealBtn.disabled = true;
+                resetBtn.disabled = true;
+                skipBtn.disabled = true;
+                completeBtn.disabled = true;
+                return;
+            }
+            
+            var status = currentStory.status;
+            
+            startBtn.disabled = (status !== 'pending');
+            revealBtn.disabled = (status !== 'voting');
+            resetBtn.disabled = (status !== 'revealed');
+            skipBtn.disabled = false;
+            completeBtn.disabled = (status !== 'revealed');
+        }
+        
+        // Utility functions
+        function showModal(modalId) {
+            document.getElementById(modalId).classList.add('show');
+        }
+        
+        function hideModal(modalId) {
+            document.getElementById(modalId).classList.remove('show');
+        }
+        
+        function hideAllModals() {
+            var modals = document.querySelectorAll('.modal');
+            modals.forEach(function(modal) {
+                modal.classList.remove('show');
+            });
+        }
+        
+        function showToast(message, type) {
+            var toast = document.getElementById('toast');
+            var toastMessage = document.getElementById('toastMessage');
+            
+            toastMessage.textContent = message;
+            toast.className = 'toast toast-' + type + ' show';
+            
+            setTimeout(function() {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+        
+        function copyJoinLink() {
+            var sessionCode = sessionData.session.sessionCode;
+            var joinUrl = window.location.protocol + '//' + window.location.host + '/join.do?session_code=' + sessionCode;
+            
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(joinUrl).then(function() {
+                    showToast('Join link copied to clipboard', 'success');
+                });
+            } else {
+                // Fallback for older browsers
+                var textArea = document.createElement('textarea');
+                textArea.value = joinUrl;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                showToast('Join link copied to clipboard', 'success');
+            }
+        }
+        
+        function toggleTheme() {
+            var body = document.body;
+            var themeToggle = document.getElementById('themeToggle');
+            
+            if (body.getAttribute('data-theme') === 'dark') {
+                body.removeAttribute('data-theme');
+                themeToggle.textContent = '🌙';
+                localStorage.setItem('theme', 'light');
+            } else {
+                body.setAttribute('data-theme', 'dark');
+                themeToggle.textContent = '☀️';
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+        
+        function switchRole() {
+            // Implementation for role switching
+            showToast('Role switching not implemented yet', 'info');
+        }
+        
+        function getUrlParameter(name) {
+            name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+            var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+            var results = regex.exec(location.search);
+            return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+        }
+        
+        // Initialize theme
+        var savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') {
+            document.body.setAttribute('data-theme', 'dark');
+            document.getElementById('themeToggle').textContent = '☀️';
+        }
+        
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', function() {
+            if (pollInterval) {
+                clearInterval(pollInterval);
+            }
+        });
+    </script>
+</body>
+</html>
+</j:jelly>
