@@ -1290,29 +1290,40 @@
             try {
                 // Handle string response (from getXMLAnswer)
                 if (typeof response === 'string') {
+                    console.log('[DEBUG parseAjax] Got string response, length:', response ? response.length : 0);
                     return response ? JSON.parse(response) : null;
                 }
+                console.log('[DEBUG parseAjax] Got XML response object:', response);
+                console.log('[DEBUG parseAjax] response.responseXML:', response.responseXML);
+                console.log('[DEBUG parseAjax] response.responseText (first 500):', (response.responseText || '').substring(0, 500));
                 var xml = response.responseXML;
-                if (!xml) return null;
+                if (!xml) { console.warn('[DEBUG parseAjax] No responseXML'); return null; }
                 var answer = xml.documentElement.getAttribute('answer');
+                console.log('[DEBUG parseAjax] documentElement.answer:', answer ? answer.substring(0, 200) : null);
                 if (!answer) {
                     // Fallback: try to find answer element in batched response
                     var answerEl = xml.getElementsByTagName('answer');
+                    console.log('[DEBUG parseAjax] <answer> elements found:', answerEl ? answerEl.length : 0);
                     if (answerEl && answerEl.length > 0) {
                         answer = answerEl[0].textContent || answerEl[0].text;
+                        console.log('[DEBUG parseAjax] answer from <answer> tag:', answer ? answer.substring(0, 200) : null);
                     }
                 }
                 if (!answer) {
                     // Additional fallback: check result elements (batched response format)
                     var resultEl = xml.getElementsByTagName('result');
+                    console.log('[DEBUG parseAjax] <result> elements found:', resultEl ? resultEl.length : 0);
                     if (resultEl && resultEl.length > 0) {
                         answer = resultEl[0].getAttribute('answer');
+                        console.log('[DEBUG parseAjax] answer from <result> attr:', answer ? answer.substring(0, 200) : null);
                     }
                 }
-                if (!answer) return null;
-                return JSON.parse(answer);
+                if (!answer) { console.warn('[DEBUG parseAjax] No answer found in any location'); return null; }
+                var parsed = JSON.parse(answer);
+                console.log('[DEBUG parseAjax] Parsed result:', parsed);
+                return parsed;
             } catch (e) {
-                console.error('Error parsing AJAX response:', e);
+                console.error('[DEBUG parseAjax] Error parsing AJAX response:', e);
                 return null;
             }
         }
@@ -1941,14 +1952,20 @@
         }
         
         function searchStoriesForEdit(searchTerm) {
+            console.log('[DEBUG searchStories] Searching for:', searchTerm);
             var ga = new GlideAjax('SessionManagementAjax');
             ga.addParam('sysparm_name', 'searchStories');
             ga.addParam('search_term', searchTerm);
             ga.addParam('limit', '15');
             ga.getXML(function(response) {
                 try {
+                    console.log('[DEBUG searchStories] Raw response received:', response);
                     var result = parseAjaxResponse(response);
-                    if (!result || !result.success) return;
+                    console.log('[DEBUG searchStories] Parsed result:', result);
+                    if (!result || !result.success) {
+                        console.warn('[DEBUG searchStories] No result or not successful:', result);
+                        return;
+                    }
                     
                     var container = document.getElementById('storySearchResults');
                     container.innerHTML = '';
@@ -1995,19 +2012,25 @@
         }
         
         function addStoryToSession(storyId) {
-            if (!editingSessionId) return;
+            console.log('[DEBUG addStory] Called with storyId:', storyId, 'editingSessionId:', editingSessionId);
+            if (!editingSessionId) { console.warn('[DEBUG addStory] No editingSessionId!'); return; }
             
             var ga = new GlideAjax('SessionManagementAjax');
             ga.addParam('sysparm_name', 'addStories');
             ga.addParam('session_id', editingSessionId);
             ga.addParam('story_ids', storyId);
+            console.log('[DEBUG addStory] Sending AJAX: session_id=' + editingSessionId + ', story_ids=' + storyId);
             ga.getXML(function(response) {
+                console.log('[DEBUG addStory] Raw response received:', response);
                 var result = parseAjaxResponse(response);
+                console.log('[DEBUG addStory] Parsed result:', result);
                 if (!result) { showToast('Error adding objective', 'error'); return; }
                 if (result.success) {
+                    console.log('[DEBUG addStory] Success! Refreshing stories...');
                     showToast('Objective added to mission', 'success');
                     refreshEditStories();
                 } else {
+                    console.warn('[DEBUG addStory] Server returned failure:', result.message);
                     showToast(result.message, 'error');
                 }
             });
@@ -2049,10 +2072,14 @@
             ga.addParam('session_id', editingSessionId);
             ga.addParam('title', title);
             ga.addParam('description', desc);
+            console.log('[DEBUG addManual] Sending AJAX: session_id=' + editingSessionId + ', title=' + title);
             ga.getXML(function(response) {
+                console.log('[DEBUG addManual] Raw response:', response);
                 var result = parseAjaxResponse(response);
+                console.log('[DEBUG addManual] Parsed result:', result);
                 if (!result) { showToast('Error adding manual objective', 'error'); return; }
                 if (result.success) {
+                    console.log('[DEBUG addManual] Success!');
                     showToast('Manual objective added', 'success');
                     document.getElementById('manualStoryTitle').value = '';
                     document.getElementById('manualStoryDesc').value = '';
@@ -2064,17 +2091,21 @@
         }
         
         function refreshEditStories() {
+            console.log('[DEBUG refresh] Refreshing stories for session:', editingSessionId);
             var ga = new GlideAjax('SessionManagementAjax');
             ga.addParam('sysparm_name', 'getSessionDetails');
             ga.addParam('session_id', editingSessionId);
             ga.getXML(function(response) {
+                console.log('[DEBUG refresh] Raw response:', response);
                 var result = parseAjaxResponse(response);
-                if (!result) { console.error('Error refreshing objectives: empty response'); return; }
+                console.log('[DEBUG refresh] Parsed result:', result);
+                if (!result) { console.error('[DEBUG refresh] Empty response'); return; }
                 if (result.success) {
                     editingStories = result.data.stories || [];
+                    console.log('[DEBUG refresh] Got', editingStories.length, 'stories:', editingStories);
                     renderEditStories();
                 } else {
-                    console.error('Error refreshing objectives:', result.message);
+                    console.error('[DEBUG refresh] Server failure:', result.message);
                 }
             });
         }

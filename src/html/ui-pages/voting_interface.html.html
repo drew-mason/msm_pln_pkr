@@ -1050,29 +1050,35 @@
             try {
                 // Handle string response (from getXMLAnswer)
                 if (typeof response === 'string') {
+                    console.log('[DEBUG parseAjax] Got string response, length:', response ? response.length : 0);
                     return response ? JSON.parse(response) : null;
                 }
+                console.log('[DEBUG parseAjax] Got XML response object:', response);
+                console.log('[DEBUG parseAjax] response.responseText (first 500):', (response.responseText || '').substring(0, 500));
                 var xml = response.responseXML;
-                if (!xml) return null;
+                if (!xml) { console.warn('[DEBUG parseAjax] No responseXML'); return null; }
                 var answer = xml.documentElement.getAttribute('answer');
+                console.log('[DEBUG parseAjax] documentElement.answer:', answer ? answer.substring(0, 200) : null);
                 if (!answer) {
-                    // Fallback: try to find answer element in batched response
                     var answerEl = xml.getElementsByTagName('answer');
+                    console.log('[DEBUG parseAjax] <answer> elements found:', answerEl ? answerEl.length : 0);
                     if (answerEl && answerEl.length > 0) {
                         answer = answerEl[0].textContent || answerEl[0].text;
                     }
                 }
                 if (!answer) {
-                    // Additional fallback: check result elements (batched response format)
                     var resultEl = xml.getElementsByTagName('result');
+                    console.log('[DEBUG parseAjax] <result> elements found:', resultEl ? resultEl.length : 0);
                     if (resultEl && resultEl.length > 0) {
                         answer = resultEl[0].getAttribute('answer');
                     }
                 }
-                if (!answer) return null;
-                return JSON.parse(answer);
+                if (!answer) { console.warn('[DEBUG parseAjax] No answer found in any location'); return null; }
+                var parsed = JSON.parse(answer);
+                console.log('[DEBUG parseAjax] Parsed result:', parsed);
+                return parsed;
             } catch (e) {
-                console.error('Error parsing AJAX response:', e);
+                console.error('[DEBUG parseAjax] Error parsing AJAX response:', e);
                 return null;
             }
         }
@@ -1610,13 +1616,17 @@
         // --- Add Objective Functions ---
         
         function searchStoriesForVoting(searchTerm) {
+            console.log('[DEBUG VI-search] Searching for:', searchTerm);
             var ga = new GlideAjax('SessionManagementAjax');
             ga.addParam('sysparm_name', 'searchStories');
             ga.addParam('search_term', searchTerm);
             ga.addParam('limit', '15');
             ga.getXML(function(response) {
+                console.log('[DEBUG VI-search] Raw response:', response);
                 var result = parseAjaxResponse(response);
+                console.log('[DEBUG VI-search] Parsed result:', result);
                 if (!result || !result.success) {
+                    console.warn('[DEBUG VI-search] No result or not successful:', result);
                     document.getElementById('storySearchResults').innerHTML = '<div style="padding:0.5rem;color:#ff6b6b;">Error searching objectives</div>';
                     return;
                 }
@@ -1666,6 +1676,7 @@
         }
         
         function addSelectedStoriesToSession() {
+            console.log('[DEBUG VI-addSelected] selectedStoryIds:', selectedStoryIds, 'sessionId:', sessionId);
             if (selectedStoryIds.length === 0) {
                 showToast('Select at least one objective', 'error');
                 return;
@@ -1675,11 +1686,15 @@
             ga.addParam('sysparm_name', 'addStories');
             ga.addParam('session_id', sessionId);
             ga.addParam('story_ids', selectedStoryIds.join(','));
+            console.log('[DEBUG VI-addSelected] Sending AJAX: session_id=' + sessionId + ', story_ids=' + selectedStoryIds.join(','));
             ga.getXML(function(response) {
+                console.log('[DEBUG VI-addSelected] Raw response:', response);
                 var result = parseAjaxResponse(response);
+                console.log('[DEBUG VI-addSelected] Parsed result:', result);
                 if (!result) { showToast('Error adding objectives', 'error'); return; }
                 
                 if (result.success) {
+                    console.log('[DEBUG VI-addSelected] Success!');
                     showToast('Objectives added to mission', 'success');
                     selectedStoryIds = [];
                     hideAllModals();
@@ -1693,6 +1708,7 @@
         function quickAddStoryToSession() {
             var title = document.getElementById('quickStoryTitle').value.trim();
             var description = document.getElementById('quickStoryDescription').value.trim();
+            console.log('[DEBUG VI-quickAdd] title:', title, 'sessionId:', sessionId);
             
             if (!title) {
                 showToast('Objective title is required', 'error');
@@ -1704,11 +1720,15 @@
             ga.addParam('session_id', sessionId);
             ga.addParam('title', title);
             ga.addParam('description', description);
+            console.log('[DEBUG VI-quickAdd] Sending AJAX: session_id=' + sessionId + ', title=' + title);
             ga.getXML(function(response) {
+                console.log('[DEBUG VI-quickAdd] Raw response:', response);
                 var result = parseAjaxResponse(response);
+                console.log('[DEBUG VI-quickAdd] Parsed result:', result);
                 if (!result) { showToast('Error adding objective', 'error'); return; }
                 
                 if (result.success) {
+                    console.log('[DEBUG VI-quickAdd] Success!');
                     showToast('Objective deployed', 'success');
                     document.getElementById('quickStoryTitle').value = '';
                     document.getElementById('quickStoryDescription').value = '';
