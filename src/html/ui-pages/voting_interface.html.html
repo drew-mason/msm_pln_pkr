@@ -89,6 +89,11 @@
             pointer-events: none;
             z-index: 9999;
             width: 100%;
+            display: none;
+        }
+
+        body.scanlines-on::after {
+            display: block;
         }
 
         #starfield {
@@ -1080,6 +1085,7 @@
         var selectedStoryIds = [];
 
         // Initialize page
+        (function() { if (/[?&]scan\b/.test(location.search)) document.body.classList.add('scanlines-on'); })();
         document.addEventListener('DOMContentLoaded', function() {
             if (!sessionId) {
                 showToast('Session ID not provided', 'error');

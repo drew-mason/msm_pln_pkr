@@ -107,7 +107,7 @@
             z-index: 0;
         }
 
-        /* Scanline effect */
+        /* Scanline effect — off by default, enable with ?scan in URL */
         body::after {
             content: '';
             position: fixed;
@@ -118,6 +118,11 @@
             pointer-events: none;
             z-index: 9999;
             width: 100%;
+            display: none;
+        }
+
+        body.scanlines-on::after {
+            display: block;
         }
 
         /* === STAR FIELD CANVAS === */
@@ -1326,6 +1331,7 @@
         var searchDebounceTimer = null;
 
         // Initialize page
+        (function() { if (/[?&]scan\b/.test(location.search)) document.body.classList.add('scanlines-on'); })();
         document.addEventListener('DOMContentLoaded', function() {
             initializeEventListeners();
             loadInitialData();

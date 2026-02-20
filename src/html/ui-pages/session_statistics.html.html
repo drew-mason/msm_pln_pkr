@@ -86,6 +86,11 @@
             pointer-events: none;
             z-index: 9999;
             width: 100%;
+            display: none;
+        }
+
+        body.scanlines-on::after {
+            display: block;
         }
 
         #starfield {
@@ -728,6 +733,7 @@
 
         var sessionId = getUrlParameter('session_id');
 
+        (function() { if (/[?&]scan\b/.test(location.search)) document.body.classList.add('scanlines-on'); })();
         document.addEventListener('DOMContentLoaded', function() {
             if (!sessionId) {
                 showError('Session ID not provided — no mission target specified');
