@@ -1,5 +1,5 @@
 var PresenterManagementAjax = Class.create();
-PresenterManagementAjax.prototype = Object.extendsObject(AbstractAjaxProcessor, {
+PresenterManagementAjax.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
     
     getDealers: function() {
         try {

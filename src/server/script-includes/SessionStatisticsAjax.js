@@ -1,5 +1,5 @@
 var SessionStatisticsAjax = Class.create();
-SessionStatisticsAjax.prototype = Object.extendsObject(AbstractAjaxProcessor, {
+SessionStatisticsAjax.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
     
     getSessionStatistics: function() {
         try {

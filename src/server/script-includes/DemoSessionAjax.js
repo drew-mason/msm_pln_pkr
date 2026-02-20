@@ -1,5 +1,5 @@
 var DemoSessionAjax = Class.create();
-DemoSessionAjax.prototype = Object.extendsObject(AbstractAjaxProcessor, {
+DemoSessionAjax.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
     
     createDemoSession: function() {
         try {

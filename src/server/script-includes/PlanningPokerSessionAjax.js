@@ -1,5 +1,5 @@
 var PlanningPokerSessionAjax = Class.create();
-PlanningPokerSessionAjax.prototype = Object.extendsObject(AbstractAjaxProcessor, {
+PlanningPokerSessionAjax.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
     
     getSession: function() {
         try {

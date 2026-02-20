@@ -1,5 +1,5 @@
 var PlanningPokerTestRunner = Class.create();
-PlanningPokerTestRunner.prototype = Object.extendsObject(AbstractAjaxProcessor, {
+PlanningPokerTestRunner.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
     
     getTestInfo: function() {
         try {

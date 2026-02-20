@@ -1,5 +1,5 @@
 var PermissionsAdminAjax = Class.create();
-PermissionsAdminAjax.prototype = Object.extendsObject(AbstractAjaxProcessor, {
+PermissionsAdminAjax.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
     
     getPermissionsData: function() {
         try {

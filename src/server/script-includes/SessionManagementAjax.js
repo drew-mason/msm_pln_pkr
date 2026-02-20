@@ -1,5 +1,5 @@
 var SessionManagementAjax = Class.create();
-SessionManagementAjax.prototype = Object.extendsObject(AbstractAjaxProcessor, {
+SessionManagementAjax.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
     
     getScoringMethods: function() {
         try {

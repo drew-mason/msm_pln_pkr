@@ -1,5 +1,5 @@
 var PlanningPokerVotingAjax = Class.create();
-PlanningPokerVotingAjax.prototype = Object.extendsObject(AbstractAjaxProcessor, {
+PlanningPokerVotingAjax.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
     
     castVote: function() {
         try {

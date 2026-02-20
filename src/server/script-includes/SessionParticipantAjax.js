@@ -1,5 +1,5 @@
 var SessionParticipantAjax = Class.create();
-SessionParticipantAjax.prototype = Object.extendsObject(AbstractAjaxProcessor, {
+SessionParticipantAjax.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
     
     joinSession: function() {
         try {
