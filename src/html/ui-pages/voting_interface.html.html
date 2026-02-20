@@ -57,13 +57,17 @@
             padding: 0;
         }
 
+        html, body {
+            height: 100vh;
+            overflow: hidden;
+        }
+
         body {
             font-family: 'Rajdhani', 'Share Tech Mono', monospace;
             background-color: #050810;
             color: var(--dark-color);
             line-height: 1.6;
             position: relative;
-            overflow-x: hidden;
         }
 
         body::before {
@@ -247,6 +251,7 @@
             padding: 1rem 2rem;
             position: relative;
             z-index: 1;
+            overflow: hidden;
         }
 
         .story-panel {
@@ -272,9 +277,11 @@
         .sidebar {
             flex: 1;
             max-width: 400px;
+            min-height: 0;
             display: flex;
             flex-direction: column;
-            gap: 1rem;
+            gap: 0.5rem;
+            overflow: hidden;
         }
 
         .session-card {
@@ -474,9 +481,23 @@
             border: 1px solid rgba(0, 212, 255, 0.25);
             border-radius: var(--radius);
             box-shadow: var(--shadow);
-            margin-bottom: 1rem;
             position: relative;
             overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .sidebar-section.flex-fill {
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 1;
+        }
+
+        .sidebar-section.flex-fill > .section-content {
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
         }
 
         .sidebar-section::before {
@@ -912,12 +933,12 @@
             </div>
 
             <!-- Story Queue -->
-            <div class="sidebar-section">
+            <div class="sidebar-section flex-fill">
                 <div class="section-header collapsible" data-target="storyQueueContent">
                     <span>Mission Queue</span>
                     <span>▼</span>
                 </div>
-                <div class="section-content collapsed" id="storyQueueContent">
+                <div class="section-content" id="storyQueueContent">
                     <div id="storyQueue"></div>
                     <button class="btn btn-primary btn-sm" id="addStoryBtn" style="margin-top: 1rem; width: 100%; padding: 0.6rem;">
                         + Add Objective
