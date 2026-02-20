@@ -1125,7 +1125,7 @@
         
         // Load session data
         function loadSession() {
-            var ga = new GlideAjax('PlanningPokerAjax');
+            var ga = new GlideAjax('PlanningPokerSessionAjax');
             ga.addParam('sysparm_name', 'getSession');
             ga.addParam('session_id', sessionId);
             ga.getXML(function(response) {
@@ -1258,7 +1258,7 @@
                 return;
             }
             
-            var ga = new GlideAjax('PlanningPokerAjax');
+            var ga = new GlideAjax('PlanningPokerVotingAjax');
             ga.addParam('sysparm_name', 'castVote');
             ga.addParam('session_id', sessionId);
             ga.addParam('story_id', currentStory.sys_id);
@@ -1285,7 +1285,7 @@
         }
         
         function pollVotingStatus() {
-            var ga = new GlideAjax('PlanningPokerAjax');
+            var ga = new GlideAjax('PlanningPokerSessionAjax');
             ga.addParam('sysparm_name', 'getVotingStatus');
             ga.addParam('session_id', sessionId);
             ga.getXML(function(response) {
@@ -1380,7 +1380,7 @@
                 return;
             }
             
-            var ga = new GlideAjax('PlanningPokerAjax');
+            var ga = new GlideAjax('PlanningPokerStoryAjax');
             ga.addParam('sysparm_name', 'startVoting');
             ga.addParam('session_id', sessionId);
             ga.addParam('story_id', currentStory.sys_id);
@@ -1404,7 +1404,7 @@
                 return;
             }
             
-            var ga = new GlideAjax('PlanningPokerAjax');
+            var ga = new GlideAjax('PlanningPokerVotingAjax');
             ga.addParam('sysparm_name', 'revealVotes');
             ga.addParam('session_id', sessionId);
             ga.addParam('story_id', currentStory.sys_id);
@@ -1432,7 +1432,7 @@
                 return;
             }
             
-            var ga = new GlideAjax('PlanningPokerAjax');
+            var ga = new GlideAjax('PlanningPokerVotingAjax');
             ga.addParam('sysparm_name', 'resetVotes');
             ga.addParam('session_id', sessionId);
             ga.addParam('story_id', currentStory.sys_id);
@@ -1454,7 +1454,7 @@
             var currentStory = sessionData.currentStory;
             var comments = document.getElementById('skipComments').value;
             
-            var ga = new GlideAjax('PlanningPokerAjax');
+            var ga = new GlideAjax('PlanningPokerStoryAjax');
             ga.addParam('sysparm_name', 'skipStory');
             ga.addParam('session_id', sessionId);
             ga.addParam('story_id', currentStory.sys_id);
@@ -1483,7 +1483,7 @@
                 return;
             }
             
-            var ga = new GlideAjax('PlanningPokerAjax');
+            var ga = new GlideAjax('PlanningPokerStoryAjax');
             ga.addParam('sysparm_name', 'setStoryPoints');
             ga.addParam('session_id', sessionId);
             ga.addParam('story_id', currentStory.sys_id);
