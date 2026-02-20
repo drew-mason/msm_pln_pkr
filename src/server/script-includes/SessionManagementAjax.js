@@ -160,6 +160,7 @@ SessionManagementAjax.prototype = Object.extendsObject(global.AbstractAjaxProces
             while (sessionGr.next()) {
                 // Get participant counts
                 var participantCounts = this._getParticipantCounts(sessionGr.getValue('sys_id'));
+                var storyCounts = this._getStoryCounts(sessionGr.getValue('sys_id'));
                 
                 sessions.push({
                     sys_id: sessionGr.getValue('sys_id'),
@@ -168,8 +169,8 @@ SessionManagementAjax.prototype = Object.extendsObject(global.AbstractAjaxProces
                     status: sessionGr.getValue('status'),
                     sessionCode: sessionGr.getValue('session_code'),
                     createdOn: sessionGr.getValue('sys_created_on'),
-                    totalStories: sessionGr.getValue('total_stories') || 0,
-                    storiesCompleted: sessionGr.getValue('stories_completed') || 0,
+                    totalStories: storyCounts.total,
+                    storiesCompleted: storyCounts.completed,
                     dealerCounts: participantCounts.dealers,
                     voterCounts: participantCounts.voters,
                     spectatorCounts: participantCounts.spectators,
@@ -779,6 +780,21 @@ SessionManagementAjax.prototype = Object.extendsObject(global.AbstractAjaxProces
         });
         this.setAnswer(response);
         return response;
+    },
+
+    _getStoryCounts: function(sessionId) {
+        var total = 0;
+        var completed = 0;
+        var gr = new GlideRecord('x_902080_planningw_session_stories');
+        gr.addQuery('session', sessionId);
+        gr.query();
+        while (gr.next()) {
+            total++;
+            if (gr.getValue('status') === 'completed') {
+                completed++;
+            }
+        }
+        return { total: total, completed: completed };
     },
 
     type: 'SessionManagementAjax'
