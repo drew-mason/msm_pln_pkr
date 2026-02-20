@@ -1758,7 +1758,42 @@
                 info.appendChild(meta);
                 div.appendChild(icon);
                 div.appendChild(info);
+                
+                // Allow dealers to click a story to switch to it
+                var isDealer = sessionData && sessionData.userRole && 
+                    (sessionData.userRole.effectiveRole === 'dealer' || sessionData.userRole.isDealer);
+                if (isDealer && !isCurrent && story.status !== 'completed') {
+                    div.style.cursor = 'pointer';
+                    div.addEventListener('mouseenter', function() { this.style.background = 'rgba(0,212,255,0.06)'; });
+                    div.addEventListener('mouseleave', function() { this.style.background = ''; });
+                    (function(storyId, storyTitle) {
+                        div.addEventListener('click', function() {
+                            switchToStory(storyId, storyTitle);
+                        });
+                    })(story.sys_id, story.story_title || story.story_number || 'this objective');
+                }
+                
                 container.appendChild(div);
+            });
+        }
+        
+        function switchToStory(storyId, storyTitle) {
+            if (!confirm('Switch active objective to "' + storyTitle + '"?')) return;
+            
+            var ga = new GlideAjax('PlanningPokerStoryAjax');
+            ga.addParam('sysparm_name', 'switchToStory');
+            ga.addParam('session_id', sessionId);
+            ga.addParam('story_id', storyId);
+            ga.getXML(function(response) {
+                var result = parseAjaxResponse(response);
+                if (!result) { showToast('Failed to switch objective', 'error'); return; }
+                
+                if (result.success) {
+                    showToast('Switched to objective', 'success');
+                    loadSession();
+                } else {
+                    showToast(result.message || 'Error switching objective', 'error');
+                }
             });
         }
         
