@@ -338,11 +338,11 @@ PlanningPokerSessionAjax.prototype = Object.extendsObject(global.AbstractAjaxPro
     },
     
     _buildResponse: function(success, message, data) {
-        return {
+        return JSON.stringify({
             success: success,
             message: message,
             data: data
-        };
+        });
     },
 
     type: 'PlanningPokerSessionAjax'

@@ -442,11 +442,11 @@ PlanningPokerStoryAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
     },
     
     _buildResponse: function(success, message, data) {
-        return {
+        return JSON.stringify({
             success: success,
             message: message,
             data: data
-        };
+        });
     },
 
     type: 'PlanningPokerStoryAjax'

@@ -142,17 +142,17 @@ PlanningPokerAjax.prototype = Object.extendsObject(global.AbstractAjaxProcessor,
     },
     
     _setAnswerAndReturn: function(result) {
-        var json = JSON.stringify(result);
+        var json = typeof result === 'string' ? result : JSON.stringify(result);
         this.setAnswer(json);
         return json;
     },
     
     _buildResponse: function(success, message, data) {
-        return {
+        return JSON.stringify({
             success: success,
             message: message,
             data: data
-        };
+        });
     },
 
     type: 'PlanningPokerAjax'
