@@ -504,6 +504,10 @@
         // Safe AJAX response parser
         function parseAjaxResponse(response) {
             try {
+                // Handle string response (from getXMLAnswer)
+                if (typeof response === 'string') {
+                    return response ? JSON.parse(response) : null;
+                }
                 var xml = response.responseXML;
                 if (!xml) return null;
                 var answer = xml.documentElement.getAttribute('answer');
@@ -512,6 +516,13 @@
                     var answerEl = xml.getElementsByTagName('answer');
                     if (answerEl && answerEl.length > 0) {
                         answer = answerEl[0].textContent || answerEl[0].text;
+                    }
+                }
+                if (!answer) {
+                    // Additional fallback: check result elements (batched response format)
+                    var resultEl = xml.getElementsByTagName('result');
+                    if (resultEl && resultEl.length > 0) {
+                        answer = resultEl[0].getAttribute('answer');
                     }
                 }
                 if (!answer) return null;
@@ -597,15 +608,21 @@
         function loadUserGroups() {
             var ga = new GlideAjax('SessionManagementAjax');
             ga.addParam('sysparm_name', 'getUserGroups');
-            ga.getXML(function(response) {
-                var result = parseAjaxResponse(response);
-                if (!result) { console.error('Failed to load user groups: null response'); return; }
-                
-                if (result.success) {
-                    userGroups = result.data;
-                    populateUserGroups();
-                } else {
-                    console.error('Failed to load user groups:', result.message);
+            ga.getXMLAnswer(function(answer) {
+                try {
+                    if (!answer) {
+                        console.warn('User groups: empty response, groups feature may be unavailable');
+                        return;
+                    }
+                    var result = JSON.parse(answer);
+                    if (result.success) {
+                        userGroups = result.data;
+                        populateUserGroups();
+                    } else {
+                        console.error('Failed to load user groups:', result.message);
+                    }
+                } catch (e) {
+                    console.error('Error parsing user groups response:', e);
                 }
             });
         }
