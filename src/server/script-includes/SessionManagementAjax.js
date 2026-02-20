@@ -66,7 +66,7 @@ SessionManagementAjax.prototype = Object.extendsObject(global.AbstractAjaxProces
             var userId = gs.getUserID();
             
             // Check permission to create sessions
-            if (!this.canCreateSession()) {
+            if (!this._hasCreatePermission()) {
                 return this._buildResponse(false, 'You do not have permission to create sessions', null);
             }
             
@@ -648,24 +648,27 @@ SessionManagementAjax.prototype = Object.extendsObject(global.AbstractAjaxProces
     
     canCreateSession: function() {
         try {
-            var userId = gs.getUserID();
-            
-            // Check if user has planning poker roles
-            if (gs.hasRole('x_902080_planningw.admin') || gs.hasRole('x_902080_planningw.dealer') || gs.hasRole('x_902080_planningw.facilitator')) {
+            var canCreate = this._hasCreatePermission();
+            if (canCreate) {
                 return this._buildResponse(true, 'User can create sessions', true);
             }
-            
-            // Check legacy roles
-            if (gs.hasRole('admin') || gs.hasRole('itil')) {
-                return this._buildResponse(true, 'User can create sessions', true);
-            }
-            
             return this._buildResponse(true, 'User cannot create sessions', false);
-            
         } catch (e) {
             gs.error('[SessionManagementAjax] canCreateSession error: ' + e);
             return this._buildResponse(false, 'Error checking permissions: ' + e, false);
         }
+    },
+    
+    _hasCreatePermission: function() {
+        // Check if user has planning poker roles
+        if (gs.hasRole('x_902080_planningw.admin') || gs.hasRole('x_902080_planningw.dealer') || gs.hasRole('x_902080_planningw.facilitator')) {
+            return true;
+        }
+        // Check legacy roles
+        if (gs.hasRole('admin') || gs.hasRole('itil')) {
+            return true;
+        }
+        return false;
     },
     
     // Helper methods

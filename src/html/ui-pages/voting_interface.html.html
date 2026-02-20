@@ -1321,11 +1321,11 @@
             document.getElementById('currentStoryCard').style.display = 'block';
             document.getElementById('storyNumber').textContent = story.story_number || 'N/A';
             document.getElementById('storyTitle').textContent = story.story_title || 'Untitled Story';
-            document.getElementById('storyDescription').innerHTML = story.story_description || 'No description provided.';
+            document.getElementById('storyDescription').textContent = story.story_description || 'No description provided.';
             
             if (story.acceptance_criteria) {
                 document.getElementById('acceptanceCriteria').style.display = 'block';
-                document.getElementById('acceptanceCriteriaContent').innerHTML = story.acceptance_criteria;
+                document.getElementById('acceptanceCriteriaContent').textContent = story.acceptance_criteria;
             } else {
                 document.getElementById('acceptanceCriteria').style.display = 'none';
             }

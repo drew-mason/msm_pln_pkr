@@ -179,7 +179,7 @@ PlanningPokerStoryAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
             }
             
             var security = new PlanningPokerSecurity();
-            if (!security.canAccessSession(sessionId, userId)) {
+            if (!security.canManageSession(sessionId, userId)) {
                 return this._buildResponse(false, 'Access denied', null);
             }
             
@@ -445,13 +445,11 @@ PlanningPokerStoryAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
     },
     
     _buildResponse: function(success, message, data) {
-        var response = JSON.stringify({
+        return {
             success: success,
             message: message,
             data: data
-        });
-        this.setAnswer(response);
-        return response;
+        };
     },
 
     type: 'PlanningPokerStoryAjax'

@@ -173,12 +173,25 @@ PlanningPokerSecurity.prototype = {
     hasAppRole: function(userId, roles) {
         if (!userId || !roles) return false;
         
-        for (var i = 0; i < roles.length; i++) {
-            if (gs.hasRole(roles[i], userId)) {
-                return true;
+        // gs.hasRole only checks the current user — the 2nd param does NOT override the user.
+        // For the current user, use gs.hasRole directly.
+        if (userId === gs.getUserID()) {
+            for (var i = 0; i < roles.length; i++) {
+                if (gs.hasRole(roles[i])) {
+                    return true;
+                }
             }
+            return false;
         }
-        return false;
+        
+        // For other users, query sys_user_has_role directly
+        var roleGr = new GlideRecord('sys_user_has_role');
+        roleGr.addQuery('user', userId);
+        roleGr.addQuery('state', 'active');
+        roleGr.addQuery('role.name', 'IN', roles.join(','));
+        roleGr.setLimit(1);
+        roleGr.query();
+        return roleGr.hasNext();
     },
 
     // Helper: Check if user is in group

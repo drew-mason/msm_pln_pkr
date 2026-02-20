@@ -281,9 +281,9 @@ PlanningPokerSessionAjax.prototype = Object.extendsObject(global.AbstractAjaxPro
         while (voteGr.next()) {
             votes.push({
                 voter: voteGr.getValue('voter'),
-                voteValue: voteGr.getValue('vote_value'),
-                voteNumericValue: voteGr.getValue('vote_numeric_value'),
-                voteTime: voteGr.getValue('vote_time')
+                vote_value: voteGr.getValue('vote_value'),
+                vote_numeric_value: voteGr.getValue('vote_numeric_value'),
+                vote_time: voteGr.getValue('vote_time')
             });
         }
         
@@ -326,13 +326,11 @@ PlanningPokerSessionAjax.prototype = Object.extendsObject(global.AbstractAjaxPro
     },
     
     _buildResponse: function(success, message, data) {
-        var response = JSON.stringify({
+        return {
             success: success,
             message: message,
             data: data
-        });
-        this.setAnswer(response);
-        return response;
+        };
     },
 
     type: 'PlanningPokerSessionAjax'

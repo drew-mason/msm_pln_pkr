@@ -208,13 +208,11 @@ PlanningPokerVotingAjax.prototype = Object.extendsObject(global.AbstractAjaxProc
     },
     
     _buildResponse: function(success, message, data) {
-        var response = JSON.stringify({
+        return {
             success: success,
             message: message,
             data: data
-        });
-        this.setAnswer(response);
-        return response;
+        };
     },
 
     type: 'PlanningPokerVotingAjax'
