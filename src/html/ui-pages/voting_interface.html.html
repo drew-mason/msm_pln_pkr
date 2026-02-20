@@ -488,16 +488,30 @@
 
         .sidebar-section.flex-fill {
             flex: 1;
-            min-height: 0;
+            min-height: 80px;
             display: flex;
             flex-direction: column;
             flex-shrink: 1;
+            overflow: visible;
         }
 
         .sidebar-section.flex-fill > .section-content {
             flex: 1;
             min-height: 0;
             overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(0,212,255,0.3) transparent;
+        }
+
+        .sidebar-section.flex-fill > .section-content::-webkit-scrollbar {
+            width: 6px;
+        }
+        .sidebar-section.flex-fill > .section-content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .sidebar-section.flex-fill > .section-content::-webkit-scrollbar-thumb {
+            background: rgba(0,212,255,0.3);
+            border-radius: 3px;
         }
 
         .sidebar-section::before {
@@ -793,6 +807,7 @@
 
         .collapsible { cursor: pointer; }
         .collapsed .section-content { display: none; }
+        .collapsed .section-content + div { display: none; }
 
         .theme-toggle {
             background: rgba(255, 153, 0, 0.1);
