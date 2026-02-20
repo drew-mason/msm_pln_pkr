@@ -817,31 +817,43 @@
             box-shadow: 0 0 15px rgba(255, 153, 0, 0.3);
         }
 
-        /* Custom themed scrollbars */
-        * {
+        /* Custom themed scrollbars for all scrollable areas */
+        .story-panel,
+        .section-content,
+        .fixed-scroll-area,
+        .modal-body {
             scrollbar-width: thin;
             scrollbar-color: rgba(0, 212, 255, 0.35) rgba(5, 10, 20, 0.6);
         }
-        ::-webkit-scrollbar {
+        .story-panel::-webkit-scrollbar,
+        .section-content::-webkit-scrollbar,
+        .fixed-scroll-area::-webkit-scrollbar,
+        .modal-body::-webkit-scrollbar {
             width: 8px;
             height: 8px;
         }
-        ::-webkit-scrollbar-track {
+        .story-panel::-webkit-scrollbar-track,
+        .section-content::-webkit-scrollbar-track,
+        .fixed-scroll-area::-webkit-scrollbar-track,
+        .modal-body::-webkit-scrollbar-track {
             background: rgba(5, 10, 20, 0.6);
             border-left: 1px solid rgba(0, 212, 255, 0.1);
         }
-        ::-webkit-scrollbar-thumb {
+        .story-panel::-webkit-scrollbar-thumb,
+        .section-content::-webkit-scrollbar-thumb,
+        .fixed-scroll-area::-webkit-scrollbar-thumb,
+        .modal-body::-webkit-scrollbar-thumb {
             background: linear-gradient(180deg, rgba(0, 212, 255, 0.4), rgba(0, 180, 220, 0.25));
             border-radius: 4px;
             border: 1px solid rgba(0, 212, 255, 0.2);
         }
-        ::-webkit-scrollbar-thumb:hover {
+        .story-panel::-webkit-scrollbar-thumb:hover,
+        .section-content::-webkit-scrollbar-thumb:hover,
+        .fixed-scroll-area::-webkit-scrollbar-thumb:hover,
+        .modal-body::-webkit-scrollbar-thumb:hover {
             background: linear-gradient(180deg, rgba(0, 212, 255, 0.6), rgba(0, 180, 220, 0.4));
             border-color: rgba(0, 212, 255, 0.4);
             box-shadow: 0 0 6px rgba(0, 212, 255, 0.3);
-        }
-        ::-webkit-scrollbar-corner {
-            background: rgba(5, 10, 20, 0.6);
         }
 
         @media (max-width: 768px) {
