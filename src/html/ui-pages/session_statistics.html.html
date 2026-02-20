@@ -392,6 +392,7 @@
     </div>
 
     <script>
+    //<![CDATA[
         var sessionId = getUrlParameter('session_id');
 
         document.addEventListener('DOMContentLoaded', function() {
@@ -567,6 +568,7 @@
             var results = regex.exec(location.search);
             return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
         }
+    //]]>
     </script>
 </body>
 </html>

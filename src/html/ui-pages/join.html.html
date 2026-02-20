@@ -286,6 +286,7 @@
     </div>
 
     <script>
+    //<![CDATA[
         var foundSession = null;
         var urlSessionCode = getUrlParameter('session_code');
 
@@ -452,6 +453,7 @@
             var results = regex.exec(location.search);
             return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
         }
+    //]]>
     </script>
 </body>
 </html>

@@ -687,12 +687,16 @@
     </form>
 
     <script>
-        // Global variables
-        var sessionData = null;
+        // Jelly-resolved variables (must remain outside CDATA)
         var currentUser = {
             id: '${gs.getUserID()}',
             name: '${gs.getUserName()}'
         };
+    </script>
+    <script>
+    //<![CDATA[
+        // Global variables
+        var sessionData = null;
         var pollInterval = null;
         var sessionId = getUrlParameter('session_id');
 
@@ -1277,6 +1281,7 @@
                 clearInterval(pollInterval);
             }
         });
+    //]]>
     </script>
 </body>
 </html>
