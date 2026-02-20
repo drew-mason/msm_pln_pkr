@@ -17,6 +17,10 @@ declare global {
                         table: 'sys_scope_privilege'
                         id: '74e4c933830b7a50c97cc2d6feaad37a'
                     }
+                    '9aa586338303ba50c97cc2d6feaad31e': {
+                        table: 'sys_scope_privilege'
+                        id: '9aa586338303ba50c97cc2d6feaad31e'
+                    }
                     a7e48d33830b7a50c97cc2d6feaad3c2: {
                         table: 'sys_scope_privilege'
                         id: 'a7e48d33830b7a50c97cc2d6feaad3c2'
