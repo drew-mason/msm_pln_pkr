@@ -34,19 +34,16 @@ PresenterManagementAjax.prototype = Object.extendsObject(global.AbstractAjaxProc
             
             while (partGr.next()) {
                 var dealerUserId = partGr.getValue('user');
-                var userGr = new GlideRecord('sys_user');
                 
-                if (userGr.get(dealerUserId)) {
-                    dealers.push({
-                        userId: dealerUserId,
-                        name: userGr.getValue('name'),
-                        firstName: userGr.getValue('first_name'),
-                        lastName: userGr.getValue('last_name'),
-                        isPresenter: partGr.getValue('is_presenter') == 'true',
-                        isOnline: partGr.getValue('is_online') == 'true',
-                        joinedAt: partGr.getValue('joined_at')
-                    });
-                }
+                dealers.push({
+                    userId: dealerUserId,
+                    name: partGr.getDisplayValue('user'),
+                    firstName: partGr.user.first_name.toString(),
+                    lastName: partGr.user.last_name.toString(),
+                    isPresenter: partGr.getValue('is_presenter') == 'true',
+                    isOnline: partGr.getValue('is_online') == 'true',
+                    joinedAt: partGr.getValue('joined_at')
+                });
             }
             
             return this._buildResponse(true, 'Dealers retrieved', dealers);
@@ -91,16 +88,13 @@ PresenterManagementAjax.prototype = Object.extendsObject(global.AbstractAjaxProc
                 return this._buildResponse(false, 'User is not an active dealer in this session', null);
             }
             
-            // Clear existing presenter flags
+            // Clear existing presenter flags in one operation
             var allDealerGr = new GlideRecord('x_902080_planningw_session_participant');
             allDealerGr.addQuery('session', sessionId);
             allDealerGr.addQuery('role', 'dealer');
-            allDealerGr.query();
-            
-            while (allDealerGr.next()) {
-                allDealerGr.setValue('is_presenter', false);
-                allDealerGr.update();
-            }
+            allDealerGr.addQuery('is_presenter', true);
+            allDealerGr.setValue('is_presenter', false);
+            allDealerGr.updateMultiple();
             
             // Set new presenter flag
             presenterPartGr.setValue('is_presenter', true);

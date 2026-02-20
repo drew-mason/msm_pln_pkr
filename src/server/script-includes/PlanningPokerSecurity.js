@@ -153,9 +153,10 @@ PlanningPokerSecurity.prototype = {
         try {
             var voterGroupGr = new GlideRecord('x_902080_planningw_session_voter_groups');
             voterGroupGr.addQuery('session', sessionId);
+            voterGroupGr.setLimit(1);
             voterGroupGr.query();
             
-            return voterGroupGr.getRowCount() > 0;
+            return voterGroupGr.hasNext();
 
         } catch (e) {
             gs.error('[PlanningPokerSecurity] sessionHasVoterGroups error: ' + String(e.message));

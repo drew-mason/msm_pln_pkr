@@ -157,26 +157,79 @@ SessionManagementAjax.prototype = Object.extendsObject(global.AbstractAjaxProces
             sessionGr.orderByDesc('sys_created_on');
             sessionGr.query();
             
+            // Collect session IDs and base data first
+            var sessionIds = [];
+            var sessionDataList = [];
             while (sessionGr.next()) {
-                // Get participant counts
-                var participantCounts = this._getParticipantCounts(sessionGr.getValue('sys_id'));
-                var storyCounts = this._getStoryCounts(sessionGr.getValue('sys_id'));
-                
-                sessions.push({
-                    sys_id: sessionGr.getValue('sys_id'),
+                var sid = sessionGr.getValue('sys_id');
+                sessionIds.push(sid);
+                sessionDataList.push({
+                    sys_id: sid,
                     name: sessionGr.getValue('name'),
                     description: sessionGr.getValue('description'),
                     status: sessionGr.getValue('status'),
                     sessionCode: sessionGr.getValue('session_code'),
                     createdOn: sessionGr.getValue('sys_created_on'),
-                    totalStories: storyCounts.total,
-                    storiesCompleted: storyCounts.completed,
-                    dealerCounts: participantCounts.dealers,
-                    voterCounts: participantCounts.voters,
-                    spectatorCounts: participantCounts.spectators,
                     easyMode: sessionGr.getValue('easy_mode') == 'true',
                     allowSpectators: sessionGr.getValue('allow_spectators') == 'true'
                 });
+            }
+            
+            // Batch participant counts using GlideAggregate
+            var partCounts = {};
+            if (sessionIds.length > 0) {
+                var partGa = new GlideAggregate('x_902080_planningw_session_participant');
+                partGa.addQuery('session', 'IN', sessionIds.join(','));
+                partGa.addQuery('status', 'active');
+                partGa.addAggregate('COUNT');
+                partGa.groupBy('session');
+                partGa.groupBy('role');
+                partGa.query();
+                while (partGa.next()) {
+                    var pSid = partGa.getValue('session');
+                    var role = partGa.getValue('role');
+                    var cnt = parseInt(partGa.getAggregate('COUNT'), 10);
+                    if (!partCounts[pSid]) partCounts[pSid] = { dealers: 0, voters: 0, spectators: 0 };
+                    if (role === 'dealer') partCounts[pSid].dealers = cnt;
+                    else if (role === 'voter') partCounts[pSid].voters = cnt;
+                    else if (role === 'spectator') partCounts[pSid].spectators = cnt;
+                }
+            }
+            
+            // Batch story counts using GlideAggregate
+            var storyTotals = {};
+            var storyCompleted = {};
+            if (sessionIds.length > 0) {
+                var totalGa = new GlideAggregate('x_902080_planningw_session_stories');
+                totalGa.addQuery('session', 'IN', sessionIds.join(','));
+                totalGa.addAggregate('COUNT');
+                totalGa.groupBy('session');
+                totalGa.query();
+                while (totalGa.next()) {
+                    storyTotals[totalGa.getValue('session')] = parseInt(totalGa.getAggregate('COUNT'), 10);
+                }
+                
+                var compGa = new GlideAggregate('x_902080_planningw_session_stories');
+                compGa.addQuery('session', 'IN', sessionIds.join(','));
+                compGa.addQuery('status', 'completed');
+                compGa.addAggregate('COUNT');
+                compGa.groupBy('session');
+                compGa.query();
+                while (compGa.next()) {
+                    storyCompleted[compGa.getValue('session')] = parseInt(compGa.getAggregate('COUNT'), 10);
+                }
+            }
+            
+            // Assemble results
+            for (var i = 0; i < sessionDataList.length; i++) {
+                var sData = sessionDataList[i];
+                var pc = partCounts[sData.sys_id] || { dealers: 0, voters: 0, spectators: 0 };
+                sData.totalStories = storyTotals[sData.sys_id] || 0;
+                sData.storiesCompleted = storyCompleted[sData.sys_id] || 0;
+                sData.dealerCounts = pc.dealers;
+                sData.voterCounts = pc.voters;
+                sData.spectatorCounts = pc.spectators;
+                sessions.push(sData);
             }
             
             return this._buildResponse(true, 'Sessions retrieved', sessions);

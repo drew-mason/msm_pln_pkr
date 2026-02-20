@@ -146,6 +146,17 @@ PlanningPokerSessionAjax.prototype = Object.extendsObject(global.AbstractAjaxPro
     _getParticipants: function(sessionId, storyId) {
         var participants = [];
         
+        // Pre-load voters for the current story in one query
+        var voterSet = {};
+        if (storyId) {
+            var voteGr = new GlideRecord('x_902080_planningw_planning_vote');
+            voteGr.addQuery('story', storyId);
+            voteGr.query();
+            while (voteGr.next()) {
+                voterSet[voteGr.getValue('voter')] = true;
+            }
+        }
+        
         var partGr = new GlideRecord('x_902080_planningw_session_participant');
         partGr.addQuery('session', sessionId);
         partGr.addQuery('status', 'active');
@@ -155,31 +166,18 @@ PlanningPokerSessionAjax.prototype = Object.extendsObject(global.AbstractAjaxPro
         
         while (partGr.next()) {
             var userId = partGr.getValue('user');
-            var userGr = new GlideRecord('sys_user');
-            if (userGr.get(userId)) {
-                var hasVoted = false;
-                
-                // Check if user has voted on current story
-                if (storyId) {
-                    var voteGr = new GlideRecord('x_902080_planningw_planning_vote');
-                    voteGr.addQuery('story', storyId);
-                    voteGr.addQuery('voter', userId);
-                    voteGr.query();
-                    hasVoted = voteGr.hasNext();
-                }
-                
-                participants.push({
-                    userId: userId,
-                    name: userGr.getValue('name'),
-                    firstName: userGr.getValue('first_name'),
-                    lastName: userGr.getValue('last_name'),
-                    role: partGr.getValue('role'),
-                    isPresenter: partGr.getValue('is_presenter') == 'true',
-                    isOnline: partGr.getValue('is_online') == 'true',
-                    hasVoted: hasVoted,
-                    joinedAt: partGr.getValue('joined_at')
-                });
-            }
+            
+            participants.push({
+                userId: userId,
+                name: partGr.getDisplayValue('user'),
+                firstName: partGr.user.first_name.toString(),
+                lastName: partGr.user.last_name.toString(),
+                role: partGr.getValue('role'),
+                isPresenter: partGr.getValue('is_presenter') == 'true',
+                isOnline: partGr.getValue('is_online') == 'true',
+                hasVoted: storyId ? (voterSet[userId] === true) : false,
+                joinedAt: partGr.getValue('joined_at')
+            });
         }
         
         return participants;
@@ -298,10 +296,14 @@ PlanningPokerSessionAjax.prototype = Object.extendsObject(global.AbstractAjaxPro
     },
     
     _getTotalVoteCount: function(storyId) {
-        var voteGr = new GlideRecord('x_902080_planningw_planning_vote');
-        voteGr.addQuery('story', storyId);
-        voteGr.query();
-        return voteGr.getRowCount();
+        var voteGa = new GlideAggregate('x_902080_planningw_planning_vote');
+        voteGa.addQuery('story', storyId);
+        voteGa.addAggregate('COUNT');
+        voteGa.query();
+        if (voteGa.next()) {
+            return parseInt(voteGa.getAggregate('COUNT'), 10);
+        }
+        return 0;
     },
 
     _getStoryQueue: function(sessionId) {

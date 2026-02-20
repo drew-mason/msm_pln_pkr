@@ -268,27 +268,62 @@ PermissionsAdminAjax.prototype = Object.extendsObject(global.AbstractAjaxProcess
     },
     
     _getGroupMemberCount: function(groupId) {
-        var memberGr = new GlideRecord('sys_user_grmember');
-        memberGr.addQuery('group', groupId);
-        memberGr.query();
-        return memberGr.getRowCount();
+        var memberGa = new GlideAggregate('sys_user_grmember');
+        memberGa.addQuery('group', groupId);
+        memberGa.addAggregate('COUNT');
+        memberGa.query();
+        if (memberGa.next()) {
+            return parseInt(memberGa.getAggregate('COUNT'), 10);
+        }
+        return 0;
     },
     
     _getPermissionStats: function() {
-        // Count users who can create sessions
+        // Count total active users with GlideAggregate
+        var totalGa = new GlideAggregate('sys_user');
+        totalGa.addQuery('active', true);
+        totalGa.addAggregate('COUNT');
+        totalGa.query();
         var totalUsers = 0;
-        var usersWithPermission = 0;
+        if (totalGa.next()) {
+            totalUsers = parseInt(totalGa.getAggregate('COUNT'), 10);
+        }
         
-        var userGr = new GlideRecord('sys_user');
-        userGr.addQuery('active', true);
-        userGr.query();
+        // Count distinct users with qualifying roles (one query instead of per-user)
+        var qualifyingRoles = 'x_902080_planningw.admin,x_902080_planningw.dealer,x_902080_planningw.facilitator,admin,itil';
+        var usersWithRoles = {};
+        var roleGa = new GlideAggregate('sys_user_has_role');
+        roleGa.addQuery('user.active', true);
+        roleGa.addQuery('role.name', 'IN', qualifyingRoles);
+        roleGa.groupBy('user');
+        roleGa.addAggregate('COUNT');
+        roleGa.query();
+        while (roleGa.next()) {
+            usersWithRoles[roleGa.getValue('user')] = true;
+        }
         
-        while (userGr.next()) {
-            totalUsers++;
-            var userId = userGr.getValue('sys_id');
-            
-            if (this._testUserCanCreateSessions(userId)) {
-                usersWithPermission++;
+        var usersWithPermission = Object.keys(usersWithRoles).length;
+        
+        // If restricted mode, intersect with allowed group membership
+        var restrictedMode = gs.getProperty('x_902080_planningw.session.creation.restricted', 'false') === 'true';
+        if (restrictedMode) {
+            var allowedGroupIds = this._getAllowedGroupIds();
+            if (allowedGroupIds.length > 0) {
+                var usersInGroups = {};
+                var memberGr = new GlideRecord('sys_user_grmember');
+                memberGr.addQuery('group', 'IN', allowedGroupIds.join(','));
+                memberGr.addQuery('user.active', true);
+                memberGr.query();
+                while (memberGr.next()) {
+                    usersInGroups[memberGr.getValue('user')] = true;
+                }
+                
+                // Count intersection
+                var count = 0;
+                for (var userId in usersWithRoles) {
+                    if (usersInGroups[userId]) count++;
+                }
+                usersWithPermission = count;
             }
         }
         

@@ -28,12 +28,45 @@ SessionStatisticsAjax.prototype = Object.extendsObject(global.AbstractAjaxProces
                 return this._buildResponse(false, 'Statistics only available for completed sessions', null);
             }
             
+            // Pre-load all votes for the session in one query (eliminates N+1)
+            var allVotesByStory = {};
+            var allVotesList = [];
+            var voteGr = new GlideRecord('x_902080_planningw_planning_vote');
+            voteGr.addQuery('session', sessionId);
+            voteGr.query();
+            while (voteGr.next()) {
+                var vote = {
+                    voter: voteGr.getValue('voter'),
+                    vote_value: voteGr.getValue('vote_value'),
+                    vote_numeric_value: voteGr.getValue('vote_numeric_value'),
+                    vote_time: voteGr.getValue('vote_time'),
+                    story: voteGr.getValue('story')
+                };
+                allVotesList.push(vote);
+                var vStoryId = vote.story;
+                if (!allVotesByStory[vStoryId]) allVotesByStory[vStoryId] = [];
+                allVotesByStory[vStoryId].push(vote);
+            }
+            
+            // Pre-load participants with dot-walk (no per-user query)
+            var participantMap = {};
+            var partGr = new GlideRecord('x_902080_planningw_session_participant');
+            partGr.addQuery('session', sessionId);
+            partGr.query();
+            while (partGr.next()) {
+                var uid = partGr.getValue('user');
+                participantMap[uid] = {
+                    name: partGr.getDisplayValue('user'),
+                    role: partGr.getValue('role')
+                };
+            }
+            
             var statistics = {
                 sessionInfo: this._getSessionInfo(sessionGr),
-                metrics: this._calculateMetrics(sessionId),
-                votingPatterns: this._getVotingPatterns(sessionId),
-                storyDetails: this._getStoryDetails(sessionId),
-                teamPerformance: this._getTeamPerformance(sessionId)
+                metrics: this._calculateMetrics(sessionId, allVotesByStory),
+                votingPatterns: this._getVotingPatterns(allVotesList),
+                storyDetails: this._getStoryDetails(sessionId, allVotesByStory),
+                teamPerformance: this._getTeamPerformance(sessionId, allVotesByStory, participantMap)
             };
             
             return this._buildResponse(true, 'Statistics retrieved', statistics);
@@ -69,7 +102,7 @@ SessionStatisticsAjax.prototype = Object.extendsObject(global.AbstractAjaxProces
         };
     },
     
-    _calculateMetrics: function(sessionId) {
+    _calculateMetrics: function(sessionId, allVotesByStory) {
         var totalStories = 0;
         var completedStories = 0;
         var totalPoints = 0;
@@ -94,21 +127,16 @@ SessionStatisticsAjax.prototype = Object.extendsObject(global.AbstractAjaxProces
                 }
             }
             
-            // Count votes for this story
+            // Use pre-loaded votes instead of per-story query
             var storyId = storyGr.getValue('sys_id');
-            var voteGr = new GlideRecord('x_902080_planningw_planning_vote');
-            voteGr.addQuery('story', storyId);
-            voteGr.query();
-            
-            var storyVoteCount = 0;
+            var storyVotes = allVotesByStory[storyId] || [];
+            var storyVoteCount = storyVotes.length;
             var voteValues = {};
             
-            while (voteGr.next()) {
+            for (var v = 0; v < storyVotes.length; v++) {
                 totalVotes++;
-                storyVoteCount++;
-                uniqueVoters[voteGr.getValue('voter')] = true;
-                
-                var voteValue = voteGr.getValue('vote_value');
+                uniqueVoters[storyVotes[v].voter] = true;
+                var voteValue = storyVotes[v].vote_value;
                 voteValues[voteValue] = (voteValues[voteValue] || 0) + 1;
             }
             
@@ -141,17 +169,13 @@ SessionStatisticsAjax.prototype = Object.extendsObject(global.AbstractAjaxProces
         };
     },
     
-    _getVotingPatterns: function(sessionId) {
+    _getVotingPatterns: function(allVotesList) {
         var voteDistribution = {};
         var insights = [];
         
-        // Count all vote values across session
-        var voteGr = new GlideRecord('x_902080_planningw_planning_vote');
-        voteGr.addQuery('session', sessionId);
-        voteGr.query();
-        
-        while (voteGr.next()) {
-            var voteValue = voteGr.getValue('vote_value');
+        // Count all vote values from pre-loaded data
+        for (var i = 0; i < allVotesList.length; i++) {
+            var voteValue = allVotesList[i].vote_value;
             voteDistribution[voteValue] = (voteDistribution[voteValue] || 0) + 1;
         }
         
@@ -180,7 +204,7 @@ SessionStatisticsAjax.prototype = Object.extendsObject(global.AbstractAjaxProces
         };
     },
     
-    _getStoryDetails: function(sessionId) {
+    _getStoryDetails: function(sessionId, allVotesByStory) {
         var stories = [];
         
         var storyGr = new GlideRecord('x_902080_planningw_session_stories');
@@ -191,21 +215,19 @@ SessionStatisticsAjax.prototype = Object.extendsObject(global.AbstractAjaxProces
         while (storyGr.next()) {
             var storyId = storyGr.getValue('sys_id');
             
-            // Get votes for this story
+            // Use pre-loaded votes instead of per-story query
+            var storyVotes = allVotesByStory[storyId] || [];
             var votes = [];
-            var voteGr = new GlideRecord('x_902080_planningw_planning_vote');
-            voteGr.addQuery('story', storyId);
-            voteGr.query();
-            
             var voteDistribution = {};
-            while (voteGr.next()) {
-                var voteValue = voteGr.getValue('vote_value');
+            
+            for (var v = 0; v < storyVotes.length; v++) {
+                var voteValue = storyVotes[v].vote_value;
                 voteDistribution[voteValue] = (voteDistribution[voteValue] || 0) + 1;
                 
                 votes.push({
-                    voter: voteGr.getValue('voter'),
+                    voter: storyVotes[v].voter,
                     voteValue: voteValue,
-                    voteNumericValue: voteGr.getValue('vote_numeric_value')
+                    voteNumericValue: storyVotes[v].vote_numeric_value
                 });
             }
             
@@ -248,31 +270,22 @@ SessionStatisticsAjax.prototype = Object.extendsObject(global.AbstractAjaxProces
         return stories;
     },
     
-    _getTeamPerformance: function(sessionId) {
+    _getTeamPerformance: function(sessionId, allVotesByStory, participantMap) {
         var participants = {};
         
-        // Get all participants
-        var partGr = new GlideRecord('x_902080_planningw_session_participant');
-        partGr.addQuery('session', sessionId);
-        partGr.query();
-        
-        while (partGr.next()) {
-            var userId = partGr.getValue('user');
-            var userGr = new GlideRecord('sys_user');
-            
-            if (userGr.get(userId)) {
-                participants[userId] = {
-                    name: userGr.getValue('name'),
-                    role: partGr.getValue('role'),
-                    storiesVoted: 0,
-                    totalVotes: 0,
-                    avgResponseTime: 0,
-                    participationRate: 0
-                };
-            }
+        // Use pre-loaded participant data (no per-user query)
+        for (var uid in participantMap) {
+            participants[uid] = {
+                name: participantMap[uid].name,
+                role: participantMap[uid].role,
+                storiesVoted: 0,
+                totalVotes: 0,
+                avgResponseTime: 0,
+                participationRate: 0
+            };
         }
         
-        // Count votes by participant
+        // Count votes by participant using pre-loaded vote data
         var totalStories = 0;
         var storyGr = new GlideRecord('x_902080_planningw_session_stories');
         storyGr.addQuery('session', sessionId);
@@ -282,14 +295,11 @@ SessionStatisticsAjax.prototype = Object.extendsObject(global.AbstractAjaxProces
         while (storyGr.next()) {
             totalStories++;
             var storyId = storyGr.getValue('sys_id');
+            var storyVotes = allVotesByStory[storyId] || [];
             var storiesWithVotes = {};
             
-            var voteGr = new GlideRecord('x_902080_planningw_planning_vote');
-            voteGr.addQuery('story', storyId);
-            voteGr.query();
-            
-            while (voteGr.next()) {
-                var voterId = voteGr.getValue('voter');
+            for (var v = 0; v < storyVotes.length; v++) {
+                var voterId = storyVotes[v].voter;
                 if (participants[voterId]) {
                     participants[voterId].totalVotes++;
                     storiesWithVotes[voterId] = true;
@@ -297,9 +307,9 @@ SessionStatisticsAjax.prototype = Object.extendsObject(global.AbstractAjaxProces
             }
             
             // Count stories voted for each participant
-            for (var userId in storiesWithVotes) {
-                if (participants[userId]) {
-                    participants[userId].storiesVoted++;
+            for (var uId in storiesWithVotes) {
+                if (participants[uId]) {
+                    participants[uId].storiesVoted++;
                 }
             }
         }

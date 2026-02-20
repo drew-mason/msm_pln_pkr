@@ -173,16 +173,19 @@ PlanningPokerVotingAjax.prototype = Object.extendsObject(global.AbstractAjaxProc
                 return this._buildResponse(false, 'You do not have permission to reset votes', null);
             }
             
-            // Delete all votes for this story
+            // Count then bulk-delete all votes for this story
+            var countGa = new GlideAggregate('x_902080_planningw_planning_vote');
+            countGa.addQuery('story', storyId);
+            countGa.addAggregate('COUNT');
+            countGa.query();
             var deletedCount = 0;
+            if (countGa.next()) {
+                deletedCount = parseInt(countGa.getAggregate('COUNT'), 10);
+            }
+            
             var voteGr = new GlideRecord('x_902080_planningw_planning_vote');
             voteGr.addQuery('story', storyId);
-            voteGr.query();
-            
-            while (voteGr.next()) {
-                voteGr.deleteRecord();
-                deletedCount++;
-            }
+            voteGr.deleteMultiple();
             
             // Update story: increment times_revoted, reset status to voting, update timestamp
             var storyGr = new GlideRecord('x_902080_planningw_session_stories');
