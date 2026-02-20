@@ -203,7 +203,7 @@ SessionManagementAjax.prototype = Object.extendsObject(global.AbstractAjaxProces
             
             // Check permissions
             var security = new PlanningPokerSecurity();
-            if (!security.canManageSession(sessionGr, userId)) {
+            if (!security.canManageSession(sessionId, userId)) {
                 return this._buildResponse(false, 'Access denied', null);
             }
             
@@ -265,7 +265,7 @@ SessionManagementAjax.prototype = Object.extendsObject(global.AbstractAjaxProces
             }
             
             var security = new PlanningPokerSecurity();
-            if (!security.canManageSession(sessionGr, userId)) {
+            if (!security.canManageSession(sessionId, userId)) {
                 return this._buildResponse(false, 'Access denied', null);
             }
             
@@ -345,7 +345,7 @@ SessionManagementAjax.prototype = Object.extendsObject(global.AbstractAjaxProces
             }
             
             var security = new PlanningPokerSecurity();
-            if (!security.canManageSession(sessionGr, userId)) {
+            if (!security.canManageSession(sessionId, userId)) {
                 return this._buildResponse(false, 'Access denied', null);
             }
             
@@ -426,7 +426,7 @@ SessionManagementAjax.prototype = Object.extendsObject(global.AbstractAjaxProces
             }
             
             var security = new PlanningPokerSecurity();
-            if (!security.canManageSession(sessionGr, userId)) {
+            if (!security.canManageSession(sessionId, userId)) {
                 return this._buildResponse(false, 'Access denied', null);
             }
             
@@ -490,7 +490,7 @@ SessionManagementAjax.prototype = Object.extendsObject(global.AbstractAjaxProces
             }
             
             var security = new PlanningPokerSecurity();
-            if (!security.canManageSession(sessionGr, userId)) {
+            if (!security.canManageSession(sessionId, userId)) {
                 return this._buildResponse(false, 'Access denied', null);
             }
             
@@ -528,7 +528,7 @@ SessionManagementAjax.prototype = Object.extendsObject(global.AbstractAjaxProces
             }
             
             var security = new PlanningPokerSecurity();
-            if (!security.canManageSession(sessionGr, userId)) {
+            if (!security.canManageSession(sessionId, userId)) {
                 return this._buildResponse(false, 'Access denied', null);
             }
             
@@ -565,7 +565,7 @@ SessionManagementAjax.prototype = Object.extendsObject(global.AbstractAjaxProces
             }
             
             var security = new PlanningPokerSecurity();
-            if (!security.canManageSession(sessionGr, userId)) {
+            if (!security.canManageSession(sessionId, userId)) {
                 return this._buildResponse(false, 'Access denied', null);
             }
             
@@ -601,7 +601,7 @@ SessionManagementAjax.prototype = Object.extendsObject(global.AbstractAjaxProces
             }
             
             var security = new PlanningPokerSecurity();
-            if (!security.canManageSession(sessionGr, userId)) {
+            if (!security.canManageSession(sessionId, userId)) {
                 return this._buildResponse(false, 'Access denied', null);
             }
             

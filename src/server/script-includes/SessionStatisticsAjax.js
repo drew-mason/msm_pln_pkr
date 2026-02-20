@@ -19,7 +19,7 @@ SessionStatisticsAjax.prototype = Object.extendsObject(global.AbstractAjaxProces
             
             // Check access
             var security = new PlanningPokerSecurity();
-            if (!security.canAccessSession(sessionGr, userId)) {
+            if (!security.canAccessSession(sessionId, userId)) {
                 return this._buildResponse(false, 'Access denied', null);
             }
             

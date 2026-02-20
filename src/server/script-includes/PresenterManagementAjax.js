@@ -18,7 +18,7 @@ PresenterManagementAjax.prototype = Object.extendsObject(global.AbstractAjaxProc
             }
             
             var security = new PlanningPokerSecurity();
-            if (!security.canAccessSession(sessionGr, userId)) {
+            if (!security.canAccessSession(sessionId, userId)) {
                 return this._buildResponse(false, 'Access denied', null);
             }
             
@@ -75,7 +75,7 @@ PresenterManagementAjax.prototype = Object.extendsObject(global.AbstractAjaxProc
             }
             
             var security = new PlanningPokerSecurity();
-            if (!security.canManageSession(sessionGr, userId)) {
+            if (!security.canManageSession(sessionId, userId)) {
                 return this._buildResponse(false, 'You do not have permission to manage presenters', null);
             }
             
@@ -148,7 +148,7 @@ PresenterManagementAjax.prototype = Object.extendsObject(global.AbstractAjaxProc
             }
             
             var security = new PlanningPokerSecurity();
-            if (!security.canManageSession(sessionGr, userId)) {
+            if (!security.canManageSession(sessionId, userId)) {
                 return this._buildResponse(false, 'You do not have permission to add dealer groups', null);
             }
             
@@ -194,7 +194,7 @@ PresenterManagementAjax.prototype = Object.extendsObject(global.AbstractAjaxProc
             
             // Check permissions
             var security = new PlanningPokerSecurity();
-            if (!security.canManageSession(sessionGr, userId)) {
+            if (!security.canManageSession(sessionId, userId)) {
                 return this._buildResponse(false, 'You do not have permission to update story presenters', null);
             }
             

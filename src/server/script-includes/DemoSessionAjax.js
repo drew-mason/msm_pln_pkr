@@ -157,7 +157,7 @@ DemoSessionAjax.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
             
             // Check permissions
             var security = new PlanningPokerSecurity();
-            if (!security.canManageSession(sessionGr, userId)) {
+            if (!security.canManageSession(sessionId, userId)) {
                 return this._buildResponse(false, 'You do not have permission to reset this session', null);
             }
             

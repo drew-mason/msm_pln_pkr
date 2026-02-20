@@ -23,7 +23,7 @@ PlanningPokerVotingAjax.prototype = Object.extendsObject(global.AbstractAjaxProc
             
             // Check permissions
             var security = new PlanningPokerSecurity();
-            if (!security.canVote(sessionGr, userId)) {
+            if (!security.canVote(sessionId, userId)) {
                 return this._buildResponse(false, 'You do not have permission to vote', null);
             }
             
@@ -101,7 +101,7 @@ PlanningPokerVotingAjax.prototype = Object.extendsObject(global.AbstractAjaxProc
             }
             
             var security = new PlanningPokerSecurity();
-            if (!security.canManageSession(sessionGr, userId)) {
+            if (!security.canManageSession(sessionId, userId)) {
                 return this._buildResponse(false, 'You do not have permission to reveal votes', null);
             }
             
@@ -169,7 +169,7 @@ PlanningPokerVotingAjax.prototype = Object.extendsObject(global.AbstractAjaxProc
             }
             
             var security = new PlanningPokerSecurity();
-            if (!security.canManageSession(sessionGr, userId)) {
+            if (!security.canManageSession(sessionId, userId)) {
                 return this._buildResponse(false, 'You do not have permission to reset votes', null);
             }
             
