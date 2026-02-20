@@ -49,16 +49,13 @@ PlanningPokerStoryAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
             }
             sessionGr.update();
             
-            // Clear other stories' current_story flag
+            // Clear other stories' is_current_story flag
             var otherStoriesGr = new GlideRecord('x_902080_planningw_session_stories');
             otherStoriesGr.addQuery('session', sessionId);
             otherStoriesGr.addQuery('sys_id', '!=', storyId);
-            otherStoriesGr.query();
-            
-            while (otherStoriesGr.next()) {
-                otherStoriesGr.setValue('is_current_story', false);
-                otherStoriesGr.update();
-            }
+            otherStoriesGr.addQuery('is_current_story', true);
+            otherStoriesGr.setValue('is_current_story', false);
+            otherStoriesGr.updateMultiple();
             
             return this._buildResponse(true, 'Voting started successfully', {
                 storyId: storyId,
@@ -118,21 +115,7 @@ PlanningPokerStoryAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
             }
             
             // Auto-advance to next pending story
-            var nextStory = this._getNextPendingStory(sessionId);
-            if (nextStory) {
-                nextStory.setValue('status', 'voting');
-                nextStory.setValue('voting_started', new GlideDateTime());
-                nextStory.setValue('is_current_story', true);
-                nextStory.update();
-                
-                // Update session current_story
-                sessionGr.setValue('current_story', nextStory.getValue('sys_id'));
-                sessionGr.update();
-            } else {
-                // No more stories - session may auto-complete via business rule
-                sessionGr.setValue('current_story', '');
-                sessionGr.update();
-            }
+            var nextStory = this._advanceToNextStory(sessionId, sessionGr);
             
             return this._buildResponse(true, 'Story points set successfully', {
                 storyId: storyId,
@@ -260,16 +243,7 @@ PlanningPokerStoryAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
             storyGr.update();
             
             // Auto-advance to next story
-            var nextStory = this._getNextPendingStory(sessionId);
-            if (nextStory) {
-                nextStory.setValue('status', 'voting');
-                nextStory.setValue('voting_started', new GlideDateTime());
-                nextStory.setValue('is_current_story', true);
-                nextStory.update();
-                
-                sessionGr.setValue('current_story', nextStory.getValue('sys_id'));
-                sessionGr.update();
-            }
+            var nextStory = this._advanceToNextStory(sessionId, sessionGr);
             
             return this._buildResponse(true, 'Story completed successfully', {
                 storyId: storyId,
@@ -316,16 +290,7 @@ PlanningPokerStoryAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
             storyGr.update();
             
             // Auto-advance to next story
-            var nextStory = this._getNextPendingStory(sessionId);
-            if (nextStory) {
-                nextStory.setValue('status', 'voting');
-                nextStory.setValue('voting_started', new GlideDateTime());
-                nextStory.setValue('is_current_story', true);
-                nextStory.update();
-                
-                sessionGr.setValue('current_story', nextStory.getValue('sys_id'));
-                sessionGr.update();
-            }
+            var nextStory = this._advanceToNextStory(sessionId, sessionGr);
             
             return this._buildResponse(true, 'Story skipped successfully', {
                 storyId: storyId,
@@ -398,12 +363,9 @@ PlanningPokerStoryAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
             // Clear current story flag from all stories
             var allStoriesGr = new GlideRecord('x_902080_planningw_session_stories');
             allStoriesGr.addQuery('session', sessionId);
-            allStoriesGr.query();
-            
-            while (allStoriesGr.next()) {
-                allStoriesGr.setValue('is_current_story', false);
-                allStoriesGr.update();
-            }
+            allStoriesGr.addQuery('is_current_story', true);
+            allStoriesGr.setValue('is_current_story', false);
+            allStoriesGr.updateMultiple();
             
             // Set new current story
             var storyGr = new GlideRecord('x_902080_planningw_session_stories');
@@ -431,6 +393,30 @@ PlanningPokerStoryAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
     },
     
     // Helper methods
+    _advanceToNextStory: function(sessionId, sessionGr) {
+        // Clear is_current_story flag on all stories for this session
+        var clearGr = new GlideRecord('x_902080_planningw_session_stories');
+        clearGr.addQuery('session', sessionId);
+        clearGr.addQuery('is_current_story', true);
+        clearGr.setValue('is_current_story', false);
+        clearGr.updateMultiple();
+        
+        var nextStory = this._getNextPendingStory(sessionId);
+        if (nextStory) {
+            nextStory.setValue('status', 'voting');
+            nextStory.setValue('voting_started', new GlideDateTime());
+            nextStory.setValue('is_current_story', true);
+            nextStory.update();
+            
+            sessionGr.setValue('current_story', nextStory.getValue('sys_id'));
+            sessionGr.update();
+        } else {
+            sessionGr.setValue('current_story', '');
+            sessionGr.update();
+        }
+        return nextStory;
+    },
+    
     _getNextPendingStory: function(sessionId) {
         var nextStoryGr = new GlideRecord('x_902080_planningw_session_stories');
         nextStoryGr.addQuery('session', sessionId);

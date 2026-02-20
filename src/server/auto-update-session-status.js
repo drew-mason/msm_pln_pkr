@@ -1,6 +1,6 @@
 import { gs, GlideAggregate, GlideRecord } from '@servicenow/glide'
 
-// Auto Update Session Status - Updates session status when stories are completed
+// Auto Update Session Status - Updates session counters and status when stories change
 export function autoUpdateSessionStatus(current, previous) {
     try {
         var sessionId = current.getValue('session');
@@ -17,8 +17,9 @@ export function autoUpdateSessionStatus(current, previous) {
 
         var storyFinalized = (currentStatus === 'completed' || currentStatus === 'revealed' || currentStatus === 'skipped');
         var pointsAdded = (currentPoints && currentPoints !== previousPoints);
+        var statusChanged = (currentStatus !== previousStatus);
 
-        if (!storyFinalized && !pointsAdded) {
+        if (!storyFinalized && !pointsAdded && !statusChanged) {
             return; // Nothing to process
         }
 
@@ -36,34 +37,49 @@ export function autoUpdateSessionStatus(current, previous) {
             statusCounts[status] = count;
         }
 
-        // Check if all stories are in final states (no pending or voting stories)
         var pendingCount = statusCounts['pending'] || 0;
         var votingCount = statusCounts['voting'] || 0;
+        var completedCount = (statusCounts['completed'] || 0) + (statusCounts['revealed'] || 0);
+        var skippedCount = statusCounts['skipped'] || 0;
         var totalStories = 0;
         
-        for (var status in statusCounts) {
-            totalStories += statusCounts[status];
+        for (var s in statusCounts) {
+            totalStories += statusCounts[s];
         }
 
-        // If all stories are done and at least one story was worked on
-        if ((pendingCount === 0 && votingCount === 0) && totalStories > 0) {
-            // Get fresh session record to prevent race conditions
-            var sessionGr = new GlideRecord('x_902080_planningw_planning_session');
-            if (sessionGr.get(sessionId)) {
-                var currentSessionStatus = sessionGr.getValue('status');
-                
-                // Skip if session is already completed or cancelled (idempotent check)
-                if (currentSessionStatus === 'completed' || currentSessionStatus === 'cancelled') {
-                    gs.info('[autoUpdateSessionStatus] Session already in final state: ' + currentSessionStatus);
-                    return;
-                }
+        // Count total votes for this session
+        var voteAgg = new GlideAggregate('x_902080_planningw_planning_vote');
+        voteAgg.addQuery('session', sessionId);
+        voteAgg.addAggregate('COUNT');
+        voteAgg.query();
+        var totalVotes = 0;
+        if (voteAgg.next()) {
+            totalVotes = parseInt(voteAgg.getAggregate('COUNT'));
+        }
 
-                sessionGr.setValue('status', 'completed');
-                sessionGr.setValue('active', false);
-                sessionGr.update();
-                
-                gs.info('[autoUpdateSessionStatus] Session completed: ' + sessionId + ' (Total stories: ' + totalStories + ')');
+        // Update session counter fields
+        var sessionGr = new GlideRecord('x_902080_planningw_planning_session');
+        if (sessionGr.get(sessionId)) {
+            var currentSessionStatus = sessionGr.getValue('status');
+            
+            // Always update counters
+            sessionGr.setValue('total_stories', totalStories);
+            sessionGr.setValue('stories_voted', completedCount + skippedCount);
+            sessionGr.setValue('stories_completed', completedCount);
+            sessionGr.setValue('stories_skipped', skippedCount);
+            sessionGr.setValue('total_votes', totalVotes);
+
+            // Auto-complete session if all stories are done
+            if ((pendingCount === 0 && votingCount === 0) && totalStories > 0) {
+                // Skip if session is already completed or cancelled (idempotent check)
+                if (currentSessionStatus !== 'completed' && currentSessionStatus !== 'cancelled') {
+                    sessionGr.setValue('status', 'completed');
+                    sessionGr.setValue('active', false);
+                    gs.info('[autoUpdateSessionStatus] Session completed: ' + sessionId + ' (Total stories: ' + totalStories + ')');
+                }
             }
+
+            sessionGr.update();
         }
 
     } catch (e) {

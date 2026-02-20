@@ -3,15 +3,6 @@ import { Role } from '@servicenow/sdk/core'
 
 // Planning Poker Application Roles
 
-// Admin - Full access to manage all sessions, scoring methods, and app configuration
-export const x_902080_planningw_admin = Role({
-    name: 'x_902080_planningw.admin',
-    description: 'Full access — manage all sessions, scoring methods, and app configuration',
-    elevated_privilege: false,
-    grantable: true,
-    can_delegate: true
-})
-
 // Dealer - Can create and facilitate estimation sessions
 export const x_902080_planningw_dealer = Role({
     name: 'x_902080_planningw.dealer',
@@ -29,6 +20,16 @@ export const x_902080_planningw_facilitator = Role({
     grantable: true,
     can_delegate: true,
     contains_roles: [x_902080_planningw_dealer]
+})
+
+// Admin - Full access to manage all sessions, scoring methods, and app configuration
+export const x_902080_planningw_admin = Role({
+    name: 'x_902080_planningw.admin',
+    description: 'Full access — manage all sessions, scoring methods, and app configuration',
+    elevated_privilege: false,
+    grantable: true,
+    can_delegate: true,
+    contains_roles: [x_902080_planningw_facilitator]
 })
 
 // Voter - Can participate in sessions and cast votes

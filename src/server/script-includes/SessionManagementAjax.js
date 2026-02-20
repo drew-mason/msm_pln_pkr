@@ -749,13 +749,15 @@ SessionManagementAjax.prototype = Object.extendsObject(global.AbstractAjaxProces
     },
     
     _addDealerGroupMembers: function(sessionId, dealerGroupId, excludeUserId) {
+        var addedCount = 0;
+        
         var groupMemberGr = new GlideRecord('sys_user_grmember');
         groupMemberGr.addQuery('group', dealerGroupId);
         groupMemberGr.query();
         
         while (groupMemberGr.next()) {
             var memberId = groupMemberGr.getValue('user');
-            if (memberId === excludeUserId) continue; // Skip creator, already added
+            if (memberId === excludeUserId) continue; // Skip excluded user (e.g. creator already added)
             
             // Check if already participant
             var existingGr = new GlideRecord('x_902080_planningw_session_participant');
@@ -773,8 +775,16 @@ SessionManagementAjax.prototype = Object.extendsObject(global.AbstractAjaxProces
                 participantGr.setValue('joined_at', new GlideDateTime());
                 participantGr.setValue('is_online', false);
                 participantGr.insert();
+                addedCount++;
+            } else if (existingGr.next() && existingGr.getValue('role') !== 'dealer') {
+                // Upgrade existing participant to dealer role
+                existingGr.setValue('role', 'dealer');
+                existingGr.update();
+                addedCount++;
             }
         }
+        
+        return addedCount;
     },
     
     _getParticipantCounts: function(sessionId) {
