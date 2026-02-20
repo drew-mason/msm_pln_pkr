@@ -465,8 +465,8 @@
         }
 
         .sidebar-section {
-            background: linear-gradient(145deg, rgba(10, 18, 35, 0.9), rgba(5, 10, 20, 0.95));
-            border: 1px solid var(--border-color);
+            background: linear-gradient(145deg, rgba(12, 22, 42, 0.95), rgba(8, 14, 28, 0.98));
+            border: 1px solid rgba(0, 212, 255, 0.25);
             border-radius: var(--radius);
             box-shadow: var(--shadow);
             margin-bottom: 1rem;
@@ -484,10 +484,10 @@
 
         .section-header {
             padding: 0.75rem 1rem;
-            border-bottom: 1px solid var(--border-color);
+            border-bottom: 1px solid rgba(0, 212, 255, 0.15);
             font-family: 'Orbitron', monospace;
-            font-size: 0.75rem;
-            font-weight: 600;
+            font-size: 0.8rem;
+            font-weight: 700;
             color: var(--primary-color);
             text-transform: uppercase;
             letter-spacing: 2px;
@@ -495,10 +495,11 @@
             justify-content: space-between;
             align-items: center;
             cursor: pointer;
+            text-shadow: 0 0 8px rgba(0, 212, 255, 0.3);
         }
 
         .section-content {
-            padding: 1rem;
+            padding: 0.75rem 1rem;
         }
 
         .participant-list {
@@ -509,8 +510,14 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0.5rem 0;
-            border-bottom: 1px solid rgba(0, 212, 255, 0.08);
+            padding: 0.6rem 0.5rem;
+            border-bottom: 1px solid rgba(0, 212, 255, 0.1);
+            border-radius: 3px;
+            transition: background 0.15s;
+        }
+
+        .participant-item:hover {
+            background: rgba(0, 212, 255, 0.04);
         }
 
         .participant-item:last-child {
@@ -519,41 +526,48 @@
 
         .participant-name {
             font-family: 'Rajdhani', monospace;
-            font-weight: 500;
-            color: var(--dark-color);
+            font-weight: 600;
+            font-size: 1.05rem;
+            color: #e8f0fe;
+            letter-spacing: 0.3px;
         }
 
         .participant-role {
             font-family: 'Share Tech Mono', monospace;
             font-size: 0.7rem;
-            padding: 0.15rem 0.5rem;
+            padding: 0.2rem 0.55rem;
             border-radius: 2px;
-            background: rgba(0, 212, 255, 0.1);
-            color: var(--primary-color);
-            border: 1px solid rgba(0, 212, 255, 0.2);
             text-transform: uppercase;
             letter-spacing: 1px;
         }
 
+        .participant-role[data-role='dealer'],
+        .participant-role {
+            background: rgba(0, 212, 255, 0.15);
+            color: #66e0ff;
+            border: 1px solid rgba(0, 212, 255, 0.35);
+        }
+
         .vote-indicator {
-            width: 22px;
-            height: 22px;
+            width: 24px;
+            height: 24px;
             border-radius: 50%;
-            background: rgba(0, 212, 255, 0.1);
-            border: 1px solid var(--border-color);
+            background: rgba(0, 212, 255, 0.08);
+            border: 2px solid rgba(0, 212, 255, 0.25);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.7rem;
+            font-size: 0.75rem;
             color: var(--primary-color);
             transition: all 0.3s;
+            flex-shrink: 0;
         }
 
         .vote-indicator.voted {
-            background: rgba(0, 255, 136, 0.2);
+            background: rgba(0, 255, 136, 0.25);
             border-color: var(--success-color);
             color: var(--success-color);
-            box-shadow: 0 0 8px rgba(0, 255, 136, 0.3);
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.4);
         }
 
         .vote-results {
@@ -875,7 +889,7 @@
                     <span>Officers</span>
                     <span>▼</span>
                 </div>
-                <div class="section-content" id="dealersContent">
+                <div class="section-content" id="dealersContent" style="max-height: 280px; overflow-y: auto;">
                     <ul class="participant-list" id="dealersList"></ul>
                 </div>
             </div>
@@ -886,7 +900,7 @@
                     <span>Crew</span>
                     <span id="participantCount">0</span>
                 </div>
-                <div class="section-content">
+                <div class="section-content" style="max-height: 300px; overflow-y: auto;">
                     <ul class="participant-list" id="participantsList"></ul>
                 </div>
             </div>
@@ -899,7 +913,7 @@
                 </div>
                 <div class="section-content collapsed" id="storyQueueContent">
                     <div id="storyQueue"></div>
-                    <button class="btn btn-secondary btn-sm" id="addStoryBtn" style="margin-top: 1rem;">
+                    <button class="btn btn-primary btn-sm" id="addStoryBtn" style="margin-top: 1rem; width: 100%; padding: 0.6rem;">
                         + Add Objective
                     </button>
                 </div>
