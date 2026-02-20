@@ -1248,6 +1248,9 @@
             
             // Render participants
             renderParticipants(participants);
+            
+            // Render story queue
+            renderStoryQueue(sessionData.storyQueue || []);
         }
         
         // Render current story
@@ -1611,6 +1614,63 @@
             resetBtn.disabled = (status !== 'revealed');
             skipBtn.disabled = false;
             completeBtn.disabled = (status !== 'revealed');
+        }
+        
+        // --- Story Queue Rendering ---
+        
+        function renderStoryQueue(stories) {
+            var container = document.getElementById('storyQueue');
+            container.innerHTML = '';
+            
+            if (!stories || stories.length === 0) {
+                container.innerHTML = '<div style="padding:0.5rem;color:rgba(200,214,229,0.4);font-family:Share Tech Mono,monospace;font-size:0.85rem;letter-spacing:1px;">// No objectives loaded</div>';
+                return;
+            }
+            
+            var currentStoryId = sessionData && sessionData.currentStory ? sessionData.currentStory.sys_id : null;
+            
+            stories.forEach(function(story, index) {
+                var div = document.createElement('div');
+                var isCurrent = story.sys_id === currentStoryId;
+                var statusIcon = '';
+                var statusColor = '';
+                
+                switch (story.status) {
+                    case 'completed':
+                        statusIcon = '✓'; statusColor = 'var(--success-color)'; break;
+                    case 'voting':
+                        statusIcon = '▶'; statusColor = 'var(--warning-color)'; break;
+                    case 'revealed':
+                        statusIcon = '◉'; statusColor = 'var(--lcars-orange)'; break;
+                    case 'skipped':
+                        statusIcon = '⊘'; statusColor = 'rgba(200,214,229,0.3)'; break;
+                    default:
+                        statusIcon = '○'; statusColor = 'rgba(200,214,229,0.5)'; break;
+                }
+                
+                div.style.cssText = 'display:flex;align-items:center;gap:0.6rem;padding:0.5rem 0.6rem;border-bottom:1px solid rgba(0,212,255,0.08);border-radius:3px;transition:background 0.15s;' + (isCurrent ? 'background:rgba(0,212,255,0.08);border-left:3px solid var(--primary-color);' : '');
+                
+                var icon = document.createElement('span');
+                icon.style.cssText = 'font-size:0.85rem;color:' + statusColor + ';flex-shrink:0;width:16px;text-align:center;';
+                icon.textContent = statusIcon;
+                
+                var info = document.createElement('div');
+                info.style.cssText = 'flex:1;min-width:0;';
+                
+                var title = document.createElement('div');
+                title.style.cssText = 'font-family:Rajdhani,monospace;font-size:0.9rem;font-weight:600;color:' + (isCurrent ? '#e8f0fe' : 'rgba(200,214,229,0.7)') + ';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+                title.textContent = (story.story_number || '') + (story.story_number && story.story_title ? ' — ' : '') + (story.story_title || 'Untitled');
+                
+                var meta = document.createElement('div');
+                meta.style.cssText = 'font-family:Share Tech Mono,monospace;font-size:0.65rem;color:rgba(200,214,229,0.4);text-transform:uppercase;letter-spacing:1px;';
+                meta.textContent = story.status + (story.story_points ? ' · ' + story.story_points + ' pts' : '');
+                
+                info.appendChild(title);
+                info.appendChild(meta);
+                div.appendChild(icon);
+                div.appendChild(info);
+                container.appendChild(div);
+            });
         }
         
         // --- Add Objective Functions ---

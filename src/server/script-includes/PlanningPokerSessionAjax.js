@@ -28,6 +28,7 @@ PlanningPokerSessionAjax.prototype = Object.extendsObject(global.AbstractAjaxPro
             var data = {
                 session: this._buildSessionInfo(sessionGr),
                 currentStory: this._getCurrentStory(sessionId),
+                storyQueue: this._getStoryQueue(sessionId),
                 participants: this._getParticipants(sessionId),
                 scoringValues: this._getScoringValues(sessionGr.getValue('scoring_method')),
                 userRole: this._determineEffectiveRole(sessionId, userId, sessionGr),
@@ -301,6 +302,27 @@ PlanningPokerSessionAjax.prototype = Object.extendsObject(global.AbstractAjaxPro
         voteGr.addQuery('story', storyId);
         voteGr.query();
         return voteGr.getRowCount();
+    },
+
+    _getStoryQueue: function(sessionId) {
+        var stories = [];
+        var storyGr = new GlideRecord('x_902080_planningw_session_stories');
+        storyGr.addQuery('session', sessionId);
+        storyGr.orderBy('order');
+        storyGr.query();
+
+        while (storyGr.next()) {
+            stories.push({
+                sys_id: storyGr.getValue('sys_id'),
+                story_number: storyGr.getValue('story_number'),
+                story_title: storyGr.getValue('story_title'),
+                status: storyGr.getValue('status'),
+                order: storyGr.getValue('order'),
+                story_points: storyGr.getValue('story_points'),
+                vote_count: storyGr.getValue('vote_count') || 0
+            });
+        }
+        return stories;
     },
     
     _buildResponse: function(success, message, data) {
