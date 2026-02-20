@@ -4,267 +4,597 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Planning Poker - Session Management</title>
+    <title>Planning Poker - Command Deck</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&amp;family=Share+Tech+Mono&amp;family=Rajdhani:wght@300;400;500;600;700&amp;display=swap');
+
         :root {
-            --primary-color: #0073e6;
-            --secondary-color: #f8f9fa;
-            --success-color: #28a745;
-            --warning-color: #ffc107;
-            --danger-color: #dc3545;
-            --dark-color: #343a40;
-            --light-color: #ffffff;
-            --border-color: #dee2e6;
-            --shadow: 0 2px 4px rgba(0,0,0,0.1);
-            --radius: 8px;
+            --primary-color: #00d4ff;
+            --primary-glow: rgba(0, 212, 255, 0.4);
+            --secondary-color: #0a0e17;
+            --success-color: #00ff88;
+            --warning-color: #ffaa00;
+            --danger-color: #ff3366;
+            --dark-color: #c8d6e5;
+            --light-color: rgba(10, 14, 27, 0.85);
+            --border-color: rgba(0, 212, 255, 0.2);
+            --shadow: 0 0 20px rgba(0, 212, 255, 0.15), 0 0 60px rgba(0, 212, 255, 0.05);
+            --radius: 4px;
+            --lcars-orange: #ff9900;
+            --lcars-purple: #cc99cc;
+            --lcars-blue: #9999ff;
+            --lcars-red: #cc6666;
+            --saber-blue: #4488ff;
+            --saber-green: #44ff66;
+            --saber-red: #ff4444;
+            --grid-color: rgba(0, 212, 255, 0.06);
+            --holo-blue: rgba(0, 180, 255, 0.12);
         }
-        
-        [data-theme="dark"] {
-            --secondary-color: #2c3e50;
-            --light-color: #34495e;
-            --dark-color: #ecf0f1;
-            --border-color: #34495e;
-            background-color: #2c3e50;
-            color: #ecf0f1;
+
+        /* === TRON GRID BACKGROUND === */
+        @keyframes gridScroll {
+            0% { background-position: 0 0; }
+            100% { background-position: 0 50px; }
         }
-        
+        @keyframes pulseGlow {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+        @keyframes scanline {
+            0% { top: -5%; }
+            100% { top: 105%; }
+        }
+        @keyframes flicker {
+            0%, 95%, 100% { opacity: 1; }
+            96% { opacity: 0.8; }
+            97% { opacity: 1; }
+            98% { opacity: 0.6; }
+        }
+        @keyframes dataStream {
+            0% { background-position: 0% 0%; }
+            100% { background-position: 0% 100%; }
+        }
+        @keyframes warpIn {
+            0% { transform: scale(0.8) translateY(20px); opacity: 0; filter: blur(8px); }
+            60% { transform: scale(1.02) translateY(-2px); opacity: 1; filter: blur(0); }
+            100% { transform: scale(1) translateY(0); opacity: 1; filter: blur(0); }
+        }
+        @keyframes borderTrace {
+            0% { background-position: 0% 0%; }
+            100% { background-position: 200% 0%; }
+        }
+        @keyframes floatStar {
+            0%, 100% { transform: translateY(0) scale(1); opacity: 0.6; }
+            50% { transform: translateY(-8px) scale(1.2); opacity: 1; }
+        }
+        @keyframes hyperspaceStreak {
+            0% { transform: translateX(-100%) scaleX(0); opacity: 0; }
+            20% { opacity: 1; }
+            100% { transform: translateX(200vw) scaleX(3); opacity: 0; }
+        }
+        @keyframes lcarsSlide {
+            0% { width: 0; }
+            100% { width: 100%; }
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
-        
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background-color: var(--secondary-color);
+            font-family: 'Rajdhani', 'Share Tech Mono', monospace;
+            background-color: #050810;
             color: var(--dark-color);
-            line-height: 1.5;
+            line-height: 1.6;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
         }
-        
+
+        /* Tron grid overlay */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background:
+                linear-gradient(var(--grid-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: gridScroll 8s linear infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Scanline effect */
+        body::after {
+            content: '';
+            position: fixed;
+            left: 0; right: 0;
+            height: 4px;
+            background: linear-gradient(180deg, transparent, rgba(0, 212, 255, 0.08), transparent);
+            animation: scanline 6s linear infinite;
+            pointer-events: none;
+            z-index: 9999;
+            width: 100%;
+        }
+
+        /* === STAR FIELD CANVAS === */
+        #starfield {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* === HEADER — LCARS inspired === */
         .header {
-            background: var(--light-color);
-            border-bottom: 1px solid var(--border-color);
-            padding: 1rem 2rem;
+            background: linear-gradient(135deg, rgba(10, 14, 30, 0.95), rgba(15, 20, 40, 0.95));
+            border-bottom: 2px solid var(--primary-color);
+            padding: 0;
+            display: flex;
+            align-items: stretch;
+            box-shadow: 0 2px 30px rgba(0, 212, 255, 0.2);
+            position: relative;
+            z-index: 10;
+            overflow: hidden;
+        }
+
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--primary-color), var(--lcars-orange), var(--lcars-purple), var(--primary-color), transparent);
+            background-size: 200% 100%;
+            animation: borderTrace 4s linear infinite;
+        }
+
+        /* LCARS bar on left side of header */
+        .lcars-bar {
+            display: flex;
+            align-items: stretch;
+            gap: 3px;
+            padding: 0;
+            margin-right: 1rem;
+        }
+
+        .lcars-block {
+            width: 12px;
+            min-height: 100%;
+        }
+
+        .lcars-block:nth-child(1) { background: var(--lcars-orange); border-radius: 0 0 8px 0; }
+        .lcars-block:nth-child(2) { background: var(--lcars-purple); }
+        .lcars-block:nth-child(3) { background: var(--lcars-blue); border-radius: 0 8px 0 0; }
+
+        .header-inner {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: var(--shadow);
+            flex: 1;
+            padding: 0.8rem 1.5rem;
         }
-        
+
         .logo {
-            font-size: 1.5rem;
-            font-weight: bold;
+            font-family: 'Orbitron', monospace;
+            font-size: 1.4rem;
+            font-weight: 700;
             color: var(--primary-color);
+            text-shadow: 0 0 10px var(--primary-glow), 0 0 30px rgba(0, 212, 255, 0.2);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            animation: pulseGlow 3s ease-in-out infinite;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
         }
-        
+
+        .logo-icon {
+            font-size: 1.6rem;
+            filter: drop-shadow(0 0 6px var(--primary-glow));
+        }
+
+        .stardate {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--lcars-orange);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
         .header-right {
             display: flex;
             align-items: center;
             gap: 1rem;
         }
-        
+
+        /* === BUTTONS === */
         .btn {
-            padding: 0.5rem 1rem;
-            border: none;
+            padding: 0.5rem 1.2rem;
+            border: 1px solid var(--border-color);
             border-radius: var(--radius);
             cursor: pointer;
-            font-size: 0.9rem;
-            transition: all 0.2s ease;
+            font-family: 'Rajdhani', monospace;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.25s ease;
             text-decoration: none;
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            position: relative;
+            overflow: hidden;
+            background: transparent;
         }
-        
-        .btn-primary { background: var(--primary-color); color: white; }
-        .btn-success { background: var(--success-color); color: white; }
-        .btn-warning { background: var(--warning-color); color: black; }
-        .btn-danger { background: var(--danger-color); color: white; }
-        .btn-secondary { background: var(--border-color); color: var(--dark-color); }
-        
-        .btn:hover { transform: translateY(-1px); box-shadow: var(--shadow); }
-        .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-        
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn:hover::before { left: 100%; }
+
+        .btn-primary {
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.15), rgba(0, 212, 255, 0.05));
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.3), rgba(0, 212, 255, 0.1));
+            box-shadow: 0 0 20px var(--primary-glow), inset 0 0 20px rgba(0, 212, 255, 0.1);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.15), rgba(0, 255, 136, 0.05));
+            border-color: var(--success-color);
+            color: var(--success-color);
+        }
+        .btn-success:hover {
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.3), inset 0 0 20px rgba(0, 255, 136, 0.1);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, rgba(255, 170, 0, 0.15), rgba(255, 170, 0, 0.05));
+            border-color: var(--warning-color);
+            color: var(--warning-color);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, rgba(255, 51, 102, 0.15), rgba(255, 51, 102, 0.05));
+            border-color: var(--danger-color);
+            color: var(--danger-color);
+        }
+        .btn-danger:hover {
+            box-shadow: 0 0 20px rgba(255, 51, 102, 0.3), inset 0 0 20px rgba(255, 51, 102, 0.1);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, rgba(200, 214, 229, 0.1), rgba(200, 214, 229, 0.03));
+            border-color: rgba(200, 214, 229, 0.3);
+            color: var(--dark-color);
+        }
+
+        .btn:hover { transform: translateY(-2px); }
+        .btn:active { transform: translateY(0); }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
         .btn-sm {
-            padding: 0.25rem 0.5rem;
-            font-size: 0.8rem;
+            padding: 0.25rem 0.6rem;
+            font-size: 0.75rem;
+            letter-spacing: 1px;
         }
-        
+
+        /* === MAIN CONTENT === */
         .main-content {
             padding: 2rem;
-            max-width: 1200px;
+            max-width: 1300px;
             margin: 0 auto;
+            position: relative;
+            z-index: 1;
         }
-        
+
         .page-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 2rem;
         }
-        
+
         .page-title {
-            font-size: 2rem;
-            font-weight: bold;
+            font-family: 'Orbitron', monospace;
+            font-size: 1.6rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            text-shadow: 0 0 15px var(--primary-glow);
+            letter-spacing: 4px;
+            text-transform: uppercase;
         }
-        
+
+        /* === TABS — LCARS style === */
         .tabs {
             display: flex;
-            gap: 0.25rem;
+            gap: 3px;
             margin-bottom: 2rem;
-            border-bottom: 2px solid var(--border-color);
+            border-bottom: none;
+            position: relative;
         }
-        
+
+        .tabs::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--lcars-orange), var(--primary-color), var(--lcars-purple));
+        }
+
         .tab {
-            padding: 1rem 1.5rem;
-            background: none;
-            border: none;
+            padding: 0.75rem 1.5rem;
+            background: rgba(0, 212, 255, 0.05);
+            border: 1px solid var(--border-color);
+            border-bottom: none;
+            border-radius: var(--radius) var(--radius) 0 0;
             cursor: pointer;
-            font-size: 1rem;
+            font-family: 'Rajdhani', monospace;
+            font-size: 0.9rem;
+            font-weight: 600;
             color: var(--dark-color);
-            border-bottom: 2px solid transparent;
-            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.3s ease;
+            position: relative;
         }
-        
+
         .tab.active {
             color: var(--primary-color);
-            border-bottom-color: var(--primary-color);
-            font-weight: bold;
+            background: rgba(0, 212, 255, 0.12);
+            border-color: var(--primary-color);
+            text-shadow: 0 0 8px var(--primary-glow);
         }
-        
+
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px; left: 0; right: 0;
+            height: 2px;
+            background: var(--primary-color);
+            box-shadow: 0 0 10px var(--primary-glow);
+        }
+
         .tab:hover {
-            background: var(--secondary-color);
+            background: rgba(0, 212, 255, 0.08);
+            color: var(--primary-color);
         }
-        
-        .tab-content {
-            display: none;
-        }
-        
-        .tab-content.active {
-            display: block;
-        }
-        
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: warpIn 0.4s ease-out; }
+
+        /* === SESSION GRID === */
         .session-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
             gap: 1.5rem;
             margin-bottom: 2rem;
         }
-        
+
+        /* === SESSION CARD — Holographic panel === */
         .session-card {
-            background: var(--light-color);
+            background: linear-gradient(145deg, rgba(10, 18, 35, 0.9), rgba(5, 10, 20, 0.95));
             border-radius: var(--radius);
             padding: 1.5rem;
-            box-shadow: var(--shadow);
             border: 1px solid var(--border-color);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            animation: warpIn 0.5s ease-out;
         }
-        
+
+        .session-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary-color), var(--lcars-orange), var(--lcars-purple));
+            background-size: 200% 100%;
+            animation: borderTrace 6s linear infinite;
+        }
+
+        .session-card::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(180deg, rgba(0, 212, 255, 0.03) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .session-card:hover {
+            border-color: rgba(0, 212, 255, 0.5);
+            box-shadow: 0 0 30px rgba(0, 212, 255, 0.15), inset 0 0 30px rgba(0, 212, 255, 0.03);
+            transform: translateY(-3px);
+        }
+
         .session-header {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
             margin-bottom: 1rem;
+            position: relative;
+            z-index: 1;
         }
-        
+
         .session-title {
-            font-size: 1.2rem;
-            font-weight: bold;
+            font-family: 'Orbitron', monospace;
+            font-size: 1rem;
+            font-weight: 600;
             margin-bottom: 0.5rem;
+            color: #e8f0fe;
+            letter-spacing: 1px;
         }
-        
+
         .session-code {
-            background: var(--primary-color);
-            color: white;
-            padding: 0.25rem 0.5rem;
+            font-family: 'Share Tech Mono', monospace;
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.2), rgba(0, 212, 255, 0.05));
+            color: var(--primary-color);
+            padding: 0.25rem 0.75rem;
             border-radius: var(--radius);
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             font-weight: bold;
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            letter-spacing: 2px;
+            text-shadow: 0 0 5px var(--primary-glow);
         }
-        
+
         .status-badge {
             display: inline-block;
-            padding: 0.25rem 0.75rem;
-            border-radius: 20px;
-            font-size: 0.8rem;
+            padding: 0.2rem 0.75rem;
+            border-radius: 2px;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.7rem;
             font-weight: bold;
             text-transform: uppercase;
+            letter-spacing: 2px;
+            border: 1px solid;
         }
-        
-        .status-ready { background: #e9ecef; color: #495057; }
-        .status-live { background: #d4edda; color: #155724; }
-        .status-completed { background: #cce5ff; color: #004085; }
-        .status-cancelled { background: #f8d7da; color: #721c24; }
-        
+
+        .status-ready {
+            background: rgba(153, 153, 255, 0.1);
+            color: var(--lcars-blue);
+            border-color: rgba(153, 153, 255, 0.3);
+        }
+        .status-live {
+            background: rgba(0, 255, 136, 0.1);
+            color: var(--success-color);
+            border-color: rgba(0, 255, 136, 0.3);
+            animation: pulseGlow 2s ease-in-out infinite;
+        }
+        .status-completed {
+            background: rgba(0, 212, 255, 0.1);
+            color: var(--primary-color);
+            border-color: rgba(0, 212, 255, 0.3);
+        }
+        .status-cancelled {
+            background: rgba(255, 51, 102, 0.1);
+            color: var(--danger-color);
+            border-color: rgba(255, 51, 102, 0.3);
+        }
+
         .session-meta {
             display: flex;
             gap: 1rem;
-            margin: 1rem 0;
-            font-size: 0.9rem;
-            color: #666;
+            margin: 0.75rem 0;
+            font-size: 0.8rem;
+            color: rgba(200, 214, 229, 0.5);
+            font-family: 'Share Tech Mono', monospace;
+            position: relative;
+            z-index: 1;
         }
-        
+
         .session-stats {
             display: flex;
             justify-content: space-between;
             margin: 1rem 0;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
+            position: relative;
+            z-index: 1;
+            padding: 0.75rem;
+            background: rgba(0, 212, 255, 0.03);
+            border: 1px solid rgba(0, 212, 255, 0.08);
+            border-radius: var(--radius);
         }
-        
-        .stat-item {
-            text-align: center;
-        }
-        
+
+        .stat-item { text-align: center; }
+
         .stat-value {
-            font-size: 1.2rem;
-            font-weight: bold;
+            font-family: 'Orbitron', monospace;
+            font-size: 1.3rem;
+            font-weight: 700;
             color: var(--primary-color);
+            text-shadow: 0 0 10px var(--primary-glow);
         }
-        
+
         .stat-label {
-            font-size: 0.8rem;
-            color: #666;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.65rem;
+            color: rgba(200, 214, 229, 0.4);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
         }
-        
+
         .session-actions {
             display: flex;
             gap: 0.5rem;
             flex-wrap: wrap;
+            position: relative;
+            z-index: 1;
         }
-        
+
+        /* === EMPTY STATE === */
         .empty-state {
             text-align: center;
             padding: 4rem 2rem;
-            color: #666;
+            color: rgba(200, 214, 229, 0.4);
         }
-        
+
         .empty-state h3 {
-            margin-bottom: 0.5rem;
+            font-family: 'Orbitron', monospace;
+            margin-bottom: 0.75rem;
+            color: rgba(0, 212, 255, 0.5);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            font-size: 1rem;
         }
-        
+
+        .empty-state p {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.85rem;
+        }
+
+        /* === MODAL — Holographic panel === */
         .modal {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(4px);
             display: none;
             align-items: center;
             justify-content: center;
             z-index: 1000;
         }
-        
-        .modal.show {
-            display: flex;
-        }
-        
+
+        .modal.show { display: flex; }
+
         .modal-content {
-            background: var(--light-color);
+            background: linear-gradient(160deg, rgba(10, 18, 35, 0.97), rgba(5, 10, 22, 0.98));
+            border: 1px solid rgba(0, 212, 255, 0.3);
             border-radius: var(--radius);
             max-width: 600px;
-            width: 90%;
-            max-height: 80vh;
+            width: 92%;
+            max-height: 82vh;
             overflow-y: auto;
+            box-shadow: 0 0 60px rgba(0, 212, 255, 0.15), 0 0 120px rgba(0, 212, 255, 0.05);
+            animation: warpIn 0.3s ease-out;
+            position: relative;
         }
-        
+
+        .modal-content::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--lcars-orange), var(--primary-color), var(--lcars-purple), var(--primary-color));
+            background-size: 200% 100%;
+            animation: borderTrace 3s linear infinite;
+        }
+
         .modal-header {
             padding: 1rem 1.5rem;
             border-bottom: 1px solid var(--border-color);
@@ -272,16 +602,19 @@
             justify-content: space-between;
             align-items: center;
         }
-        
+
         .modal-title {
-            font-size: 1.2rem;
-            font-weight: bold;
+            font-family: 'Orbitron', monospace;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            text-shadow: 0 0 8px var(--primary-glow);
+            letter-spacing: 3px;
+            text-transform: uppercase;
         }
-        
-        .modal-body {
-            padding: 1.5rem;
-        }
-        
+
+        .modal-body { padding: 1.5rem; }
+
         .modal-footer {
             padding: 1rem 1.5rem;
             border-top: 1px solid var(--border-color);
@@ -289,103 +622,167 @@
             gap: 0.5rem;
             justify-content: flex-end;
         }
-        
-        .form-group {
-            margin-bottom: 1rem;
-        }
-        
+
+        /* === FORMS === */
+        .form-group { margin-bottom: 1.2rem; }
+
         .form-label {
             display: block;
-            margin-bottom: 0.5rem;
-            font-weight: bold;
+            margin-bottom: 0.4rem;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.8rem;
+            font-weight: normal;
+            color: var(--lcars-orange);
+            text-transform: uppercase;
+            letter-spacing: 2px;
         }
-        
+
         .form-control {
             width: 100%;
-            padding: 0.5rem;
+            padding: 0.6rem 0.75rem;
+            background: rgba(0, 212, 255, 0.04);
             border: 1px solid var(--border-color);
             border-radius: var(--radius);
-            font-size: 1rem;
+            font-family: 'Rajdhani', monospace;
+            font-size: 0.95rem;
+            color: var(--dark-color);
+            transition: all 0.3s ease;
         }
-        
+
         .form-control:focus {
             outline: none;
             border-color: var(--primary-color);
-            box-shadow: 0 0 0 2px rgba(0,115,230,0.25);
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.2), inset 0 0 10px rgba(0, 212, 255, 0.05);
+            background: rgba(0, 212, 255, 0.08);
         }
-        
+
+        .form-control option {
+            background: #0a0e17;
+            color: var(--dark-color);
+        }
+
         .form-check {
             display: flex;
             align-items: center;
             gap: 0.5rem;
             margin-bottom: 1rem;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--dark-color);
         }
-        
-        .form-check input {
-            width: auto;
+
+        .form-check input[type="checkbox"] {
+            width: 16px; height: 16px;
+            accent-color: var(--primary-color);
         }
-        
+
         textarea.form-control {
             resize: vertical;
-            min-height: 100px;
+            min-height: 80px;
         }
-        
+
+        small {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.7rem;
+            color: rgba(200, 214, 229, 0.4);
+        }
+
+        /* === TOAST — Holographic notification === */
         .toast {
             position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 1rem 1.5rem;
+            top: 20px; right: 20px;
+            padding: 0.75rem 1.5rem;
             border-radius: var(--radius);
-            box-shadow: var(--shadow);
             z-index: 2000;
             transform: translateX(400px);
-            transition: transform 0.3s ease;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            border: 1px solid;
+            backdrop-filter: blur(10px);
         }
-        
-        .toast.show {
-            transform: translateX(0);
-        }
-        
+
+        .toast.show { transform: translateX(0); }
+
         .toast-success {
-            background: var(--success-color);
-            color: white;
+            background: rgba(0, 255, 136, 0.15);
+            border-color: var(--success-color);
+            color: var(--success-color);
+            box-shadow: 0 0 30px rgba(0, 255, 136, 0.2);
         }
-        
+
         .toast-error {
-            background: var(--danger-color);
-            color: white;
+            background: rgba(255, 51, 102, 0.15);
+            border-color: var(--danger-color);
+            color: var(--danger-color);
+            box-shadow: 0 0 30px rgba(255, 51, 102, 0.2);
         }
-        
+
         .toast-info {
-            background: var(--primary-color);
-            color: white;
+            background: rgba(0, 212, 255, 0.15);
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+            box-shadow: 0 0 30px rgba(0, 212, 255, 0.2);
         }
-        
+
+        /* === THEME TOGGLE (red alert mode) === */
         .theme-toggle {
-            background: none;
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius);
-            padding: 0.5rem;
+            background: rgba(255, 153, 0, 0.1);
+            border: 1px solid var(--lcars-orange);
+            border-radius: 50%;
+            width: 36px; height: 36px;
             cursor: pointer;
-            font-size: 1.2rem;
+            font-size: 1rem;
+            color: var(--lcars-orange);
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-        
+
+        .theme-toggle:hover {
+            box-shadow: 0 0 15px rgba(255, 153, 0, 0.3);
+            background: rgba(255, 153, 0, 0.2);
+        }
+
+        /* === CANCEL ALL SECTION === */
         .cancel-all-section {
-            background: var(--light-color);
-            border: 1px solid var(--danger-color);
+            background: linear-gradient(135deg, rgba(255, 51, 102, 0.08), rgba(255, 51, 102, 0.02));
+            border: 1px solid rgba(255, 51, 102, 0.3);
             border-radius: var(--radius);
             padding: 1.5rem;
             margin-bottom: 2rem;
-        }
-        
-        .cancel-all-section h3 {
-            color: var(--danger-color);
-            margin-bottom: 0.5rem;
+            position: relative;
         }
 
-        .modal-content.modal-lg {
-            max-width: 900px;
+        .cancel-all-section::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 4px; height: 100%;
+            background: var(--danger-color);
+            border-radius: var(--radius) 0 0 var(--radius);
+            box-shadow: 0 0 10px rgba(255, 51, 102, 0.3);
         }
+
+        .cancel-all-section h3 {
+            font-family: 'Orbitron', monospace;
+            color: var(--danger-color);
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .cancel-all-section p {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.8rem;
+            color: rgba(200, 214, 229, 0.6);
+        }
+
+        /* === EDIT SESSION MODAL === */
+        .modal-content.modal-lg { max-width: 900px; }
 
         .edit-tabs {
             display: flex;
@@ -394,155 +791,138 @@
         }
 
         .edit-tab {
-            padding: 0.75rem 1.25rem;
+            padding: 0.65rem 1.25rem;
             background: none;
             border: none;
             cursor: pointer;
-            font-size: 0.95rem;
-            color: var(--dark-color);
+            font-family: 'Rajdhani', monospace;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: rgba(200, 214, 229, 0.5);
             border-bottom: 2px solid transparent;
             margin-bottom: -2px;
             transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
         }
 
         .edit-tab.active {
             color: var(--primary-color);
             border-bottom-color: var(--primary-color);
-            font-weight: bold;
+            text-shadow: 0 0 6px var(--primary-glow);
         }
 
-        .edit-tab-content {
-            display: none;
-        }
+        .edit-tab-content { display: none; }
+        .edit-tab-content.active { display: block; animation: warpIn 0.3s; }
 
-        .edit-tab-content.active {
-            display: block;
-        }
-
-        .story-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
+        .story-list { list-style: none; padding: 0; margin: 0; }
 
         .story-item {
             display: flex;
             align-items: center;
             gap: 0.75rem;
-            padding: 0.75rem;
+            padding: 0.65rem 0.75rem;
             border: 1px solid var(--border-color);
             border-radius: var(--radius);
-            margin-bottom: 0.5rem;
-            background: var(--secondary-color);
-            transition: background 0.15s;
+            margin-bottom: 0.4rem;
+            background: rgba(0, 212, 255, 0.03);
+            transition: all 0.2s;
         }
 
         .story-item:hover {
-            background: var(--light-color);
+            background: rgba(0, 212, 255, 0.06);
+            border-color: rgba(0, 212, 255, 0.3);
         }
 
         .story-item .drag-handle {
             cursor: grab;
-            color: #999;
-            font-size: 1.2rem;
+            color: rgba(0, 212, 255, 0.4);
+            font-size: 1.1rem;
             user-select: none;
         }
 
-        .story-item .drag-handle:active {
-            cursor: grabbing;
-        }
+        .story-item .drag-handle:active { cursor: grabbing; }
+        .story-item.dragging { opacity: 0.5; }
 
-        .story-item.dragging {
-            opacity: 0.5;
-            background: var(--light-color);
-        }
-
-        .story-info {
-            flex: 1;
-            min-width: 0;
-        }
+        .story-info { flex: 1; min-width: 0; }
 
         .story-number {
+            font-family: 'Share Tech Mono', monospace;
             font-weight: bold;
-            font-size: 0.85rem;
-            color: var(--primary-color);
+            font-size: 0.8rem;
+            color: var(--lcars-orange);
         }
 
         .story-title-text {
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            color: var(--dark-color);
         }
 
         .story-status {
-            font-size: 0.75rem;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.65rem;
             padding: 0.15rem 0.5rem;
-            border-radius: 10px;
-            background: #e9ecef;
-            color: #495057;
-            text-transform: capitalize;
+            border-radius: 2px;
+            background: rgba(0, 212, 255, 0.1);
+            color: var(--primary-color);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border: 1px solid rgba(0, 212, 255, 0.2);
         }
 
-        .story-search-container {
-            position: relative;
-            margin-bottom: 1rem;
-        }
+        .story-search-container { position: relative; margin-bottom: 1rem; }
 
         .story-search-input {
             width: 100%;
             padding: 0.5rem 0.75rem;
+            background: rgba(0, 212, 255, 0.04);
             border: 1px solid var(--border-color);
             border-radius: var(--radius);
-            font-size: 0.95rem;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--dark-color);
         }
 
         .story-search-input:focus {
             outline: none;
             border-color: var(--primary-color);
-            box-shadow: 0 0 0 2px rgba(0,115,230,0.25);
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.2);
         }
 
         .story-search-results {
             position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: var(--light-color);
+            top: 100%; left: 0; right: 0;
+            background: rgba(10, 14, 27, 0.98);
             border: 1px solid var(--border-color);
+            border-top: none;
             border-radius: 0 0 var(--radius) var(--radius);
             max-height: 250px;
             overflow-y: auto;
             z-index: 10;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
             display: none;
         }
 
-        .story-search-results.show {
-            display: block;
-        }
+        .story-search-results.show { display: block; }
 
         .search-result-item {
-            padding: 0.6rem 0.75rem;
+            padding: 0.5rem 0.75rem;
             cursor: pointer;
-            border-bottom: 1px solid var(--border-color);
+            border-bottom: 1px solid rgba(0, 212, 255, 0.08);
             display: flex;
             justify-content: space-between;
             align-items: center;
+            font-family: 'Rajdhani', monospace;
+            font-size: 0.9rem;
+            transition: background 0.15s;
         }
 
-        .search-result-item:last-child {
-            border-bottom: none;
-        }
-
-        .search-result-item:hover {
-            background: var(--secondary-color);
-        }
-
-        .search-result-item.disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
+        .search-result-item:last-child { border-bottom: none; }
+        .search-result-item:hover { background: rgba(0, 212, 255, 0.08); }
+        .search-result-item.disabled { opacity: 0.4; cursor: not-allowed; }
 
         .manual-story-form {
             display: flex;
@@ -551,73 +931,205 @@
             align-items: flex-end;
         }
 
-        .manual-story-form .form-group {
-            margin-bottom: 0;
-            flex: 1;
-        }
+        .manual-story-form .form-group { margin-bottom: 0; flex: 1; }
 
         .story-count-badge {
             display: inline-block;
-            padding: 0.15rem 0.6rem;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            background: var(--primary-color);
-            color: white;
+            padding: 0.1rem 0.5rem;
+            border-radius: 2px;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.7rem;
+            background: rgba(0, 212, 255, 0.15);
+            color: var(--primary-color);
+            border: 1px solid rgba(0, 212, 255, 0.3);
             margin-left: 0.5rem;
         }
 
         .empty-stories {
             text-align: center;
             padding: 2rem;
-            color: #999;
+            color: rgba(200, 214, 229, 0.3);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.85rem;
         }
-        
+
+        /* === EASTER EGG ELEMENTS === */
+        .konami-activated .session-card {
+            border-color: var(--saber-green) !important;
+            box-shadow: 0 0 40px rgba(68, 255, 102, 0.3) !important;
+        }
+
+        #hyperspace-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 9998;
+            overflow: hidden;
+        }
+
+        .hyperspace-line {
+            position: absolute;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, white, transparent);
+            animation: hyperspaceStreak 0.8s linear forwards;
+        }
+
+        #warp-flash {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: white;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 9997;
+            transition: opacity 0.15s;
+        }
+
+        /* Red alert mode */
+        .red-alert .header { border-bottom-color: var(--saber-red) !important; }
+        .red-alert .header::after {
+            background: linear-gradient(90deg, transparent, var(--saber-red), var(--danger-color), var(--saber-red), transparent) !important;
+        }
+        .red-alert .session-card::before {
+            background: linear-gradient(90deg, var(--saber-red), var(--danger-color), var(--saber-red)) !important;
+        }
+        .red-alert body::before {
+            background:
+                linear-gradient(rgba(255, 40, 40, 0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 40, 40, 0.04) 1px, transparent 1px) !important;
+        }
+
+        /* Hidden crawl */
+        #crawl-container {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #000;
+            z-index: 10000;
+            perspective: 400px;
+            overflow: hidden;
+        }
+
+        #crawl-container.show { display: flex; align-items: center; justify-content: center; }
+
+        .crawl-text {
+            position: absolute;
+            width: 60%;
+            text-align: center;
+            color: #ffd700;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.6rem;
+            line-height: 2;
+            animation: crawlUp 15s linear forwards;
+            top: 100%;
+        }
+
+        @keyframes crawlUp {
+            0% { top: 100%; transform: rotateX(20deg); }
+            100% { top: -200%; transform: rotateX(25deg); }
+        }
+
+        .crawl-close {
+            position: absolute;
+            top: 20px; right: 30px;
+            color: #ffd700;
+            font-size: 2rem;
+            cursor: pointer;
+            z-index: 10001;
+            font-family: 'Orbitron', monospace;
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.3); }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 212, 255, 0.3);
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(0, 212, 255, 0.5); }
+
+        /* === RESPONSIVE === */
         @media (max-width: 768px) {
-            .session-grid {
-                grid-template-columns: 1fr;
-            }
-            
+            .session-grid { grid-template-columns: 1fr; }
             .page-header {
                 flex-direction: column;
                 gap: 1rem;
                 align-items: flex-start;
             }
-            
-            .tabs {
-                flex-wrap: wrap;
-            }
-            
-            .session-stats {
-                flex-direction: column;
-                gap: 0.5rem;
-            }
-            
-            .session-actions {
-                justify-content: center;
-            }
+            .tabs { flex-wrap: wrap; }
+            .session-stats { flex-direction: column; gap: 0.5rem; }
+            .session-actions { justify-content: center; }
+            .lcars-bar { display: none; }
+            .page-title { font-size: 1.1rem; letter-spacing: 2px; }
         }
     </style>
 </head>
 <body>
+    <!-- Star field background -->
+    <canvas id="starfield"></canvas>
+
+    <!-- Hyperspace overlay -->
+    <div id="hyperspace-overlay"></div>
+    <div id="warp-flash"></div>
+
+    <!-- Star Wars crawl easter egg -->
+    <div id="crawl-container">
+        <span class="crawl-close" id="crawlClose">×</span>
+        <div class="crawl-text">
+            EPISODE XLII<br/><br/>
+            THE PLANNING POKER CHRONICLES<br/><br/>
+            It is a period of sprint planning.<br/>
+            Rebel developers, striking from<br/>
+            their standing desks, have won<br/>
+            their first victory against<br/>
+            the evil Scope Creep.<br/><br/>
+            During the ceremony, Agile spies<br/>
+            managed to steal secret plans<br/>
+            to the Empire's ultimate weapon,<br/>
+            the FEATURE BACKLOG, a mountain<br/>
+            of unestimated user stories with<br/>
+            enough complexity to destroy<br/>
+            an entire sprint...<br/><br/>
+            Pursued by the Empire's sinister<br/>
+            agents of waterfall methodology,<br/>
+            Princess Product Owner races home<br/>
+            aboard her starship, custodian of<br/>
+            the stolen user stories that can<br/>
+            save her people and restore<br/>
+            velocity to the galaxy...
+        </div>
+    </div>
+
     <div class="header">
-        <div class="logo">🃏 Planning Poker</div>
-        <div class="header-right">
-            <button class="theme-toggle" id="themeToggle" title="Toggle dark/light theme">
-                🌙
-            </button>
+        <div class="lcars-bar">
+            <div class="lcars-block"></div>
+            <div class="lcars-block"></div>
+            <div class="lcars-block"></div>
+        </div>
+        <div class="header-inner">
+            <div>
+                <div class="logo">
+                    <span class="logo-icon">◆</span> Planning Poker
+                </div>
+                <div class="stardate" id="stardate"></div>
+            </div>
+            <div class="header-right">
+                <button class="theme-toggle" id="themeToggle" title="Red Alert Mode">
+                    ▲
+                </button>
+            </div>
         </div>
     </div>
 
     <div class="main-content">
         <div class="page-header">
-            <h1 class="page-title">Session Management</h1>
-            <button class="btn btn-primary" id="createSessionBtn">+ Create Session</button>
+            <h1 class="page-title">Command Deck</h1>
+            <button class="btn btn-primary" id="createSessionBtn">⟐ Initialize Session</button>
         </div>
 
         <div class="tabs">
-            <button class="tab active" data-tab="live">Live Sessions</button>
-            <button class="tab" data-tab="planning">Planning</button>
-            <button class="tab" data-tab="completed">Completed</button>
+            <button class="tab active" data-tab="live">◉ Active Missions</button>
+            <button class="tab" data-tab="planning">◈ Mission Planning</button>
+            <button class="tab" data-tab="completed">◇ Mission Archive</button>
         </div>
 
         <div class="tab-content active" id="liveTab">
@@ -626,9 +1138,9 @@
 
         <div class="tab-content" id="planningTab">
             <div class="cancel-all-section" id="cancelAllSection" style="display: none;">
-                <h3>⚠️ Bulk Actions</h3>
-                <p>Cancel all planning sessions that have not started yet. This action cannot be undone.</p>
-                <button class="btn btn-danger" id="cancelAllBtn">Cancel All Planning Sessions</button>
+                <h3>⚠ THREAT LEVEL: MAXIMUM</h3>
+                <p>Terminate all planned missions that have not launched. This action is irreversible.</p>
+                <button class="btn btn-danger" id="cancelAllBtn">☠ Abort All Planned Missions</button>
             </div>
             <div class="session-grid" id="planningSessions"></div>
         </div>
@@ -642,43 +1154,43 @@
     <div class="modal" id="createSessionModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 class="modal-title">Create New Session</h3>
+                <h3 class="modal-title">⟐ Initialize New Mission</h3>
                 <button class="btn btn-secondary" data-dismiss="modal">×</button>
             </div>
             <div class="modal-body">
                 <div class="form-group">
-                    <label class="form-label">Session Name *</label>
-                    <input type="text" class="form-control" id="sessionName" placeholder="Enter session name" required />
+                    <label class="form-label">Mission Designation *</label>
+                    <input type="text" class="form-control" id="sessionName" placeholder="Enter mission designation" required />
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Description</label>
-                    <textarea class="form-control" id="sessionDescription" placeholder="Optional session description"></textarea>
+                    <label class="form-label">Mission Briefing</label>
+                    <textarea class="form-control" id="sessionDescription" placeholder="Optional mission briefing"></textarea>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Scoring Method *</label>
+                    <label class="form-label">Scoring Protocol *</label>
                     <select class="form-control" id="scoringMethod" required>
-                        <option value="">Select scoring method...</option>
+                        <option value="">Select scoring protocol...</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Dealer Group</label>
+                    <label class="form-label">Command Crew</label>
                     <select class="form-control" id="dealerGroup">
-                        <option value="">Select dealer group (optional)...</option>
+                        <option value="">Select command crew (optional)...</option>
                     </select>
-                    <small>Group members will be automatically added as dealers</small>
+                    <small>Crew members will be auto-assigned as bridge officers</small>
                 </div>
                 <div class="form-check">
                     <input type="checkbox" id="allowSpectators" checked />
-                    <label for="allowSpectators">Allow Spectators</label>
+                    <label for="allowSpectators">Allow Observers on Bridge</label>
                 </div>
                 <div class="form-check">
                     <input type="checkbox" id="easyMode" />
-                    <label for="easyMode">Easy Mode (Allow quick story creation)</label>
+                    <label for="easyMode">Training Mode (Quick story creation)</label>
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                <button class="btn btn-primary" id="confirmCreateSessionBtn">Create Session</button>
+                <button class="btn btn-secondary" data-dismiss="modal">Abort</button>
+                <button class="btn btn-primary" id="confirmCreateSessionBtn">◆ Launch Mission</button>
             </div>
         </div>
     </div>
@@ -692,75 +1204,75 @@
     <div class="modal" id="editSessionModal">
         <div class="modal-content modal-lg">
             <div class="modal-header">
-                <h3 class="modal-title">Edit Session</h3>
+                <h3 class="modal-title">◈ Mission Configuration</h3>
                 <button class="btn btn-secondary" data-dismiss="modal">×</button>
             </div>
             <div class="modal-body">
                 <div class="edit-tabs">
-                    <button class="edit-tab active" data-edit-tab="details">Session Details</button>
-                    <button class="edit-tab" data-edit-tab="stories">Stories <span class="story-count-badge" id="storyCountBadge">0</span></button>
+                    <button class="edit-tab active" data-edit-tab="details">Mission Parameters</button>
+                    <button class="edit-tab" data-edit-tab="stories">Objectives <span class="story-count-badge" id="storyCountBadge">0</span></button>
                 </div>
 
                 <div class="edit-tab-content active" id="editDetailsTab">
                     <input type="hidden" id="editSessionId" />
                     <div class="form-group">
-                        <label class="form-label">Session Name *</label>
-                        <input type="text" class="form-control" id="editSessionName" placeholder="Enter session name" required />
+                        <label class="form-label">Mission Designation *</label>
+                        <input type="text" class="form-control" id="editSessionName" placeholder="Enter mission designation" required />
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Description</label>
-                        <textarea class="form-control" id="editSessionDescription" placeholder="Optional session description"></textarea>
+                        <label class="form-label">Mission Briefing</label>
+                        <textarea class="form-control" id="editSessionDescription" placeholder="Optional mission briefing"></textarea>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Scoring Method *</label>
+                        <label class="form-label">Scoring Protocol *</label>
                         <select class="form-control" id="editScoringMethod" required>
-                            <option value="">Select scoring method...</option>
+                            <option value="">Select scoring protocol...</option>
                         </select>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Dealer Group</label>
+                        <label class="form-label">Command Crew</label>
                         <select class="form-control" id="editDealerGroup">
-                            <option value="">Select dealer group (optional)...</option>
+                            <option value="">Select command crew (optional)...</option>
                         </select>
-                        <small>Group members will be automatically added as dealers</small>
+                        <small>Crew members will be auto-assigned as bridge officers</small>
                     </div>
                     <div class="form-check">
                         <input type="checkbox" id="editAllowSpectators" />
-                        <label for="editAllowSpectators">Allow Spectators</label>
+                        <label for="editAllowSpectators">Allow Observers on Bridge</label>
                     </div>
                     <div class="form-check">
                         <input type="checkbox" id="editEasyMode" />
-                        <label for="editEasyMode">Easy Mode (Allow quick story creation)</label>
+                        <label for="editEasyMode">Training Mode (Quick story creation)</label>
                     </div>
                 </div>
 
                 <div class="edit-tab-content" id="editStoriesTab">
                     <div class="story-search-container">
-                        <input type="text" class="story-search-input" id="storySearchInput" placeholder="Search stories by number or title..." autocomplete="off" />
+                        <input type="text" class="story-search-input" id="storySearchInput" placeholder="Scan database for objectives..." autocomplete="off" />
                         <div class="story-search-results" id="storySearchResults"></div>
                     </div>
 
                     <div class="manual-story-form" id="manualStoryForm" style="display: none;">
                         <div class="form-group">
-                            <label class="form-label">Title</label>
-                            <input type="text" class="form-control" id="manualStoryTitle" placeholder="Story title" />
+                            <label class="form-label">Objective Title</label>
+                            <input type="text" class="form-control" id="manualStoryTitle" placeholder="Objective designation" />
                         </div>
                         <div class="form-group">
-                            <label class="form-label">Description</label>
-                            <input type="text" class="form-control" id="manualStoryDesc" placeholder="Optional description" />
+                            <label class="form-label">Intel</label>
+                            <input type="text" class="form-control" id="manualStoryDesc" placeholder="Optional intel" />
                         </div>
-                        <button class="btn btn-success btn-sm" id="addManualStoryBtn" style="margin-bottom:1rem;">Add</button>
+                        <button class="btn btn-success btn-sm" id="addManualStoryBtn" style="margin-bottom:1rem;">+ Add</button>
                     </div>
 
-                    <h4 style="margin-bottom: 0.75rem;">Session Stories</h4>
+                    <h4 style="margin-bottom: 0.75rem; font-family: Orbitron, monospace; font-size: 0.85rem; color: var(--primary-color); letter-spacing: 2px; text-transform: uppercase;">Mission Objectives</h4>
                     <ul class="story-list" id="editStoryList">
-                        <li class="empty-stories">No stories added yet. Search above to add stories.</li>
+                        <li class="empty-stories">No objectives loaded. Scan database above to add objectives.</li>
                     </ul>
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                <button class="btn btn-primary" id="saveSessionBtn">Save Changes</button>
+                <button class="btn btn-secondary" data-dismiss="modal">Abort</button>
+                <button class="btn btn-primary" id="saveSessionBtn">◆ Confirm Changes</button>
             </div>
         </div>
     </div>
@@ -836,7 +1348,7 @@
             document.getElementById('confirmCreateSessionBtn').addEventListener('click', createSession);
             
             document.getElementById('cancelAllBtn').addEventListener('click', function() {
-                if (confirm('Are you sure you want to cancel all planning sessions? This cannot be undone.')) {
+                if (confirm('CONFIRM: Abort all planned missions? This action cannot be reversed.')) {
                     cancelAllSessions();
                 }
             });
@@ -1023,7 +1535,12 @@
             var container = document.getElementById(containerId);
             
             if (sessionList.length === 0) {
-                container.innerHTML = '<div class="empty-state"><h3>No ' + type + ' sessions</h3><p>Create a new session to get started.</p></div>';
+                var emptyMessages = {
+                    live: '<h3>No Active Missions</h3><p>All systems nominal. Initialize a new mission to begin.</p>',
+                    planning: '<h3>No Missions in Queue</h3><p>The command deck is empty. Awaiting new directives.</p>',
+                    completed: '<h3>No Mission Archives</h3><p>No completed mission logs found in the database.</p>'
+                };
+                container.innerHTML = '<div class="empty-state">' + (emptyMessages[type] || '<h3>No data</h3>') + '</div>';
                 return;
             }
             
@@ -1047,14 +1564,14 @@
             
             var actionsHtml = '';
             if (type === 'planning') {
-                actionsHtml = '<button class="btn btn-success btn-sm" data-action="goLive">Go Live</button>' +
-                             '<button class="btn btn-secondary btn-sm" data-action="editSession">Edit</button>' +
-                             '<button class="btn btn-danger btn-sm" data-action="cancelSession">Cancel</button>';
+                actionsHtml = '<button class="btn btn-success btn-sm" data-action="goLive">▶ Launch</button>' +
+                             '<button class="btn btn-secondary btn-sm" data-action="editSession">◈ Configure</button>' +
+                             '<button class="btn btn-danger btn-sm" data-action="cancelSession">✕ Abort</button>';
             } else if (type === 'live') {
-                actionsHtml = '<button class="btn btn-primary btn-sm" data-action="openVoting">Open Voting</button>' +
-                             '<button class="btn btn-secondary btn-sm" data-action="copyJoinLink">Copy Link</button>';
+                actionsHtml = '<button class="btn btn-primary btn-sm" data-action="openVoting">◉ Enter Bridge</button>' +
+                             '<button class="btn btn-secondary btn-sm" data-action="copyJoinLink">⟐ Transmit Link</button>';
             } else if (type === 'completed') {
-                actionsHtml = '<button class="btn btn-secondary btn-sm" data-action="viewStatistics">View Statistics</button>';
+                actionsHtml = '<button class="btn btn-secondary btn-sm" data-action="viewStatistics">◇ Mission Report</button>';
             }
             
             card.innerHTML = 
@@ -1067,26 +1584,26 @@
                 '</div>' +
                 
                 '<div class="session-meta">' +
-                    '<span>Created: ' + formatDate(session.createdOn) + '</span>' +
-                    '<span>' + (session.easyMode ? 'Easy Mode' : 'Standard Mode') + '</span>' +
+                    '<span>⏱ ' + formatDate(session.createdOn) + '</span>' +
+                    '<span>' + (session.easyMode ? '◇ Training' : '◆ Standard') + '</span>' +
                 '</div>' +
                 
                 '<div class="session-stats">' +
                     '<div class="stat-item">' +
                         '<div class="stat-value">' + (session.totalStories || 0) + '</div>' +
-                        '<div class="stat-label">Stories</div>' +
+                        '<div class="stat-label">Objectives</div>' +
                     '</div>' +
                     '<div class="stat-item">' +
                         '<div class="stat-value">' + (session.storiesCompleted || 0) + '</div>' +
-                        '<div class="stat-label">Completed</div>' +
+                        '<div class="stat-label">Complete</div>' +
                     '</div>' +
                     '<div class="stat-item">' +
                         '<div class="stat-value">' + (session.dealerCounts || 0) + '</div>' +
-                        '<div class="stat-label">Dealers</div>' +
+                        '<div class="stat-label">Officers</div>' +
                     '</div>' +
                     '<div class="stat-item">' +
                         '<div class="stat-value">' + (session.voterCounts || 0) + '</div>' +
-                        '<div class="stat-label">Voters</div>' +
+                        '<div class="stat-label">Crew</div>' +
                     '</div>' +
                 '</div>' +
                 
@@ -1157,7 +1674,7 @@
                 if (!result) { showToast('Error creating session', 'error'); return; }
                 
                 if (result.success) {
-                    showToast('Session created successfully', 'success');
+                    showToast('Mission initialized — Standing by for launch', 'success');
                     hideAllModals();
                     clearCreateSessionForm();
                     loadSessions();
@@ -1176,7 +1693,7 @@
                 if (!result) { showToast('Error going live', 'error'); return; }
                 
                 if (result.success) {
-                    showToast('Session is now live', 'success');
+                    showToast('Mission is now LIVE — All stations report!', 'success');
                     loadSessions();
                 } else {
                     showToast(result.message, 'error');
@@ -1185,7 +1702,7 @@
         }
         
         function cancelSession(sessionId) {
-            if (!confirm('Are you sure you want to cancel this session?')) {
+            if (!confirm('Confirm mission abort? This cannot be undone.')) {
                 return;
             }
             
@@ -1197,7 +1714,7 @@
                 if (!result) { showToast('Error cancelling session', 'error'); return; }
                 
                 if (result.success) {
-                    showToast('Session cancelled', 'success');
+                    showToast('Mission aborted successfully', 'success');
                     loadSessions();
                 } else {
                     showToast(result.message, 'error');
@@ -1220,7 +1737,7 @@
             });
             
             setTimeout(function() {
-                showToast('All planning sessions cancelled', 'success');
+                showToast('All planned missions have been terminated', 'success');
                 loadSessions();
             }, 1000);
         }
@@ -1284,7 +1801,7 @@
             
             if (navigator.clipboard) {
                 navigator.clipboard.writeText(joinUrl).then(function() {
-                    showToast('Join link copied to clipboard', 'success');
+                    showToast('Transmission coordinates copied to clipboard', 'success');
                 });
             } else {
                 var textArea = document.createElement('textarea');
@@ -1293,7 +1810,7 @@
                 textArea.select();
                 document.execCommand('copy');
                 document.body.removeChild(textArea);
-                showToast('Join link copied to clipboard', 'success');
+                showToast('Transmission coordinates copied to clipboard', 'success');
             }
         }
         
@@ -1686,16 +2203,19 @@
         
         function toggleTheme() {
             var body = document.body;
+            body.classList.toggle('red-alert');
             var themeToggle = document.getElementById('themeToggle');
             
-            if (body.getAttribute('data-theme') === 'dark') {
-                body.removeAttribute('data-theme');
-                themeToggle.textContent = '🌙';
-                localStorage.setItem('theme', 'light');
+            if (body.classList.contains('red-alert')) {
+                themeToggle.textContent = '◆';
+                themeToggle.style.borderColor = 'var(--saber-red)';
+                themeToggle.style.color = 'var(--saber-red)';
+                showToast('RED ALERT — All hands to battle stations', 'error');
             } else {
-                body.setAttribute('data-theme', 'dark');
-                themeToggle.textContent = '☀️';
-                localStorage.setItem('theme', 'dark');
+                themeToggle.textContent = '▲';
+                themeToggle.style.borderColor = '';
+                themeToggle.style.color = '';
+                showToast('Standing down from Red Alert', 'info');
             }
         }
         
@@ -1712,12 +2232,214 @@
             return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
         }
         
-        // Initialize theme
-        var savedTheme = localStorage.getItem('theme');
-        if (savedTheme === 'dark') {
-            document.body.setAttribute('data-theme', 'dark');
-            document.getElementById('themeToggle').textContent = '☀️';
+        // === STARDATE DISPLAY ===
+        function updateStardate() {
+            var now = new Date();
+            var start = new Date(now.getFullYear(), 0, 0);
+            var diff = now - start;
+            var oneDay = 1000 * 60 * 60 * 24;
+            var dayOfYear = Math.floor(diff / oneDay);
+            var stardate = (now.getFullYear() - 2000) * 1000 + dayOfYear + (now.getHours() / 24);
+            document.getElementById('stardate').textContent = 'STARDATE ' + stardate.toFixed(1);
         }
+        updateStardate();
+        setInterval(updateStardate, 60000);
+
+        // === STAR FIELD ===
+        (function() {
+            var canvas = document.getElementById('starfield');
+            if (!canvas) return;
+            var ctx = canvas.getContext('2d');
+            var stars = [];
+            var numStars = 180;
+
+            function resize() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+
+            function initStars() {
+                stars = [];
+                for (var i = 0; i < numStars; i++) {
+                    stars.push({
+                        x: Math.random() * canvas.width,
+                        y: Math.random() * canvas.height,
+                        size: Math.random() * 1.5 + 0.3,
+                        speed: Math.random() * 0.3 + 0.05,
+                        opacity: Math.random() * 0.7 + 0.3,
+                        twinkle: Math.random() * Math.PI * 2
+                    });
+                }
+            }
+
+            function drawStars() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                var time = Date.now() * 0.001;
+
+                for (var i = 0; i < stars.length; i++) {
+                    var s = stars[i];
+                    s.y += s.speed;
+                    if (s.y > canvas.height) {
+                        s.y = 0;
+                        s.x = Math.random() * canvas.width;
+                    }
+                    var twinkleAlpha = Math.sin(time * 2 + s.twinkle) * 0.3 + 0.7;
+                    ctx.beginPath();
+                    ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(200, 220, 255, ' + (s.opacity * twinkleAlpha) + ')';
+                    ctx.fill();
+                }
+                requestAnimationFrame(drawStars);
+            }
+
+            resize();
+            initStars();
+            drawStars();
+            window.addEventListener('resize', function() { resize(); initStars(); });
+        })();
+
+        // === KONAMI CODE EASTER EGG ===
+        // Up Up Down Down Left Right Left Right B A
+        (function() {
+            var konamiSequence = [38, 38, 40, 40, 37, 39, 37, 39, 66, 65];
+            var konamiIndex = 0;
+
+            document.addEventListener('keydown', function(e) {
+                if (e.keyCode === konamiSequence[konamiIndex]) {
+                    konamiIndex++;
+                    if (konamiIndex === konamiSequence.length) {
+                        konamiIndex = 0;
+                        activateKonami();
+                    }
+                } else {
+                    konamiIndex = 0;
+                }
+            });
+
+            function activateKonami() {
+                document.body.classList.toggle('konami-activated');
+                if (document.body.classList.contains('konami-activated')) {
+                    showToast('The Force is strong with this one...', 'success');
+                    triggerHyperspace();
+                } else {
+                    showToast('Exiting hyperspace', 'info');
+                }
+            }
+        })();
+
+        // === HYPERSPACE JUMP EFFECT ===
+        function triggerHyperspace() {
+            var overlay = document.getElementById('hyperspace-overlay');
+            var flash = document.getElementById('warp-flash');
+
+            // Create light streaks
+            for (var i = 0; i < 60; i++) {
+                var line = document.createElement('div');
+                line.className = 'hyperspace-line';
+                line.style.top = (Math.random() * 100) + '%';
+                line.style.left = '0';
+                line.style.width = (Math.random() * 30 + 20) + '%';
+                line.style.animationDelay = (Math.random() * 0.5) + 's';
+                line.style.opacity = Math.random() * 0.6 + 0.4;
+                overlay.appendChild(line);
+            }
+
+            // Flash at end
+            setTimeout(function() {
+                flash.style.opacity = '0.8';
+                setTimeout(function() {
+                    flash.style.opacity = '0';
+                }, 150);
+            }, 600);
+
+            // Cleanup
+            setTimeout(function() {
+                overlay.innerHTML = '';
+            }, 1500);
+        }
+
+        // === STAR WARS CRAWL — Triple-click the logo ===
+        (function() {
+            var clickCount = 0;
+            var clickTimer;
+            var logo = document.querySelector('.logo');
+            if (!logo) return;
+
+            logo.style.cursor = 'pointer';
+            logo.addEventListener('click', function() {
+                clickCount++;
+                clearTimeout(clickTimer);
+                clickTimer = setTimeout(function() { clickCount = 0; }, 500);
+
+                if (clickCount >= 3) {
+                    clickCount = 0;
+                    document.getElementById('crawl-container').classList.add('show');
+                }
+            });
+
+            document.getElementById('crawlClose').addEventListener('click', function() {
+                document.getElementById('crawl-container').classList.remove('show');
+            });
+        })();
+
+        // === HIDDEN MESSAGE — Type "help me obi-wan" ===
+        (function() {
+            var secretPhrase = 'help me obi-wan';
+            var typed = '';
+
+            document.addEventListener('keypress', function(e) {
+                // Don't capture if user is in an input
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
+
+                typed += e.key.toLowerCase();
+                if (typed.length > secretPhrase.length) {
+                    typed = typed.slice(-secretPhrase.length);
+                }
+                if (typed === secretPhrase) {
+                    typed = '';
+                    showToast("Help me, Obi-Wan Kenobi. You're my only hope.", 'info');
+                    triggerHyperspace();
+                }
+            });
+        })();
+
+        // === ENGAGE BUTTON — Press 'E' while not in input ===
+        (function() {
+            document.addEventListener('keydown', function(e) {
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
+                if (e.key === 'e' || e.key === 'E') {
+                    if (e.shiftKey) {
+                        showToast('Make it so, Number One.', 'info');
+                        triggerHyperspace();
+                    }
+                }
+            });
+        })();
+
+        // === HOVER SOUND DATA (visual-only flourish on card hover) ===
+        (function() {
+            var quotes = [
+                'I find your lack of story points disturbing.',
+                'Live long and estimate.',
+                'May the velocity be with you.',
+                'Resistance to Agile is futile.',
+                'These are not the story points you are looking for.',
+                'Engage the backlog, Number One.',
+                'Do, or do not. There is no try... except in sprint retro.',
+                'Set phasers to estimate.',
+                'I am altering the acceptance criteria. Pray I don\'t alter them further.',
+                'The needs of the many outweigh the needs of the one... who wrote the ticket.'
+            ];
+
+            // Double-click any session card for a random quote
+            document.addEventListener('dblclick', function(e) {
+                var card = e.target.closest('.session-card');
+                if (card) {
+                    var quote = quotes[Math.floor(Math.random() * quotes.length)];
+                    showToast(quote, 'info');
+                }
+            });
+        })();
     //]]>
     </script>
 </body>
