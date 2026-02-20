@@ -1526,6 +1526,24 @@ declare global {
                         }
                     },
                     {
+                        table: 'sys_user_role_contains'
+                        id: 'de06ed9e6edc407a8430b75c960019fc'
+                        key: {
+                            role: {
+                                id: '844aac6e047f445094b3442da609d537'
+                                key: {
+                                    name: 'x_902080_planningw.admin'
+                                }
+                            }
+                            contains: {
+                                id: '200b526525394f67b8e60fc318538dbd'
+                                key: {
+                                    name: 'x_902080_planningw.facilitator'
+                                }
+                            }
+                        }
+                    },
+                    {
                         table: 'sys_documentation'
                         id: 'de1a9e69d36c47b2bc1f6d3e9c0150c1'
                         key: {
