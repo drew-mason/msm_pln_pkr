@@ -1576,6 +1576,10 @@
         }
         
         function copyJoinLink() {
+            if (!sessionData || !sessionData.session) {
+                showToast('Session data not loaded yet', 'error');
+                return;
+            }
             var sessionCode = sessionData.session.sessionCode;
             var joinUrl = window.location.protocol + '//' + window.location.host + '/join.do?session_code=' + sessionCode;
             
