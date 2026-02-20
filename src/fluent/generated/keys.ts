@@ -13,6 +13,14 @@ declare global {
                         table: 'sys_scope_privilege'
                         id: '6be8f47b83877a50c97cc2d6feaad3a4'
                     }
+                    '74e4c933830b7a50c97cc2d6feaad37a': {
+                        table: 'sys_scope_privilege'
+                        id: '74e4c933830b7a50c97cc2d6feaad37a'
+                    }
+                    a7e48d33830b7a50c97cc2d6feaad3c2: {
+                        table: 'sys_scope_privilege'
+                        id: 'a7e48d33830b7a50c97cc2d6feaad3c2'
+                    }
                     app_menu_planning_poker: {
                         table: 'sys_app_application'
                         id: '3931fc1d1d114bf3a2cda21e0735b002'
@@ -36,6 +44,10 @@ declare global {
                     br_session_state_manager: {
                         table: 'sys_script'
                         id: '86d5ba2e2d834352ab32d4d84a006068'
+                    }
+                    d1554973830b7a50c97cc2d6feaad3ed: {
+                        table: 'sys_scope_privilege'
+                        id: 'd1554973830b7a50c97cc2d6feaad3ed'
                     }
                     fd09f47b83877a50c97cc2d6feaad3ad: {
                         table: 'sys_scope_privilege'
