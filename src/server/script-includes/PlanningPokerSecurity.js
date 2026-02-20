@@ -1,5 +1,3 @@
-import { gs, GlideRecord } from '@servicenow/glide'
-
 // PlanningPokerSecurity - Centralized authorization utility
 var PlanningPokerSecurity = Class.create();
 PlanningPokerSecurity.prototype = {

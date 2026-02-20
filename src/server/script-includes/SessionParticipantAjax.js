@@ -179,7 +179,7 @@ SessionParticipantAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
             }
             
             var security = new PlanningPokerSecurity();
-            if (!security.canAccessSession(sessionGr, userId)) {
+            if (!security.canAccessSession(sessionId, userId)) {
                 return this._buildResponse(false, 'Access denied', null);
             }
             
@@ -244,7 +244,7 @@ SessionParticipantAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
             }
             
             var security = new PlanningPokerSecurity();
-            if (!security.canManageSession(sessionGr, userId)) {
+            if (!security.canManageSession(sessionId, userId)) {
                 return this._buildResponse(false, 'You do not have permission to change participant roles', null);
             }
             

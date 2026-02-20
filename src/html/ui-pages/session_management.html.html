@@ -701,9 +701,10 @@
             letter-spacing: 1px;
             border: 1px solid;
             backdrop-filter: blur(10px);
+            pointer-events: none;
         }
 
-        .toast.show { transform: translateX(0); }
+        .toast.show { transform: translateX(0); pointer-events: auto; }
 
         .toast-success {
             background: rgba(0, 255, 136, 0.15);
@@ -2189,15 +2190,19 @@
             });
         }
         
+        var _toastTimer = null;
         function showToast(message, type) {
             var toast = document.getElementById('toast');
             var toastMessage = document.getElementById('toastMessage');
             
+            if (_toastTimer) { clearTimeout(_toastTimer); _toastTimer = null; }
+            
             toastMessage.textContent = message;
             toast.className = 'toast toast-' + type + ' show';
             
-            setTimeout(function() {
+            _toastTimer = setTimeout(function() {
                 toast.classList.remove('show');
+                _toastTimer = null;
             }, 3000);
         }
         

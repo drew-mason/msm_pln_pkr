@@ -20,7 +20,7 @@ PlanningPokerSessionAjax.prototype = Object.extendsObject(global.AbstractAjaxPro
             
             // Check access
             var security = new PlanningPokerSecurity();
-            if (!security.canAccessSession(sessionGr, userId)) {
+            if (!security.canAccessSession(sessionId, userId)) {
                 return this._buildResponse(false, 'Access denied', null);
             }
             
@@ -64,7 +64,7 @@ PlanningPokerSessionAjax.prototype = Object.extendsObject(global.AbstractAjaxPro
             
             // Check access
             var security = new PlanningPokerSecurity();
-            if (!security.canAccessSession(sessionGr, userId)) {
+            if (!security.canAccessSession(sessionId, userId)) {
                 return this._buildResponse(false, 'Access denied', null);
             }
             
