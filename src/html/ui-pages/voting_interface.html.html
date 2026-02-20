@@ -498,20 +498,7 @@
         .sidebar-section.flex-fill > .section-content {
             flex: 1;
             min-height: 0;
-            overflow-y: auto;
-            scrollbar-width: thin;
-            scrollbar-color: rgba(0,212,255,0.3) transparent;
-        }
-
-        .sidebar-section.flex-fill > .section-content::-webkit-scrollbar {
-            width: 6px;
-        }
-        .sidebar-section.flex-fill > .section-content::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        .sidebar-section.flex-fill > .section-content::-webkit-scrollbar-thumb {
-            background: rgba(0,212,255,0.3);
-            border-radius: 3px;
+            overflow-y: scroll;
         }
 
         .sidebar-section::before {
@@ -541,6 +528,10 @@
         .section-content {
             padding: 0.75rem 1rem;
             background: #080e1c;
+        }
+
+        .fixed-scroll-area {
+            overflow-y: auto;
         }
 
         .participant-list {
@@ -826,10 +817,32 @@
             box-shadow: 0 0 15px rgba(255, 153, 0, 0.3);
         }
 
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.3); }
-        ::-webkit-scrollbar-thumb { background: rgba(0, 212, 255, 0.3); border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: rgba(0, 212, 255, 0.5); }
+        /* Custom themed scrollbars */
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(0, 212, 255, 0.35) rgba(5, 10, 20, 0.6);
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(5, 10, 20, 0.6);
+            border-left: 1px solid rgba(0, 212, 255, 0.1);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, rgba(0, 212, 255, 0.4), rgba(0, 180, 220, 0.25));
+            border-radius: 4px;
+            border: 1px solid rgba(0, 212, 255, 0.2);
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, rgba(0, 212, 255, 0.6), rgba(0, 180, 220, 0.4));
+            border-color: rgba(0, 212, 255, 0.4);
+            box-shadow: 0 0 6px rgba(0, 212, 255, 0.3);
+        }
+        ::-webkit-scrollbar-corner {
+            background: rgba(5, 10, 20, 0.6);
+        }
 
         @media (max-width: 768px) {
             .main-content {
@@ -931,7 +944,7 @@
                     <span>Officers</span>
                     <span>▼</span>
                 </div>
-                <div class="section-content" id="dealersContent" style="max-height: 280px; overflow-y: auto;">
+                <div class="section-content fixed-scroll-area" id="dealersContent" style="max-height: 280px;">
                     <ul class="participant-list" id="dealersList"></ul>
                 </div>
             </div>
@@ -942,7 +955,7 @@
                     <span>Crew</span>
                     <span id="participantCount">0</span>
                 </div>
-                <div class="section-content" style="max-height: 300px; overflow-y: auto;">
+                <div class="section-content fixed-scroll-area" style="max-height: 300px;">
                     <ul class="participant-list" id="participantsList"></ul>
                 </div>
             </div>
@@ -953,7 +966,7 @@
                     <span>Mission Queue</span>
                     <span>▼</span>
                 </div>
-                <div class="section-content" id="storyQueueContent">
+                <div class="section-content fixed-scroll-area" id="storyQueueContent">
                     <div id="storyQueue"></div>
                 </div>
                 <div style="padding: 0.5rem 1rem; border-top: 1px solid rgba(0,212,255,0.15); background: #080e1c; flex-shrink: 0;">
