@@ -4,68 +4,209 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Planning Poker - Session Statistics</title>
+    <title>Planning Poker - Mission Debrief</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&amp;family=Share+Tech+Mono&amp;family=Rajdhani:wght@300;400;500;600;700&amp;display=swap');
+
         :root {
-            --primary-color: #0073e6;
-            --secondary-color: #f8f9fa;
-            --success-color: #28a745;
-            --warning-color: #ffc107;
-            --danger-color: #dc3545;
-            --dark-color: #343a40;
-            --light-color: #ffffff;
-            --border-color: #dee2e6;
-            --shadow: 0 2px 4px rgba(0,0,0,0.1);
-            --radius: 8px;
+            --primary-color: #00d4ff;
+            --primary-glow: rgba(0, 212, 255, 0.4);
+            --secondary-color: #0a0e17;
+            --success-color: #00ff88;
+            --warning-color: #ffaa00;
+            --danger-color: #ff3366;
+            --dark-color: #c8d6e5;
+            --light-color: rgba(10, 14, 27, 0.85);
+            --border-color: rgba(0, 212, 255, 0.2);
+            --shadow: 0 0 20px rgba(0, 212, 255, 0.15), 0 0 60px rgba(0, 212, 255, 0.05);
+            --radius: 4px;
+            --lcars-orange: #ff9900;
+            --lcars-purple: #cc99cc;
+            --lcars-blue: #9999ff;
+            --grid-color: rgba(0, 212, 255, 0.06);
         }
-        
+
+        @keyframes gridScroll {
+            0% { background-position: 0 0; }
+            100% { background-position: 0 50px; }
+        }
+        @keyframes pulseGlow {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+        @keyframes scanline {
+            0% { top: -5%; }
+            100% { top: 105%; }
+        }
+        @keyframes warpIn {
+            0% { transform: scale(0.8) translateY(20px); opacity: 0; filter: blur(8px); }
+            60% { transform: scale(1.02) translateY(-2px); opacity: 1; filter: blur(0); }
+            100% { transform: scale(1) translateY(0); opacity: 1; filter: blur(0); }
+        }
+        @keyframes borderTrace {
+            0% { background-position: 0% 0%; }
+            100% { background-position: 200% 0%; }
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
-        
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background-color: var(--secondary-color);
+            font-family: 'Rajdhani', 'Share Tech Mono', monospace;
+            background-color: #050810;
             color: var(--dark-color);
-            line-height: 1.5;
+            line-height: 1.6;
+            position: relative;
+            overflow-x: hidden;
         }
-        
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background:
+                linear-gradient(var(--grid-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: gridScroll 8s linear infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            left: 0; right: 0;
+            height: 4px;
+            background: linear-gradient(180deg, transparent, rgba(0, 212, 255, 0.08), transparent);
+            animation: scanline 6s linear infinite;
+            pointer-events: none;
+            z-index: 9999;
+            width: 100%;
+        }
+
+        #starfield {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
         .header {
-            background: var(--light-color);
-            border-bottom: 1px solid var(--border-color);
-            padding: 1rem 2rem;
+            background: linear-gradient(135deg, rgba(10, 14, 30, 0.95), rgba(15, 20, 40, 0.95));
+            border-bottom: 2px solid var(--primary-color);
+            padding: 0;
+            display: flex;
+            align-items: stretch;
+            box-shadow: 0 2px 30px rgba(0, 212, 255, 0.2);
+            position: relative;
+            z-index: 10;
+            overflow: hidden;
+        }
+
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--primary-color), var(--lcars-orange), var(--lcars-purple), var(--primary-color), transparent);
+            background-size: 200% 100%;
+            animation: borderTrace 4s linear infinite;
+        }
+
+        .lcars-bar {
+            display: flex;
+            align-items: stretch;
+            gap: 3px;
+            margin-right: 1rem;
+        }
+
+        .lcars-block { width: 12px; min-height: 100%; }
+        .lcars-block:nth-child(1) { background: var(--lcars-orange); border-radius: 0 0 8px 0; }
+        .lcars-block:nth-child(2) { background: var(--lcars-purple); }
+        .lcars-block:nth-child(3) { background: var(--lcars-blue); border-radius: 0 8px 0 0; }
+
+        .header-inner {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: var(--shadow);
+            flex: 1;
+            padding: 0.8rem 1.5rem;
         }
-        
+
         .logo {
-            font-size: 1.5rem;
-            font-weight: bold;
+            font-family: 'Orbitron', monospace;
+            font-size: 1.2rem;
+            font-weight: 700;
             color: var(--primary-color);
+            text-shadow: 0 0 10px var(--primary-glow);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            animation: pulseGlow 3s ease-in-out infinite;
         }
-        
+
+        .btn {
+            padding: 0.5rem 1.2rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-family: 'Rajdhani', monospace;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.25s ease;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            background: transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            transition: left 0.5s;
+        }
+        .btn:hover::before { left: 100%; }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, rgba(200, 214, 229, 0.1), rgba(200, 214, 229, 0.03));
+            border-color: rgba(200, 214, 229, 0.3);
+            color: var(--dark-color);
+        }
+        .btn:hover { transform: translateY(-2px); }
+
         .main-content {
             padding: 2rem;
             max-width: 1200px;
             margin: 0 auto;
+            position: relative;
+            z-index: 1;
         }
-        
+
         .page-title {
-            font-size: 2rem;
-            font-weight: bold;
+            font-family: 'Orbitron', monospace;
+            font-size: 1.6rem;
+            font-weight: 600;
             margin-bottom: 2rem;
             text-align: center;
+            color: var(--primary-color);
+            text-shadow: 0 0 15px var(--primary-glow);
+            letter-spacing: 4px;
+            text-transform: uppercase;
         }
-        
+
         .loading {
             text-align: center;
             padding: 4rem 2rem;
         }
-        
+
         .spinner {
             border: 3px solid var(--border-color);
             border-top: 3px solid var(--primary-color);
@@ -74,245 +215,378 @@
             height: 40px;
             animation: spin 1s linear infinite;
             margin: 0 auto 1rem;
+            box-shadow: 0 0 15px var(--primary-glow);
         }
-        
+
+        .loading p {
+            font-family: 'Share Tech Mono', monospace;
+            color: rgba(200, 214, 229, 0.5);
+            letter-spacing: 1px;
+            font-size: 0.85rem;
+        }
+
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        
+
         .error-message {
-            background: #f8d7da;
-            color: #721c24;
+            background: rgba(255, 51, 102, 0.1);
+            border: 1px solid rgba(255, 51, 102, 0.3);
+            color: var(--danger-color);
             padding: 2rem;
             border-radius: var(--radius);
             text-align: center;
             margin: 2rem 0;
+            font-family: 'Share Tech Mono', monospace;
         }
-        
+
         .session-info {
-            background: var(--light-color);
+            background: linear-gradient(145deg, rgba(10, 18, 35, 0.9), rgba(5, 10, 20, 0.95));
+            border: 1px solid var(--border-color);
             border-radius: var(--radius);
             padding: 2rem;
             box-shadow: var(--shadow);
             margin-bottom: 2rem;
             text-align: center;
+            position: relative;
+            overflow: hidden;
         }
-        
+
+        .session-info::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary-color), var(--lcars-orange), var(--lcars-purple));
+            background-size: 200% 100%;
+            animation: borderTrace 4s linear infinite;
+        }
+
         .session-name {
-            font-size: 1.5rem;
-            font-weight: bold;
+            font-family: 'Orbitron', monospace;
+            font-size: 1.3rem;
+            font-weight: 600;
             color: var(--primary-color);
             margin-bottom: 0.5rem;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px var(--primary-glow);
         }
-        
+
         .session-details {
-            color: #666;
+            font-family: 'Share Tech Mono', monospace;
+            color: rgba(200, 214, 229, 0.6);
             margin-bottom: 1rem;
+            font-size: 0.85rem;
         }
-        
+
         .metrics-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 1.5rem;
             margin-bottom: 2rem;
         }
-        
+
         .metric-card {
-            background: var(--light-color);
+            background: linear-gradient(145deg, rgba(10, 18, 35, 0.9), rgba(5, 10, 20, 0.95));
+            border: 1px solid var(--border-color);
             border-radius: var(--radius);
             padding: 1.5rem;
             text-align: center;
             box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s;
+            animation: warpIn 0.5s ease-out;
         }
-        
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--primary-color), var(--lcars-purple));
+        }
+
+        .metric-card:hover {
+            border-color: rgba(0, 212, 255, 0.5);
+            box-shadow: 0 0 30px rgba(0, 212, 255, 0.15);
+            transform: translateY(-3px);
+        }
+
         .metric-value {
+            font-family: 'Orbitron', monospace;
             font-size: 2rem;
-            font-weight: bold;
+            font-weight: 700;
             color: var(--primary-color);
             margin-bottom: 0.5rem;
+            text-shadow: 0 0 15px var(--primary-glow);
         }
-        
+
         .metric-label {
-            font-size: 0.9rem;
-            color: #666;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.7rem;
+            color: rgba(200, 214, 229, 0.4);
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 2px;
         }
-        
+
         .section {
-            background: var(--light-color);
+            background: linear-gradient(145deg, rgba(10, 18, 35, 0.9), rgba(5, 10, 20, 0.95));
+            border: 1px solid var(--border-color);
             border-radius: var(--radius);
             padding: 2rem;
             box-shadow: var(--shadow);
             margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
         }
-        
+
+        .section::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary-color), var(--lcars-orange), var(--lcars-purple));
+            background-size: 200% 100%;
+            animation: borderTrace 6s linear infinite;
+        }
+
         .section-title {
-            font-size: 1.3rem;
-            font-weight: bold;
+            font-family: 'Orbitron', monospace;
+            font-size: 1rem;
+            font-weight: 600;
             margin-bottom: 1rem;
             color: var(--primary-color);
+            text-shadow: 0 0 8px var(--primary-glow);
+            letter-spacing: 3px;
+            text-transform: uppercase;
         }
-        
+
         .vote-distribution {
             display: flex;
             flex-wrap: wrap;
             gap: 0.5rem;
             margin-bottom: 1rem;
         }
-        
+
         .vote-chip {
-            background: var(--primary-color);
-            color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            font-size: 0.9rem;
+            font-family: 'Share Tech Mono', monospace;
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            color: var(--primary-color);
+            padding: 0.4rem 0.8rem;
+            border-radius: 2px;
+            font-size: 0.85rem;
             font-weight: bold;
+            letter-spacing: 1px;
         }
-        
+
         .insights {
-            background: var(--secondary-color);
+            background: rgba(0, 212, 255, 0.04);
+            border: 1px solid var(--border-color);
             padding: 1rem;
             border-radius: var(--radius);
             margin-top: 1rem;
         }
-        
+
         .insight-item {
             display: flex;
             align-items: center;
             margin-bottom: 0.5rem;
+            font-family: 'Rajdhani', monospace;
+            color: rgba(200, 214, 229, 0.7);
         }
-        
+
         .insight-item:last-child {
             margin-bottom: 0;
         }
-        
+
         .insight-icon {
             margin-right: 0.5rem;
-            font-size: 1.2rem;
+            font-size: 1.1rem;
+            filter: drop-shadow(0 0 4px var(--primary-glow));
         }
-        
+
         .stories-grid {
             display: grid;
             gap: 1rem;
         }
-        
+
         .story-card {
-            background: var(--secondary-color);
+            background: rgba(0, 212, 255, 0.03);
+            border: 1px solid var(--border-color);
             border-radius: var(--radius);
             padding: 1.5rem;
-            border-left: 4px solid var(--primary-color);
+            border-left: 3px solid var(--primary-color);
+            transition: all 0.3s;
         }
-        
+
+        .story-card:hover {
+            border-color: rgba(0, 212, 255, 0.4);
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.1);
+        }
+
         .story-header {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
             margin-bottom: 1rem;
         }
-        
+
         .story-number {
+            font-family: 'Share Tech Mono', monospace;
             font-weight: bold;
-            color: var(--primary-color);
+            color: var(--lcars-orange);
         }
-        
+
         .story-points {
-            background: var(--success-color);
-            color: white;
-            padding: 0.25rem 0.75rem;
-            border-radius: 20px;
+            font-family: 'Orbitron', monospace;
+            background: rgba(0, 255, 136, 0.15);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            color: var(--success-color);
+            padding: 0.2rem 0.75rem;
+            border-radius: 2px;
             font-weight: bold;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
         }
-        
+
         .story-meta {
             display: flex;
             gap: 1rem;
             margin-bottom: 1rem;
-            font-size: 0.9rem;
-            color: #666;
-        }
-        
-        .badge {
-            padding: 0.25rem 0.5rem;
-            border-radius: 12px;
+            font-family: 'Share Tech Mono', monospace;
             font-size: 0.8rem;
-            font-weight: bold;
+            color: rgba(200, 214, 229, 0.5);
         }
-        
-        .badge-low { background: #d4edda; color: #155724; }
-        .badge-medium { background: #fff3cd; color: #856404; }
-        .badge-high { background: #f8d7da; color: #721c24; }
-        .badge-yes { background: #d4edda; color: #155724; }
-        .badge-no { background: #f8d7da; color: #721c24; }
-        .badge-partial { background: #fff3cd; color: #856404; }
-        
+
+        .badge {
+            font-family: 'Share Tech Mono', monospace;
+            padding: 0.15rem 0.5rem;
+            border-radius: 2px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border: 1px solid;
+        }
+
+        .badge-low {
+            background: rgba(0, 255, 136, 0.1);
+            color: var(--success-color);
+            border-color: rgba(0, 255, 136, 0.3);
+        }
+        .badge-medium {
+            background: rgba(255, 170, 0, 0.1);
+            color: var(--warning-color);
+            border-color: rgba(255, 170, 0, 0.3);
+        }
+        .badge-high {
+            background: rgba(255, 51, 102, 0.1);
+            color: var(--danger-color);
+            border-color: rgba(255, 51, 102, 0.3);
+        }
+        .badge-yes {
+            background: rgba(0, 255, 136, 0.1);
+            color: var(--success-color);
+            border-color: rgba(0, 255, 136, 0.3);
+        }
+        .badge-no {
+            background: rgba(255, 51, 102, 0.1);
+            color: var(--danger-color);
+            border-color: rgba(255, 51, 102, 0.3);
+        }
+        .badge-partial {
+            background: rgba(255, 170, 0, 0.1);
+            color: var(--warning-color);
+            border-color: rgba(255, 170, 0, 0.3);
+        }
+
         .team-table {
             width: 100%;
             border-collapse: collapse;
         }
-        
+
         .team-table th,
         .team-table td {
-            padding: 1rem;
+            padding: 0.75rem 1rem;
             text-align: left;
             border-bottom: 1px solid var(--border-color);
+            font-family: 'Rajdhani', monospace;
         }
-        
+
         .team-table th {
-            background: var(--secondary-color);
-            font-weight: bold;
+            background: rgba(0, 212, 255, 0.06);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.75rem;
+            font-weight: normal;
+            color: var(--lcars-orange);
+            text-transform: uppercase;
+            letter-spacing: 2px;
         }
-        
+
+        .team-table td {
+            color: var(--dark-color);
+        }
+
+        .team-table td small {
+            font-family: 'Share Tech Mono', monospace;
+            color: rgba(200, 214, 229, 0.4);
+            font-size: 0.7rem;
+        }
+
         .progress-bar {
             width: 100%;
-            height: 20px;
-            background: var(--border-color);
-            border-radius: 10px;
+            height: 16px;
+            background: rgba(0, 212, 255, 0.08);
+            border: 1px solid var(--border-color);
+            border-radius: 2px;
             overflow: hidden;
         }
-        
+
         .progress-fill {
             height: 100%;
-            background: var(--success-color);
-            transition: width 0.3s ease;
+            background: linear-gradient(90deg, var(--primary-color), var(--success-color));
+            transition: width 0.5s ease;
+            box-shadow: 0 0 10px var(--primary-glow);
         }
-        
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.3); }
+        ::-webkit-scrollbar-thumb { background: rgba(0, 212, 255, 0.3); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(0, 212, 255, 0.5); }
+
         @media (max-width: 768px) {
-            .main-content {
-                padding: 1rem;
-            }
-            
-            .metrics-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            
-            .story-header {
-                flex-direction: column;
-                gap: 0.5rem;
-            }
-            
-            .story-meta {
-                flex-direction: column;
-                gap: 0.5rem;
-            }
+            .main-content { padding: 1rem; }
+            .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+            .story-header { flex-direction: column; gap: 0.5rem; }
+            .story-meta { flex-direction: column; gap: 0.5rem; }
+            .lcars-bar { display: none; }
         }
     </style>
 </head>
 <body>
+    <canvas id="starfield"></canvas>
+
     <div class="header">
-        <div class="logo">🃏 Planning Poker - Statistics</div>
-        <button onclick="window.close()" style="padding: 0.5rem 1rem; border: none; border-radius: 4px; cursor: pointer;">
-            ✕ Close
-        </button>
+        <div class="lcars-bar">
+            <div class="lcars-block"></div>
+            <div class="lcars-block"></div>
+            <div class="lcars-block"></div>
+        </div>
+        <div class="header-inner">
+            <div class="logo">◇ Mission Debrief</div>
+            <button class="btn btn-secondary" onclick="window.close()">✕ Disengage</button>
+        </div>
     </div>
 
     <div class="main-content">
-        <h1 class="page-title">Session Statistics</h1>
+        <h1 class="page-title">Mission Analytics</h1>
 
         <div class="loading" id="loading">
             <div class="spinner"></div>
-            <p>Loading session statistics...</p>
+            <p>Retrieving mission telemetry...</p>
         </div>
 
         <div class="error-message" id="errorMessage" style="display: none;"></div>
@@ -322,10 +596,10 @@
             <div class="session-info">
                 <div class="session-name" id="sessionName"></div>
                 <div class="session-details">
-                    <div>Facilitator: <span id="dealerName"></span></div>
-                    <div>Scoring Method: <span id="scoringMethod"></span></div>
-                    <div>Completed: <span id="completedOn"></span></div>
-                    <div>Duration: <span id="duration"></span></div>
+                    <div>Commanding Officer: <span id="dealerName"></span></div>
+                    <div>Estimation Protocol: <span id="scoringMethod"></span></div>
+                    <div>Mission Complete: <span id="completedOn"></span></div>
+                    <div>Mission Duration: <span id="duration"></span></div>
                 </div>
             </div>
 
@@ -333,23 +607,23 @@
             <div class="metrics-grid">
                 <div class="metric-card">
                     <div class="metric-value" id="totalStories">0</div>
-                    <div class="metric-label">Total Stories</div>
+                    <div class="metric-label">Total Objectives</div>
                 </div>
                 <div class="metric-card">
                     <div class="metric-value" id="completedStories">0</div>
-                    <div class="metric-label">Completed Stories</div>
+                    <div class="metric-label">Objectives Complete</div>
                 </div>
                 <div class="metric-card">
                     <div class="metric-value" id="totalPoints">0</div>
-                    <div class="metric-label">Total Points</div>
+                    <div class="metric-label">Complexity Rating</div>
                 </div>
                 <div class="metric-card">
                     <div class="metric-value" id="totalVotes">0</div>
-                    <div class="metric-label">Total Votes</div>
+                    <div class="metric-label">Crew Votes</div>
                 </div>
                 <div class="metric-card">
                     <div class="metric-value" id="uniqueVoters">0</div>
-                    <div class="metric-label">Unique Voters</div>
+                    <div class="metric-label">Active Crew</div>
                 </div>
                 <div class="metric-card">
                     <div class="metric-value" id="averageRounds">0</div>
@@ -357,32 +631,32 @@
                 </div>
                 <div class="metric-card">
                     <div class="metric-value" id="consensusRate">0%</div>
-                    <div class="metric-label">Consensus Rate</div>
+                    <div class="metric-label">Alignment Rate</div>
                 </div>
             </div>
 
             <!-- Voting Patterns -->
             <div class="section">
-                <h2 class="section-title">Voting Patterns</h2>
+                <h2 class="section-title">Vote Telemetry</h2>
                 <div class="vote-distribution" id="voteDistribution"></div>
                 <div class="insights" id="insights"></div>
             </div>
 
             <!-- Story Details -->
             <div class="section">
-                <h2 class="section-title">Story Estimations</h2>
+                <h2 class="section-title">Objective Analysis</h2>
                 <div class="stories-grid" id="storiesGrid"></div>
             </div>
 
             <!-- Team Performance -->
             <div class="section">
-                <h2 class="section-title">Team Performance</h2>
+                <h2 class="section-title">Crew Performance</h2>
                 <table class="team-table">
                     <thead>
                         <tr>
-                            <th>Team Member</th>
-                            <th>Stories Voted</th>
-                            <th>Participation Rate</th>
+                            <th>Crew Member</th>
+                            <th>Objectives Voted</th>
+                            <th>Engagement Rate</th>
                         </tr>
                     </thead>
                     <tbody id="teamPerformance"></tbody>
@@ -393,6 +667,33 @@
 
     <script>
     //<![CDATA[
+        // Star field
+        (function() {
+            var canvas = document.getElementById('starfield');
+            if (!canvas) return;
+            var ctx = canvas.getContext('2d');
+            var stars = [];
+            function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+            resize();
+            window.addEventListener('resize', resize);
+            for (var i = 0; i < 120; i++) {
+                stars.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, r: Math.random() * 1.5 + 0.3, s: Math.random() * 0.3 + 0.05, a: Math.random() });
+            }
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                stars.forEach(function(st) {
+                    st.a += st.s * 0.02;
+                    var alpha = 0.3 + Math.sin(st.a) * 0.4;
+                    ctx.beginPath();
+                    ctx.arc(st.x, st.y, st.r, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(0, 212, 255, ' + Math.max(0.1, alpha) + ')';
+                    ctx.fill();
+                });
+                requestAnimationFrame(draw);
+            }
+            draw();
+        })();
+
         // Safe AJAX response parser
         function parseAjaxResponse(response) {
             try {
@@ -417,7 +718,7 @@
 
         document.addEventListener('DOMContentLoaded', function() {
             if (!sessionId) {
-                showError('Session ID not provided');
+                showError('Session ID not provided — no mission target specified');
                 return;
             }
             
@@ -432,7 +733,7 @@
                 hideLoading();
                 
                 var result = parseAjaxResponse(response);
-                if (!result) { showError('Error loading statistics'); return; }
+                if (!result) { showError('Comm link failure — unable to retrieve telemetry'); return; }
                 
                 if (result.success) {
                     renderStatistics(result.data);
@@ -487,7 +788,7 @@
             patterns.insights.forEach(function(insight) {
                 var item = document.createElement('div');
                 item.className = 'insight-item';
-                item.innerHTML = '<span class="insight-icon">💡</span>' + escapeHtml(insight);
+                item.innerHTML = '<span class="insight-icon">◇</span>' + escapeHtml(insight);
                 insightsEl.appendChild(item);
             });
         }

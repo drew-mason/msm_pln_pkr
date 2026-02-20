@@ -4,113 +4,266 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Planning Poker - Voting Interface</title>
+    <title>Planning Poker - Bridge Console</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&amp;family=Share+Tech+Mono&amp;family=Rajdhani:wght@300;400;500;600;700&amp;display=swap');
+
         :root {
-            --primary-color: #0073e6;
-            --secondary-color: #f8f9fa;
-            --success-color: #28a745;
-            --warning-color: #ffc107;
-            --danger-color: #dc3545;
-            --dark-color: #343a40;
-            --light-color: #ffffff;
-            --border-color: #dee2e6;
-            --shadow: 0 2px 4px rgba(0,0,0,0.1);
-            --radius: 8px;
+            --primary-color: #00d4ff;
+            --primary-glow: rgba(0, 212, 255, 0.4);
+            --secondary-color: #0a0e17;
+            --success-color: #00ff88;
+            --warning-color: #ffaa00;
+            --danger-color: #ff3366;
+            --dark-color: #c8d6e5;
+            --light-color: rgba(10, 14, 27, 0.85);
+            --border-color: rgba(0, 212, 255, 0.2);
+            --shadow: 0 0 20px rgba(0, 212, 255, 0.15), 0 0 60px rgba(0, 212, 255, 0.05);
+            --radius: 4px;
+            --lcars-orange: #ff9900;
+            --lcars-purple: #cc99cc;
+            --lcars-blue: #9999ff;
+            --lcars-red: #cc6666;
+            --saber-blue: #4488ff;
+            --saber-green: #44ff66;
+            --grid-color: rgba(0, 212, 255, 0.06);
         }
-        
-        [data-theme="dark"] {
-            --secondary-color: #2c3e50;
-            --light-color: #34495e;
-            --dark-color: #ecf0f1;
-            --border-color: #34495e;
-            background-color: #2c3e50;
-            color: #ecf0f1;
+
+        @keyframes gridScroll {
+            0% { background-position: 0 0; }
+            100% { background-position: 0 50px; }
         }
-        
+        @keyframes pulseGlow {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+        @keyframes scanline {
+            0% { top: -5%; }
+            100% { top: 105%; }
+        }
+        @keyframes warpIn {
+            0% { transform: scale(0.8) translateY(20px); opacity: 0; filter: blur(8px); }
+            60% { transform: scale(1.02) translateY(-2px); opacity: 1; filter: blur(0); }
+            100% { transform: scale(1) translateY(0); opacity: 1; filter: blur(0); }
+        }
+        @keyframes borderTrace {
+            0% { background-position: 0% 0%; }
+            100% { background-position: 200% 0%; }
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
-        
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background-color: var(--secondary-color);
+            font-family: 'Rajdhani', 'Share Tech Mono', monospace;
+            background-color: #050810;
             color: var(--dark-color);
-            line-height: 1.5;
+            line-height: 1.6;
+            position: relative;
+            overflow-x: hidden;
         }
-        
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background:
+                linear-gradient(var(--grid-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: gridScroll 8s linear infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            left: 0; right: 0;
+            height: 4px;
+            background: linear-gradient(180deg, transparent, rgba(0, 212, 255, 0.08), transparent);
+            animation: scanline 6s linear infinite;
+            pointer-events: none;
+            z-index: 9999;
+            width: 100%;
+        }
+
+        #starfield {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
         .header {
-            background: var(--light-color);
-            border-bottom: 1px solid var(--border-color);
-            padding: 1rem 2rem;
+            background: linear-gradient(135deg, rgba(10, 14, 30, 0.95), rgba(15, 20, 40, 0.95));
+            border-bottom: 2px solid var(--primary-color);
+            padding: 0;
+            display: flex;
+            align-items: stretch;
+            box-shadow: 0 2px 30px rgba(0, 212, 255, 0.2);
+            position: relative;
+            z-index: 10;
+            overflow: hidden;
+        }
+
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--primary-color), var(--lcars-orange), var(--lcars-purple), var(--primary-color), transparent);
+            background-size: 200% 100%;
+            animation: borderTrace 4s linear infinite;
+        }
+
+        .lcars-bar {
+            display: flex;
+            align-items: stretch;
+            gap: 3px;
+            margin-right: 1rem;
+        }
+
+        .lcars-block { width: 12px; min-height: 100%; }
+        .lcars-block:nth-child(1) { background: var(--lcars-orange); border-radius: 0 0 8px 0; }
+        .lcars-block:nth-child(2) { background: var(--lcars-purple); }
+        .lcars-block:nth-child(3) { background: var(--lcars-blue); border-radius: 0 8px 0 0; }
+
+        .header-inner {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: var(--shadow);
+            flex: 1;
+            padding: 0.8rem 1.5rem;
         }
-        
+
         .header-left {
             display: flex;
             align-items: center;
             gap: 1rem;
         }
-        
+
         .logo {
-            font-size: 1.5rem;
-            font-weight: bold;
+            font-family: 'Orbitron', monospace;
+            font-size: 1.2rem;
+            font-weight: 700;
             color: var(--primary-color);
+            text-shadow: 0 0 10px var(--primary-glow);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            animation: pulseGlow 3s ease-in-out infinite;
         }
-        
+
         .session-code {
-            background: var(--primary-color);
-            color: white;
-            padding: 0.5rem 1rem;
+            font-family: 'Share Tech Mono', monospace;
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.2), rgba(0, 212, 255, 0.05));
+            color: var(--primary-color);
+            padding: 0.4rem 0.8rem;
             border-radius: var(--radius);
             font-weight: bold;
             cursor: pointer;
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            letter-spacing: 2px;
+            font-size: 0.85rem;
+            text-shadow: 0 0 5px var(--primary-glow);
+            transition: all 0.2s;
         }
-        
+
+        .session-code:hover {
+            box-shadow: 0 0 15px var(--primary-glow);
+        }
+
         .header-right {
             display: flex;
             align-items: center;
             gap: 1rem;
         }
-        
+
         .btn {
-            padding: 0.5rem 1rem;
-            border: none;
+            padding: 0.5rem 1.2rem;
+            border: 1px solid var(--border-color);
             border-radius: var(--radius);
             cursor: pointer;
-            font-size: 0.9rem;
-            transition: all 0.2s ease;
+            font-family: 'Rajdhani', monospace;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.25s ease;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            position: relative;
+            overflow: hidden;
+            background: transparent;
         }
-        
-        .btn-primary { background: var(--primary-color); color: white; }
-        .btn-success { background: var(--success-color); color: white; }
-        .btn-warning { background: var(--warning-color); color: black; }
-        .btn-danger { background: var(--danger-color); color: white; }
-        .btn-secondary { background: var(--border-color); color: var(--dark-color); }
-        
-        .btn:hover { transform: translateY(-1px); box-shadow: var(--shadow); }
-        .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-        
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            transition: left 0.5s;
+        }
+        .btn:hover::before { left: 100%; }
+
+        .btn-primary {
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.15), rgba(0, 212, 255, 0.05));
+            border-color: var(--primary-color); color: var(--primary-color);
+        }
+        .btn-primary:hover { box-shadow: 0 0 20px var(--primary-glow); }
+        .btn-success {
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.15), rgba(0, 255, 136, 0.05));
+            border-color: var(--success-color); color: var(--success-color);
+        }
+        .btn-success:hover { box-shadow: 0 0 20px rgba(0, 255, 136, 0.3); }
+        .btn-warning {
+            background: linear-gradient(135deg, rgba(255, 170, 0, 0.15), rgba(255, 170, 0, 0.05));
+            border-color: var(--warning-color); color: var(--warning-color);
+        }
+        .btn-danger {
+            background: linear-gradient(135deg, rgba(255, 51, 102, 0.15), rgba(255, 51, 102, 0.05));
+            border-color: var(--danger-color); color: var(--danger-color);
+        }
+        .btn-secondary {
+            background: linear-gradient(135deg, rgba(200, 214, 229, 0.1), rgba(200, 214, 229, 0.03));
+            border-color: rgba(200, 214, 229, 0.3); color: var(--dark-color);
+        }
+
+        .btn:hover { transform: translateY(-1px); }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
         .main-content {
             display: flex;
-            height: calc(100vh - 80px);
+            height: calc(100vh - 65px);
             gap: 1rem;
             padding: 1rem 2rem;
+            position: relative;
+            z-index: 1;
         }
-        
+
         .story-panel {
             flex: 2;
-            background: var(--light-color);
+            background: linear-gradient(145deg, rgba(10, 18, 35, 0.9), rgba(5, 10, 20, 0.95));
             border-radius: var(--radius);
+            border: 1px solid var(--border-color);
             box-shadow: var(--shadow);
             overflow-y: auto;
+            position: relative;
         }
-        
+
+        .story-panel::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary-color), var(--lcars-orange), var(--lcars-purple));
+            background-size: 200% 100%;
+            animation: borderTrace 6s linear infinite;
+        }
+
         .sidebar {
             flex: 1;
             max-width: 400px;
@@ -118,35 +271,68 @@
             flex-direction: column;
             gap: 1rem;
         }
-        
+
         .session-card {
-            background: var(--light-color);
+            background: linear-gradient(145deg, rgba(10, 18, 35, 0.9), rgba(5, 10, 20, 0.95));
+            border: 1px solid var(--border-color);
             border-radius: var(--radius);
             padding: 1.5rem;
             box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
         }
-        
+
+        .session-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary-color), var(--lcars-orange), var(--lcars-purple));
+            background-size: 200% 100%;
+            animation: borderTrace 6s linear infinite;
+        }
+
         .session-title {
-            font-size: 1.5rem;
-            font-weight: bold;
+            font-family: 'Orbitron', monospace;
+            font-size: 1.2rem;
+            font-weight: 600;
             margin-bottom: 0.5rem;
+            color: #e8f0fe;
+            letter-spacing: 1px;
         }
-        
+
         .status-badge {
             display: inline-block;
-            padding: 0.25rem 0.75rem;
-            border-radius: 20px;
-            font-size: 0.8rem;
+            padding: 0.2rem 0.75rem;
+            border-radius: 2px;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.7rem;
             font-weight: bold;
             text-transform: uppercase;
+            letter-spacing: 2px;
+            border: 1px solid;
         }
-        
-        .status-ready { background: #e9ecef; color: #495057; }
-        .status-live { background: #d4edda; color: #155724; }
-        .status-completed { background: #cce5ff; color: #004085; }
-        
+
+        .status-ready {
+            background: rgba(153, 153, 255, 0.1);
+            color: var(--lcars-blue);
+            border-color: rgba(153, 153, 255, 0.3);
+        }
+        .status-live {
+            background: rgba(0, 255, 136, 0.1);
+            color: var(--success-color);
+            border-color: rgba(0, 255, 136, 0.3);
+            animation: pulseGlow 2s ease-in-out infinite;
+        }
+        .status-completed {
+            background: rgba(0, 212, 255, 0.1);
+            color: var(--primary-color);
+            border-color: rgba(0, 212, 255, 0.3);
+        }
+
         .dealer-controls {
-            background: var(--light-color);
+            background: linear-gradient(145deg, rgba(10, 18, 35, 0.9), rgba(5, 10, 20, 0.95));
+            border: 1px solid var(--border-color);
             border-radius: var(--radius);
             padding: 1rem;
             box-shadow: var(--shadow);
@@ -155,222 +341,310 @@
             flex-wrap: wrap;
             margin-bottom: 1rem;
         }
-        
+
         .story-card {
-            background: var(--light-color);
+            background: linear-gradient(145deg, rgba(10, 18, 35, 0.9), rgba(5, 10, 20, 0.95));
+            border: 1px solid var(--border-color);
             border-radius: var(--radius);
             padding: 2rem;
             box-shadow: var(--shadow);
             margin-bottom: 1rem;
+            position: relative;
+            overflow: hidden;
         }
-        
+
+        .story-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--lcars-orange), var(--primary-color));
+        }
+
         .story-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 1rem;
         }
-        
+
         .story-number {
-            font-size: 1.2rem;
-            color: var(--primary-color);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 1rem;
+            color: var(--lcars-orange);
             font-weight: bold;
         }
-        
+
         .story-title {
-            font-size: 1.3rem;
-            font-weight: bold;
+            font-family: 'Orbitron', monospace;
+            font-size: 1.1rem;
+            font-weight: 600;
             margin-bottom: 1rem;
+            color: #e8f0fe;
+            letter-spacing: 1px;
         }
-        
+
         .story-description {
             margin-bottom: 1.5rem;
             line-height: 1.6;
+            font-family: 'Rajdhani', monospace;
+            color: rgba(200, 214, 229, 0.7);
         }
-        
+
         .acceptance-criteria {
-            background: var(--secondary-color);
+            background: rgba(0, 212, 255, 0.04);
+            border: 1px solid var(--border-color);
             padding: 1rem;
             border-radius: var(--radius);
             margin-bottom: 1.5rem;
         }
-        
+
         .acceptance-criteria h4 {
             margin-bottom: 0.5rem;
-            color: var(--primary-color);
+            font-family: 'Share Tech Mono', monospace;
+            color: var(--lcars-orange);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-size: 0.8rem;
         }
-        
+
         .voting-cards {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(85px, 1fr));
             gap: 1rem;
             margin-top: 2rem;
+            padding: 0 1rem;
         }
-        
+
         .voting-card {
-            background: var(--light-color);
+            background: linear-gradient(145deg, rgba(10, 18, 35, 0.9), rgba(5, 10, 20, 0.95));
             border: 2px solid var(--border-color);
             border-radius: var(--radius);
-            padding: 1rem;
+            padding: 1.2rem;
             text-align: center;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.25s ease;
+            font-family: 'Orbitron', monospace;
             font-size: 1.1rem;
             font-weight: bold;
+            color: var(--dark-color);
+            position: relative;
+            overflow: hidden;
         }
-        
+
+        .voting-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.1), transparent);
+            transition: left 0.4s;
+        }
+        .voting-card:hover::before { left: 100%; }
+
         .voting-card:hover {
             border-color: var(--primary-color);
-            transform: translateY(-2px);
-            box-shadow: var(--shadow);
+            transform: translateY(-3px);
+            box-shadow: 0 0 25px var(--primary-glow);
+            color: var(--primary-color);
+            text-shadow: 0 0 8px var(--primary-glow);
         }
-        
+
         .voting-card.selected {
-            background: var(--primary-color);
-            color: white;
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.2), rgba(0, 212, 255, 0.08));
+            color: var(--primary-color);
             border-color: var(--primary-color);
+            box-shadow: 0 0 30px var(--primary-glow), inset 0 0 20px rgba(0, 212, 255, 0.1);
+            text-shadow: 0 0 10px var(--primary-glow);
         }
-        
+
         .voting-card.special {
-            background: var(--warning-color);
-            color: black;
+            background: linear-gradient(135deg, rgba(255, 170, 0, 0.15), rgba(255, 170, 0, 0.05));
+            border-color: rgba(255, 170, 0, 0.3);
+            color: var(--warning-color);
         }
-        
+
         .sidebar-section {
-            background: var(--light-color);
+            background: linear-gradient(145deg, rgba(10, 18, 35, 0.9), rgba(5, 10, 20, 0.95));
+            border: 1px solid var(--border-color);
             border-radius: var(--radius);
             box-shadow: var(--shadow);
             margin-bottom: 1rem;
+            position: relative;
+            overflow: hidden;
         }
-        
+
+        .sidebar-section::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--primary-color), var(--lcars-purple));
+        }
+
         .section-header {
-            padding: 1rem;
+            padding: 0.75rem 1rem;
             border-bottom: 1px solid var(--border-color);
-            font-weight: bold;
+            font-family: 'Orbitron', monospace;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            text-transform: uppercase;
+            letter-spacing: 2px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             cursor: pointer;
         }
-        
+
         .section-content {
             padding: 1rem;
         }
-        
+
         .participant-list {
             list-style: none;
         }
-        
+
         .participant-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 0.5rem 0;
-            border-bottom: 1px solid var(--border-color);
+            border-bottom: 1px solid rgba(0, 212, 255, 0.08);
         }
-        
+
         .participant-item:last-child {
             border-bottom: none;
         }
-        
+
         .participant-name {
+            font-family: 'Rajdhani', monospace;
             font-weight: 500;
+            color: var(--dark-color);
         }
-        
+
         .participant-role {
-            font-size: 0.8rem;
-            padding: 0.2rem 0.5rem;
-            border-radius: 12px;
-            background: var(--secondary-color);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.7rem;
+            padding: 0.15rem 0.5rem;
+            border-radius: 2px;
+            background: rgba(0, 212, 255, 0.1);
+            color: var(--primary-color);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
-        
+
         .vote-indicator {
-            width: 20px;
-            height: 20px;
+            width: 22px;
+            height: 22px;
             border-radius: 50%;
-            background: var(--border-color);
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid var(--border-color);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.8rem;
-            color: white;
+            font-size: 0.7rem;
+            color: var(--primary-color);
+            transition: all 0.3s;
         }
-        
+
         .vote-indicator.voted {
-            background: var(--success-color);
+            background: rgba(0, 255, 136, 0.2);
+            border-color: var(--success-color);
+            color: var(--success-color);
+            box-shadow: 0 0 8px rgba(0, 255, 136, 0.3);
         }
-        
+
         .vote-results {
             margin-bottom: 1rem;
         }
-        
+
         .vote-summary {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 1rem;
+            gap: 0.75rem;
             margin-bottom: 1rem;
         }
-        
+
         .stat-card {
             text-align: center;
-            padding: 1rem;
-            background: var(--secondary-color);
+            padding: 0.75rem;
+            background: rgba(0, 212, 255, 0.04);
+            border: 1px solid var(--border-color);
             border-radius: var(--radius);
         }
-        
+
         .stat-value {
-            font-size: 1.5rem;
-            font-weight: bold;
+            font-family: 'Orbitron', monospace;
+            font-size: 1.3rem;
+            font-weight: 700;
             color: var(--primary-color);
+            text-shadow: 0 0 10px var(--primary-glow);
         }
-        
+
         .stat-label {
-            font-size: 0.8rem;
-            color: var(--dark-color);
-            opacity: 0.7;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.65rem;
+            color: rgba(200, 214, 229, 0.4);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
         }
-        
+
         .vote-distribution {
             display: flex;
             flex-wrap: wrap;
             gap: 0.5rem;
-            margin-top: 1rem;
+            margin-top: 0.75rem;
         }
-        
+
         .vote-chip {
-            background: var(--primary-color);
-            color: white;
-            padding: 0.25rem 0.5rem;
-            border-radius: 12px;
-            font-size: 0.8rem;
+            font-family: 'Share Tech Mono', monospace;
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            color: var(--primary-color);
+            padding: 0.25rem 0.6rem;
+            border-radius: 2px;
+            font-size: 0.75rem;
+            letter-spacing: 1px;
         }
-        
+
         .modal {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(4px);
             display: none;
             align-items: center;
             justify-content: center;
             z-index: 1000;
         }
-        
-        .modal.show {
-            display: flex;
-        }
-        
+        .modal.show { display: flex; }
+
         .modal-content {
-            background: var(--light-color);
+            background: linear-gradient(160deg, rgba(10, 18, 35, 0.97), rgba(5, 10, 22, 0.98));
+            border: 1px solid rgba(0, 212, 255, 0.3);
             border-radius: var(--radius);
             max-width: 600px;
-            width: 90%;
-            max-height: 80vh;
+            width: 92%;
+            max-height: 82vh;
             overflow-y: auto;
+            box-shadow: 0 0 60px rgba(0, 212, 255, 0.15);
+            animation: warpIn 0.3s ease-out;
+            position: relative;
         }
-        
+
+        .modal-content::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--lcars-orange), var(--primary-color), var(--lcars-purple));
+            background-size: 200% 100%;
+            animation: borderTrace 3s linear infinite;
+        }
+
         .modal-header {
             padding: 1rem 1.5rem;
             border-bottom: 1px solid var(--border-color);
@@ -378,16 +652,19 @@
             justify-content: space-between;
             align-items: center;
         }
-        
+
         .modal-title {
-            font-size: 1.2rem;
-            font-weight: bold;
+            font-family: 'Orbitron', monospace;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            text-shadow: 0 0 8px var(--primary-glow);
+            letter-spacing: 2px;
+            text-transform: uppercase;
         }
-        
-        .modal-body {
-            padding: 1.5rem;
-        }
-        
+
+        .modal-body { padding: 1.5rem; }
+
         .modal-footer {
             padding: 1rem 1.5rem;
             border-top: 1px solid var(--border-color);
@@ -395,100 +672,116 @@
             gap: 0.5rem;
             justify-content: flex-end;
         }
-        
-        .form-group {
-            margin-bottom: 1rem;
-        }
-        
+
+        .form-group { margin-bottom: 1rem; }
+
         .form-label {
             display: block;
-            margin-bottom: 0.5rem;
-            font-weight: bold;
+            margin-bottom: 0.4rem;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--lcars-orange);
+            text-transform: uppercase;
+            letter-spacing: 2px;
         }
-        
+
         .form-control {
             width: 100%;
-            padding: 0.5rem;
+            padding: 0.6rem 0.75rem;
+            background: rgba(0, 212, 255, 0.04);
             border: 1px solid var(--border-color);
             border-radius: var(--radius);
-            font-size: 1rem;
+            font-family: 'Rajdhani', monospace;
+            font-size: 0.95rem;
+            color: var(--dark-color);
+            transition: all 0.3s ease;
         }
-        
+
         .form-control:focus {
             outline: none;
             border-color: var(--primary-color);
-            box-shadow: 0 0 0 2px rgba(0,115,230,0.25);
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.2);
+            background: rgba(0, 212, 255, 0.08);
         }
-        
+
+        .form-control option {
+            background: #0a0e17;
+            color: var(--dark-color);
+        }
+
         textarea.form-control {
             resize: vertical;
             min-height: 100px;
         }
-        
+
         .toast {
             position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 1rem 1.5rem;
+            top: 20px; right: 20px;
+            padding: 0.75rem 1.5rem;
             border-radius: var(--radius);
-            box-shadow: var(--shadow);
             z-index: 2000;
             transform: translateX(400px);
-            transition: transform 0.3s ease;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            border: 1px solid;
+            backdrop-filter: blur(10px);
         }
-        
-        .toast.show {
-            transform: translateX(0);
-        }
-        
+        .toast.show { transform: translateX(0); }
+
         .toast-success {
-            background: var(--success-color);
-            color: white;
+            background: rgba(0, 255, 136, 0.15);
+            border-color: var(--success-color);
+            color: var(--success-color);
+            box-shadow: 0 0 30px rgba(0, 255, 136, 0.2);
         }
-        
         .toast-error {
-            background: var(--danger-color);
-            color: white;
+            background: rgba(255, 51, 102, 0.15);
+            border-color: var(--danger-color);
+            color: var(--danger-color);
+            box-shadow: 0 0 30px rgba(255, 51, 102, 0.2);
         }
-        
         .toast-info {
-            background: var(--primary-color);
-            color: white;
+            background: rgba(0, 212, 255, 0.15);
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+            box-shadow: 0 0 30px rgba(0, 212, 255, 0.2);
         }
-        
-        .collapsible {
-            cursor: pointer;
-        }
-        
-        .collapsed .section-content {
-            display: none;
-        }
-        
+
+        .collapsible { cursor: pointer; }
+        .collapsed .section-content { display: none; }
+
         .theme-toggle {
-            background: none;
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius);
-            padding: 0.5rem;
+            background: rgba(255, 153, 0, 0.1);
+            border: 1px solid var(--lcars-orange);
+            border-radius: 50%;
+            width: 36px; height: 36px;
             cursor: pointer;
-            font-size: 1.2rem;
+            font-size: 1rem;
+            color: var(--lcars-orange);
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-        
+        .theme-toggle:hover {
+            box-shadow: 0 0 15px rgba(255, 153, 0, 0.3);
+        }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.3); }
+        ::-webkit-scrollbar-thumb { background: rgba(0, 212, 255, 0.3); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(0, 212, 255, 0.5); }
+
         @media (max-width: 768px) {
             .main-content {
                 flex-direction: column;
                 padding: 1rem;
             }
-            
-            .sidebar {
-                max-width: none;
-            }
-            
-            .header {
-                padding: 1rem;
-                flex-wrap: wrap;
-                gap: 1rem;
-            }
-            
+            .sidebar { max-width: none; }
+            .header-inner { padding: 0.5rem 1rem; flex-wrap: wrap; gap: 0.5rem; }
+            .lcars-bar { display: none; }
             .voting-cards {
                 grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
             }
@@ -496,10 +789,18 @@
     </style>
 </head>
 <body>
+    <canvas id="starfield"></canvas>
+
     <div class="header">
+        <div class="lcars-bar">
+            <div class="lcars-block"></div>
+            <div class="lcars-block"></div>
+            <div class="lcars-block"></div>
+        </div>
+        <div class="header-inner">
         <div class="header-left">
-            <div class="logo">🃏 Planning Poker</div>
-            <button class="btn btn-secondary" id="backBtn">← Back</button>
+            <div class="logo">◇ Bridge Console</div>
+            <button class="btn btn-secondary" id="backBtn">← Command Deck</button>
             <div class="session-code" id="sessionCode" title="Click to copy join link">
                 Loading...
             </div>
@@ -508,9 +809,10 @@
             <button class="btn btn-secondary" id="roleSwitch" style="display: none;">
                 Switch Role
             </button>
-            <button class="theme-toggle" id="themeToggle" title="Toggle dark/light theme">
-                🌙
+            <button class="theme-toggle" id="themeToggle" title="Red Alert Mode">
+                🔴
             </button>
+        </div>
         </div>
     </div>
 
@@ -520,23 +822,23 @@
             <div class="session-card">
                 <div class="session-title" id="sessionTitle">Loading...</div>
                 <span class="status-badge" id="sessionStatus">Ready</span>
-                <div id="sessionDescription" style="margin-top: 0.5rem; color: #666;"></div>
+                <div id="sessionDescription" style="margin-top: 0.5rem; color: rgba(200, 214, 229, 0.5); font-family: 'Share Tech Mono', monospace; font-size: 0.85rem;"></div>
             </div>
 
             <!-- Dealer Controls (visible only to dealers) -->
             <div class="dealer-controls" id="dealerControls" style="display: none;">
-                <button class="btn btn-success" id="startVotingBtn">Start Voting</button>
-                <button class="btn btn-primary" id="revealVotesBtn">Reveal Votes</button>
-                <button class="btn btn-warning" id="resetVotesBtn">Reset Votes</button>
-                <button class="btn btn-secondary" id="skipStoryBtn">Skip Story</button>
-                <button class="btn btn-success" id="completeStoryBtn">Complete Story</button>
+                <button class="btn btn-success" id="startVotingBtn">◇ Engage Voting</button>
+                <button class="btn btn-primary" id="revealVotesBtn">◇ Decloak Votes</button>
+                <button class="btn btn-warning" id="resetVotesBtn">↺ Reset Sensors</button>
+                <button class="btn btn-secondary" id="skipStoryBtn">⏭ Bypass Objective</button>
+                <button class="btn btn-success" id="completeStoryBtn">◆ Lock Estimate</button>
             </div>
 
             <!-- Current Story -->
             <div class="story-card" id="currentStoryCard" style="display: none;">
                 <div class="story-header">
                     <span class="story-number" id="storyNumber">#123</span>
-                    <div id="storyPresenter" style="font-size: 0.9rem; color: #666;"></div>
+                    <div id="storyPresenter" style="font-size: 0.8rem; color: rgba(200, 214, 229, 0.5); font-family: 'Share Tech Mono', monospace;"></div>
                 </div>
                 <div class="story-title" id="storyTitle">Story Title</div>
                 <div class="story-description" id="storyDescription">Story description goes here...</div>
@@ -569,7 +871,7 @@
             <!-- Dealers -->
             <div class="sidebar-section">
                 <div class="section-header collapsible" data-target="dealersContent">
-                    <span>Dealers</span>
+                    <span>Officers</span>
                     <span>▼</span>
                 </div>
                 <div class="section-content" id="dealersContent">
@@ -580,7 +882,7 @@
             <!-- Participants -->
             <div class="sidebar-section">
                 <div class="section-header">
-                    <span>Participants</span>
+                    <span>Crew</span>
                     <span id="participantCount">0</span>
                 </div>
                 <div class="section-content">
@@ -591,13 +893,13 @@
             <!-- Story Queue -->
             <div class="sidebar-section">
                 <div class="section-header collapsible" data-target="storyQueueContent">
-                    <span>Story Queue</span>
+                    <span>Mission Queue</span>
                     <span>▼</span>
                 </div>
                 <div class="section-content collapsed" id="storyQueueContent">
                     <div id="storyQueue"></div>
                     <button class="btn btn-secondary btn-sm" id="addStoryBtn" style="margin-top: 1rem;">
-                        + Add Story
+                        + Add Objective
                     </button>
                 </div>
             </div>
@@ -608,18 +910,18 @@
     <div class="modal" id="addStoryModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 class="modal-title">Add Story</h3>
+                <h3 class="modal-title">Add Objective</h3>
                 <button class="btn btn-secondary" data-dismiss="modal">×</button>
             </div>
             <div class="modal-body">
                 <div class="form-group">
-                    <label class="form-label">Search Stories</label>
+                    <label class="form-label">Scan Objectives</label>
                     <input type="text" class="form-control" id="storySearch" placeholder="Search by title or number...">
                 </div>
                 <div id="storySearchResults"></div>
                 <hr />
                 <div class="form-group">
-                    <label class="form-label">Quick Add (Easy Mode)</label>
+                    <label class="form-label">Quick Deploy</label>
                     <input type="text" class="form-control" id="quickStoryTitle" placeholder="Story title">
                     <textarea class="form-control" id="quickStoryDescription" placeholder="Story description" style="margin-top: 0.5rem;"></textarea>
                 </div>
@@ -635,18 +937,18 @@
     <div class="modal" id="skipStoryModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 class="modal-title">Skip Story</h3>
+                <h3 class="modal-title">Bypass Objective</h3>
                 <button class="btn btn-secondary" data-dismiss="modal">×</button>
             </div>
             <div class="modal-body">
                 <div class="form-group">
-                    <label class="form-label">Reason for Skipping (Optional)</label>
+                    <label class="form-label">Bypass Rationale (Optional)</label>
                     <textarea class="form-control" id="skipComments" placeholder="Enter reason for skipping this story..."></textarea>
                 </div>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                <button class="btn btn-warning" id="confirmSkipStoryBtn">Skip Story</button>
+                <button class="btn btn-warning" id="confirmSkipStoryBtn">Confirm Bypass</button>
             </div>
         </div>
     </div>
@@ -654,24 +956,24 @@
     <div class="modal" id="completeStoryModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 class="modal-title">Complete Story</h3>
+                <h3 class="modal-title">Lock Estimate</h3>
                 <button class="btn btn-secondary" data-dismiss="modal">×</button>
             </div>
             <div class="modal-body">
                 <div class="form-group">
-                    <label class="form-label">Final Story Points</label>
+                    <label class="form-label">Final Complexity Rating</label>
                     <select class="form-control" id="finalStoryPoints">
                         <option value="">Select points...</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Comments (Optional)</label>
+                    <label class="form-label">Mission Notes (Optional)</label>
                     <textarea class="form-control" id="completionComments" placeholder="Add any notes about the estimation..."></textarea>
                 </div>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                <button class="btn btn-success" id="confirmCompleteStoryBtn">Complete Story</button>
+                <button class="btn btn-success" id="confirmCompleteStoryBtn">◆ Lock Estimate</button>
             </div>
         </div>
     </div>
@@ -695,6 +997,33 @@
     </script>
     <script>
     //<![CDATA[
+        // Star field
+        (function() {
+            var canvas = document.getElementById('starfield');
+            if (!canvas) return;
+            var ctx = canvas.getContext('2d');
+            var stars = [];
+            function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+            resize();
+            window.addEventListener('resize', resize);
+            for (var i = 0; i < 120; i++) {
+                stars.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, r: Math.random() * 1.5 + 0.3, s: Math.random() * 0.3 + 0.05, a: Math.random() });
+            }
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                stars.forEach(function(st) {
+                    st.a += st.s * 0.02;
+                    var alpha = 0.3 + Math.sin(st.a) * 0.4;
+                    ctx.beginPath();
+                    ctx.arc(st.x, st.y, st.r, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(0, 212, 255, ' + Math.max(0.1, alpha) + ')';
+                    ctx.fill();
+                });
+                requestAnimationFrame(draw);
+            }
+            draw();
+        })();
+
         // Safe AJAX response parser
         function parseAjaxResponse(response) {
             try {
@@ -788,7 +1117,7 @@
             ga.addParam('session_id', sessionId);
             ga.getXML(function(response) {
                 var result = parseAjaxResponse(response);
-                if (!result) { showToast('Error loading session', 'error'); return; }
+                if (!result) { showToast('Comm link failure — unable to load session', 'error'); return; }
                 
                 if (result.success) {
                     sessionData = result.data;
@@ -843,7 +1172,7 @@
                 }
             } else {
                 document.getElementById('currentStoryCard').style.display = 'none';
-                document.getElementById('votingCards').innerHTML = '<p style="text-align: center; color: #666; padding: 2rem;">No active story. Waiting for dealer to start voting.</p>';
+                document.getElementById('votingCards').innerHTML = '<p style="text-align: center; color: rgba(200, 214, 229, 0.4); padding: 2rem; font-family: Share Tech Mono, monospace; letter-spacing: 1px;">// No active objective. Standing by for orders.</p>';
             }
             
             // Render participants
@@ -882,7 +1211,7 @@
             votingCardsContainer.innerHTML = '';
             
             if (!currentStory || currentStory.status !== 'voting') {
-                votingCardsContainer.innerHTML = '<p style="text-align: center; color: #666; padding: 2rem;">Voting is not active for this story.</p>';
+                votingCardsContainer.innerHTML = '<p style="text-align: center; color: rgba(200, 214, 229, 0.4); padding: 2rem; font-family: Share Tech Mono, monospace; letter-spacing: 1px;">// Estimation array offline. Awaiting commanding officer.</p>';
                 return;
             }
             
@@ -926,7 +1255,7 @@
                 if (!result) { return; }
                 
                 if (result.success) {
-                    showToast('Vote cast: ' + voteValue, 'success');
+                    showToast('Vote registered: ' + voteValue, 'success');
                 } else {
                     showToast(result.message, 'error');
                 }
@@ -1044,10 +1373,10 @@
             ga.addParam('story_id', currentStory.sys_id);
             ga.getXML(function(response) {
                 var result = parseAjaxResponse(response);
-                if (!result) { showToast('Error starting voting', 'error'); return; }
+                if (!result) { showToast('Comm failure — unable to engage', 'error'); return; }
                 
                 if (result.success) {
-                    showToast('Voting started', 'success');
+                    showToast('Voting engaged', 'success');
                     loadSession(); // Reload to update UI
                 } else {
                     showToast(result.message, 'error');
@@ -1068,10 +1397,10 @@
             ga.addParam('story_id', currentStory.sys_id);
             ga.getXML(function(response) {
                 var result = parseAjaxResponse(response);
-                if (!result) { showToast('Error revealing votes', 'error'); return; }
+                if (!result) { showToast('Comm failure — unable to decloak', 'error'); return; }
                 
                 if (result.success) {
-                    showToast('Votes revealed', 'success');
+                    showToast('Votes decloaked', 'success');
                     renderVoteResults(result.data);
                 } else {
                     showToast(result.message, 'error');
@@ -1086,7 +1415,7 @@
                 return;
             }
             
-            if (!confirm('Are you sure you want to reset all votes for this story?')) {
+            if (!confirm('Confirm: Purge all registered votes for this objective?')) {
                 return;
             }
             
@@ -1096,10 +1425,10 @@
             ga.addParam('story_id', currentStory.sys_id);
             ga.getXML(function(response) {
                 var result = parseAjaxResponse(response);
-                if (!result) { showToast('Error resetting votes', 'error'); return; }
+                if (!result) { showToast('Comm failure — unable to reset', 'error'); return; }
                 
                 if (result.success) {
-                    showToast('Votes reset', 'success');
+                    showToast('Sensors reset', 'success');
                     loadSession(); // Reload to update UI
                     hideModal('voteResultsSection');
                 } else {
@@ -1119,10 +1448,10 @@
             ga.addParam('comments', comments);
             ga.getXML(function(response) {
                 var result = parseAjaxResponse(response);
-                if (!result) { showToast('Error skipping story', 'error'); return; }
+                if (!result) { showToast('Comm failure — bypass error', 'error'); return; }
                 
                 if (result.success) {
-                    showToast('Story skipped', 'success');
+                    showToast('Objective bypassed', 'success');
                     hideAllModals();
                     loadSession(); // Reload to update UI
                 } else {
@@ -1137,7 +1466,7 @@
             var comments = document.getElementById('completionComments').value;
             
             if (!points) {
-                showToast('Please select story points', 'error');
+                showToast('Complexity rating required', 'error');
                 return;
             }
             
@@ -1149,10 +1478,10 @@
             ga.addParam('comments', comments);
             ga.getXML(function(response) {
                 var result = parseAjaxResponse(response);
-                if (!result) { showToast('Error completing story', 'error'); return; }
+                if (!result) { showToast('Comm failure — estimate lock error', 'error'); return; }
                 
                 if (result.success) {
-                    showToast('Story completed with ' + points + ' points', 'success');
+                    showToast('Estimate locked: ' + points + ' pts', 'success');
                     hideAllModals();
                     loadSession(); // Reload to update UI
                 } else {
@@ -1247,7 +1576,7 @@
             
             if (navigator.clipboard) {
                 navigator.clipboard.writeText(joinUrl).then(function() {
-                    showToast('Join link copied to clipboard', 'success');
+                    showToast('Docking coordinates transmitted', 'success');
                 });
             } else {
                 // Fallback for older browsers
@@ -1257,28 +1586,17 @@
                 textArea.select();
                 document.execCommand('copy');
                 document.body.removeChild(textArea);
-                showToast('Join link copied to clipboard', 'success');
+                showToast('Docking coordinates transmitted', 'success');
             }
         }
         
         function toggleTheme() {
-            var body = document.body;
-            var themeToggle = document.getElementById('themeToggle');
-            
-            if (body.getAttribute('data-theme') === 'dark') {
-                body.removeAttribute('data-theme');
-                themeToggle.textContent = '🌙';
-                localStorage.setItem('theme', 'light');
-            } else {
-                body.setAttribute('data-theme', 'dark');
-                themeToggle.textContent = '☀️';
-                localStorage.setItem('theme', 'dark');
-            }
+            document.body.classList.toggle('red-alert');
+            showToast(document.body.classList.contains('red-alert') ? 'RED ALERT activated' : 'Red alert disengaged', 'info');
         }
         
         function switchRole() {
-            // Implementation for role switching
-            showToast('Role switching not implemented yet', 'info');
+            showToast('Role switching not yet operational', 'info');
         }
         
         function getUrlParameter(name) {
@@ -1286,13 +1604,6 @@
             var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
             var results = regex.exec(location.search);
             return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
-        }
-        
-        // Initialize theme
-        var savedTheme = localStorage.getItem('theme');
-        if (savedTheme === 'dark') {
-            document.body.setAttribute('data-theme', 'dark');
-            document.getElementById('themeToggle').textContent = '☀️';
         }
         
         // Cleanup on page unload
