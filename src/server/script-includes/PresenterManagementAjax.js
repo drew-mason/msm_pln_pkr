@@ -232,43 +232,9 @@ PresenterManagementAjax.prototype = Object.extendsObject(global.AbstractAjaxProc
     
     // Helper methods
     _addDealerGroupMembers: function(sessionId, dealerGroupId) {
-        var addedCount = 0;
-        
-        var groupMemberGr = new GlideRecord('sys_user_grmember');
-        groupMemberGr.addQuery('group', dealerGroupId);
-        groupMemberGr.query();
-        
-        while (groupMemberGr.next()) {
-            var memberId = groupMemberGr.getValue('user');
-            
-            // Check if already a participant
-            var existingGr = new GlideRecord('x_902080_planningw_session_participant');
-            existingGr.addQuery('session', sessionId);
-            existingGr.addQuery('user', memberId);
-            existingGr.query();
-            
-            if (!existingGr.hasNext()) {
-                // Add as new dealer participant
-                var participantGr = new GlideRecord('x_902080_planningw_session_participant');
-                participantGr.initialize();
-                participantGr.setValue('session', sessionId);
-                participantGr.setValue('user', memberId);
-                participantGr.setValue('role', 'dealer');
-                participantGr.setValue('status', 'active');
-                participantGr.setValue('joined_at', new GlideDateTime());
-                participantGr.setValue('is_online', false);
-                participantGr.insert();
-                
-                addedCount++;
-            } else if (existingGr.next() && existingGr.getValue('role') !== 'dealer') {
-                // Update existing participant to dealer role
-                existingGr.setValue('role', 'dealer');
-                existingGr.update();
-                addedCount++;
-            }
-        }
-        
-        return addedCount;
+        // Delegate to canonical implementation in SessionManagementAjax
+        var smAjax = new SessionManagementAjax();
+        return smAjax._addDealerGroupMembers(sessionId, dealerGroupId, null);
     },
     
     _buildResponse: function(success, message, data) {
