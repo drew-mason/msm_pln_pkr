@@ -1061,6 +1061,8 @@
         var sessionData = null;
         var pollInterval = null;
         var sessionId = getUrlParameter('session_id');
+        var storySearchDebounce = null;
+        var selectedStoryIds = [];
 
         // Initialize page
         document.addEventListener('DOMContentLoaded', function() {
@@ -1107,6 +1109,35 @@
                     hideAllModals();
                 });
             });
+            
+            // Add Objective button - opens modal
+            document.getElementById('addStoryBtn').addEventListener('click', function() {
+                selectedStoryIds = [];
+                document.getElementById('storySearchResults').innerHTML = '';
+                document.getElementById('storySearch').value = '';
+                document.getElementById('quickStoryTitle').value = '';
+                document.getElementById('quickStoryDescription').value = '';
+                showModal('addStoryModal');
+            });
+            
+            // Story search input with debounce
+            document.getElementById('storySearch').addEventListener('input', function() {
+                clearTimeout(storySearchDebounce);
+                var term = this.value.trim();
+                if (term.length < 2) {
+                    document.getElementById('storySearchResults').innerHTML = '';
+                    return;
+                }
+                storySearchDebounce = setTimeout(function() {
+                    searchStoriesForVoting(term);
+                }, 300);
+            });
+            
+            // Add Selected stories button
+            document.getElementById('addSelectedStoriesBtn').addEventListener('click', addSelectedStoriesToSession);
+            
+            // Quick Add manual story button
+            document.getElementById('quickAddStoryBtn').addEventListener('click', quickAddStoryToSession);
             
             // Collapsible sections
             var collapsibles = document.querySelectorAll('.collapsible');
@@ -1553,6 +1584,125 @@
             resetBtn.disabled = (status !== 'revealed');
             skipBtn.disabled = false;
             completeBtn.disabled = (status !== 'revealed');
+        }
+        
+        // --- Add Objective Functions ---
+        
+        function searchStoriesForVoting(searchTerm) {
+            var ga = new GlideAjax('SessionManagementAjax');
+            ga.addParam('sysparm_name', 'searchStories');
+            ga.addParam('search_term', searchTerm);
+            ga.addParam('limit', '15');
+            ga.getXML(function(response) {
+                var result = parseAjaxResponse(response);
+                if (!result || !result.success) {
+                    document.getElementById('storySearchResults').innerHTML = '<div style="padding:0.5rem;color:#ff6b6b;">Error searching objectives</div>';
+                    return;
+                }
+                
+                var container = document.getElementById('storySearchResults');
+                container.innerHTML = '';
+                selectedStoryIds = [];
+                
+                if (result.data.length === 0) {
+                    container.innerHTML = '<div style="padding:0.75rem;color:rgba(200,214,229,0.4);font-family:Share Tech Mono,monospace;font-size:0.85rem;">// No matching objectives found</div>';
+                    return;
+                }
+                
+                result.data.forEach(function(story) {
+                    var div = document.createElement('div');
+                    div.style.cssText = 'padding:0.5rem 0.75rem;border-bottom:1px solid rgba(0,212,255,0.08);display:flex;align-items:center;gap:0.5rem;cursor:pointer;transition:background 0.15s;font-family:Rajdhani,monospace;font-size:0.9rem;';
+                    
+                    var checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.value = story.sys_id;
+                    checkbox.style.cssText = 'accent-color:var(--primary-color);';
+                    checkbox.addEventListener('change', function() {
+                        if (this.checked) {
+                            selectedStoryIds.push(story.sys_id);
+                        } else {
+                            selectedStoryIds = selectedStoryIds.filter(function(id) { return id !== story.sys_id; });
+                        }
+                    });
+                    
+                    var label = document.createElement('span');
+                    label.innerHTML = '<strong>' + escapeHtml(story.number) + '</strong> — ' + escapeHtml(story.short_description || 'Untitled');
+                    
+                    div.appendChild(checkbox);
+                    div.appendChild(label);
+                    div.addEventListener('click', function(e) {
+                        if (e.target !== checkbox) {
+                            checkbox.checked = !checkbox.checked;
+                            checkbox.dispatchEvent(new Event('change'));
+                        }
+                    });
+                    div.addEventListener('mouseenter', function() { div.style.background = 'rgba(0,212,255,0.08)'; });
+                    div.addEventListener('mouseleave', function() { div.style.background = ''; });
+                    
+                    container.appendChild(div);
+                });
+            });
+        }
+        
+        function addSelectedStoriesToSession() {
+            if (selectedStoryIds.length === 0) {
+                showToast('Select at least one objective', 'error');
+                return;
+            }
+            
+            var ga = new GlideAjax('SessionManagementAjax');
+            ga.addParam('sysparm_name', 'addStories');
+            ga.addParam('session_id', sessionId);
+            ga.addParam('story_ids', selectedStoryIds.join(','));
+            ga.getXML(function(response) {
+                var result = parseAjaxResponse(response);
+                if (!result) { showToast('Error adding objectives', 'error'); return; }
+                
+                if (result.success) {
+                    showToast('Objectives added to mission', 'success');
+                    selectedStoryIds = [];
+                    hideAllModals();
+                    loadSession(); // Refresh to show new stories
+                } else {
+                    showToast(result.message, 'error');
+                }
+            });
+        }
+        
+        function quickAddStoryToSession() {
+            var title = document.getElementById('quickStoryTitle').value.trim();
+            var description = document.getElementById('quickStoryDescription').value.trim();
+            
+            if (!title) {
+                showToast('Objective title is required', 'error');
+                return;
+            }
+            
+            var ga = new GlideAjax('SessionManagementAjax');
+            ga.addParam('sysparm_name', 'addManualStory');
+            ga.addParam('session_id', sessionId);
+            ga.addParam('title', title);
+            ga.addParam('description', description);
+            ga.getXML(function(response) {
+                var result = parseAjaxResponse(response);
+                if (!result) { showToast('Error adding objective', 'error'); return; }
+                
+                if (result.success) {
+                    showToast('Objective deployed', 'success');
+                    document.getElementById('quickStoryTitle').value = '';
+                    document.getElementById('quickStoryDescription').value = '';
+                    hideAllModals();
+                    loadSession(); // Refresh to show new story
+                } else {
+                    showToast(result.message, 'error');
+                }
+            });
+        }
+        
+        function escapeHtml(text) {
+            var div = document.createElement('div');
+            div.appendChild(document.createTextNode(text || ''));
+            return div.innerHTML;
         }
         
         // Utility functions

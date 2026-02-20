@@ -217,6 +217,7 @@ SessionManagementAjax.prototype = Object.extendsObject(global.AbstractAjaxProces
             while (storyGr.next()) {
                 stories.push({
                     sys_id: storyGr.getValue('sys_id'),
+                    story: storyGr.getValue('story'),
                     story_number: storyGr.getValue('story_number'),
                     story_title: storyGr.getValue('story_title'),
                     status: storyGr.getValue('status'),

@@ -1429,21 +1429,17 @@
         function loadUserGroups() {
             var ga = new GlideAjax('SessionManagementAjax');
             ga.addParam('sysparm_name', 'getUserGroups');
-            ga.getXMLAnswer(function(answer) {
-                try {
-                    if (!answer) {
-                        console.warn('User groups: empty response, groups feature may be unavailable');
-                        return;
-                    }
-                    var result = JSON.parse(answer);
-                    if (result.success) {
-                        userGroups = result.data;
-                        populateUserGroups();
-                    } else {
-                        console.error('Failed to load user groups:', result.message);
-                    }
-                } catch (e) {
-                    console.error('Error parsing user groups response:', e);
+            ga.getXML(function(response) {
+                var result = parseAjaxResponse(response);
+                if (!result) {
+                    console.warn('User groups: empty response, groups feature may be unavailable');
+                    return;
+                }
+                if (result.success) {
+                    userGroups = result.data;
+                    populateUserGroups();
+                } else {
+                    console.error('Failed to load user groups:', result.message);
                 }
             });
         }
@@ -1758,38 +1754,33 @@
             var ga = new GlideAjax('SessionManagementAjax');
             ga.addParam('sysparm_name', 'getSessionDetails');
             ga.addParam('session_id', sessionId);
-            ga.getXMLAnswer(function(answer) {
-                try {
-                    if (!answer) { showToast('Error loading session details', 'error'); return; }
-                    var result = JSON.parse(answer);
-                    if (!result.success) { showToast(result.message, 'error'); return; }
-                    
-                    var data = result.data;
-                    
-                    // Populate form
-                    document.getElementById('editSessionId').value = data.sys_id;
-                    document.getElementById('editSessionName').value = data.name || '';
-                    document.getElementById('editSessionDescription').value = data.description || '';
-                    document.getElementById('editScoringMethod').value = data.scoringMethod || '';
-                    document.getElementById('editDealerGroup').value = data.dealerGroup || '';
-                    document.getElementById('editAllowSpectators').checked = data.allowSpectators;
-                    document.getElementById('editEasyMode').checked = data.easyMode;
-                    
-                    // Show/hide manual story form
-                    document.getElementById('manualStoryForm').style.display = data.easyMode ? 'flex' : 'none';
-                    
-                    // Populate stories
-                    editingStories = data.stories || [];
-                    renderEditStories();
-                    
-                    // Reset to details tab
-                    switchEditTab('details');
-                    
-                    showModal('editSessionModal');
-                } catch (e) {
-                    console.error('Error loading session details:', e);
-                    showToast('Error loading session details', 'error');
-                }
+            ga.getXML(function(response) {
+                var result = parseAjaxResponse(response);
+                if (!result) { showToast('Error loading session details', 'error'); return; }
+                if (!result.success) { showToast(result.message, 'error'); return; }
+                
+                var data = result.data;
+                
+                // Populate form
+                document.getElementById('editSessionId').value = data.sys_id;
+                document.getElementById('editSessionName').value = data.name || '';
+                document.getElementById('editSessionDescription').value = data.description || '';
+                document.getElementById('editScoringMethod').value = data.scoringMethod || '';
+                document.getElementById('editDealerGroup').value = data.dealerGroup || '';
+                document.getElementById('editAllowSpectators').checked = data.allowSpectators;
+                document.getElementById('editEasyMode').checked = data.easyMode;
+                
+                // Show/hide manual story form
+                document.getElementById('manualStoryForm').style.display = data.easyMode ? 'flex' : 'none';
+                
+                // Populate stories
+                editingStories = data.stories || [];
+                renderEditStories();
+                
+                // Reset to details tab
+                switchEditTab('details');
+                
+                showModal('editSessionModal');
             });
         }
         
@@ -1948,11 +1939,10 @@
             ga.addParam('sysparm_name', 'searchStories');
             ga.addParam('search_term', searchTerm);
             ga.addParam('limit', '15');
-            ga.getXMLAnswer(function(answer) {
+            ga.getXML(function(response) {
                 try {
-                    if (!answer) return;
-                    var result = JSON.parse(answer);
-                    if (!result.success) return;
+                    var result = parseAjaxResponse(response);
+                    if (!result || !result.success) return;
                     
                     var container = document.getElementById('storySearchResults');
                     container.innerHTML = '';
@@ -2005,42 +1995,34 @@
             ga.addParam('sysparm_name', 'addStories');
             ga.addParam('session_id', editingSessionId);
             ga.addParam('story_ids', storyId);
-            ga.getXMLAnswer(function(answer) {
-                try {
-                    if (!answer) { showToast('Error adding story', 'error'); return; }
-                    var result = JSON.parse(answer);
-                    if (result.success) {
-                        showToast('Story added', 'success');
-                        refreshEditStories();
-                    } else {
-                        showToast(result.message, 'error');
-                    }
-                } catch (e) {
-                    showToast('Error adding story', 'error');
+            ga.getXML(function(response) {
+                var result = parseAjaxResponse(response);
+                if (!result) { showToast('Error adding objective', 'error'); return; }
+                if (result.success) {
+                    showToast('Objective added to mission', 'success');
+                    refreshEditStories();
+                } else {
+                    showToast(result.message, 'error');
                 }
             });
         }
         
         function removeStoryFromSession(sessionStoryId) {
             if (!editingSessionId) return;
-            if (!confirm('Remove this story from the session?')) return;
+            if (!confirm('Remove this objective from the mission?')) return;
             
             var ga = new GlideAjax('SessionManagementAjax');
             ga.addParam('sysparm_name', 'removeStory');
             ga.addParam('session_id', editingSessionId);
             ga.addParam('session_story_id', sessionStoryId);
-            ga.getXMLAnswer(function(answer) {
-                try {
-                    if (!answer) { showToast('Error removing story', 'error'); return; }
-                    var result = JSON.parse(answer);
-                    if (result.success) {
-                        showToast('Story removed', 'success');
-                        refreshEditStories();
-                    } else {
-                        showToast(result.message, 'error');
-                    }
-                } catch (e) {
-                    showToast('Error removing story', 'error');
+            ga.getXML(function(response) {
+                var result = parseAjaxResponse(response);
+                if (!result) { showToast('Error removing objective', 'error'); return; }
+                if (result.success) {
+                    showToast('Objective removed', 'success');
+                    refreshEditStories();
+                } else {
+                    showToast(result.message, 'error');
                 }
             });
         }
@@ -2061,20 +2043,16 @@
             ga.addParam('session_id', editingSessionId);
             ga.addParam('title', title);
             ga.addParam('description', desc);
-            ga.getXMLAnswer(function(answer) {
-                try {
-                    if (!answer) { showToast('Error adding manual story', 'error'); return; }
-                    var result = JSON.parse(answer);
-                    if (result.success) {
-                        showToast('Manual story added', 'success');
-                        document.getElementById('manualStoryTitle').value = '';
-                        document.getElementById('manualStoryDesc').value = '';
-                        refreshEditStories();
-                    } else {
-                        showToast(result.message, 'error');
-                    }
-                } catch (e) {
-                    showToast('Error adding manual story', 'error');
+            ga.getXML(function(response) {
+                var result = parseAjaxResponse(response);
+                if (!result) { showToast('Error adding manual objective', 'error'); return; }
+                if (result.success) {
+                    showToast('Manual objective added', 'success');
+                    document.getElementById('manualStoryTitle').value = '';
+                    document.getElementById('manualStoryDesc').value = '';
+                    refreshEditStories();
+                } else {
+                    showToast(result.message, 'error');
                 }
             });
         }
@@ -2083,16 +2061,14 @@
             var ga = new GlideAjax('SessionManagementAjax');
             ga.addParam('sysparm_name', 'getSessionDetails');
             ga.addParam('session_id', editingSessionId);
-            ga.getXMLAnswer(function(answer) {
-                try {
-                    if (!answer) return;
-                    var result = JSON.parse(answer);
-                    if (result.success) {
-                        editingStories = result.data.stories || [];
-                        renderEditStories();
-                    }
-                } catch (e) {
-                    console.error('Error refreshing stories:', e);
+            ga.getXML(function(response) {
+                var result = parseAjaxResponse(response);
+                if (!result) { console.error('Error refreshing objectives: empty response'); return; }
+                if (result.success) {
+                    editingStories = result.data.stories || [];
+                    renderEditStories();
+                } else {
+                    console.error('Error refreshing objectives:', result.message);
                 }
             });
         }
@@ -2121,22 +2097,18 @@
             ga.addParam('dealer_group', document.getElementById('editDealerGroup').value);
             ga.addParam('allow_spectators', document.getElementById('editAllowSpectators').checked.toString());
             ga.addParam('easy_mode', document.getElementById('editEasyMode').checked.toString());
-            ga.getXMLAnswer(function(answer) {
-                try {
-                    if (!answer) { showToast('Error saving session', 'error'); return; }
-                    var result = JSON.parse(answer);
-                    if (result.success) {
-                        // Save story order if stories were reordered
-                        saveStoryOrder(sessionId, function() {
-                            showToast('Session saved successfully', 'success');
-                            hideAllModals();
-                            loadSessions();
-                        });
-                    } else {
-                        showToast(result.message, 'error');
-                    }
-                } catch (e) {
-                    showToast('Error saving session', 'error');
+            ga.getXML(function(response) {
+                var result = parseAjaxResponse(response);
+                if (!result) { showToast('Error saving mission', 'error'); return; }
+                if (result.success) {
+                    // Save story order if stories were reordered
+                    saveStoryOrder(sessionId, function() {
+                        showToast('Mission configuration saved', 'success');
+                        hideAllModals();
+                        loadSessions();
+                    });
+                } else {
+                    showToast(result.message, 'error');
                 }
             });
         }
@@ -2155,16 +2127,10 @@
             ga.addParam('sysparm_name', 'reorderStories');
             ga.addParam('session_id', sessionId);
             ga.addParam('story_order', JSON.stringify(orderData));
-            ga.getXMLAnswer(function(answer) {
-                try {
-                    if (answer) {
-                        var result = JSON.parse(answer);
-                        if (!result.success) {
-                            console.error('Error saving story order:', result.message);
-                        }
-                    }
-                } catch (e) {
-                    console.error('Error saving story order:', e);
+            ga.getXML(function(response) {
+                var result = parseAjaxResponse(response);
+                if (result && !result.success) {
+                    console.error('Error saving objective order:', result.message);
                 }
                 callback();
             });
