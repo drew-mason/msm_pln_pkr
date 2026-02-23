@@ -19,7 +19,7 @@ PlanningPokerSessionAjax.prototype = Object.extendsObject(global.AbstractAjaxPro
                 session: this._buildSessionInfo(sessionGr),
                 currentStory: this._getCurrentStory(sessionId),
                 storyQueue: this._getStoryQueue(sessionId),
-                participants: this._getParticipants(sessionId),
+                participants: this._getParticipants(sessionId, null, sessionGr),
                 scoringValues: this._getScoringValues(sessionGr.getValue('scoring_method')),
                 userRole: this._getUserRoleData(sessionId, userId, sessionGr),
                 revealedVotes: null
@@ -57,7 +57,7 @@ PlanningPokerSessionAjax.prototype = Object.extendsObject(global.AbstractAjaxPro
             }
             
             // Get voting indicators without revealing values
-            var participants = this._getParticipants(sessionId, currentStory.sys_id);
+            var participants = this._getParticipants(sessionId, currentStory.sys_id, sessionGr);
             var totalVoteCount = this._getTotalVoteCount(currentStory.sys_id);
             
             var data = {
@@ -152,7 +152,7 @@ PlanningPokerSessionAjax.prototype = Object.extendsObject(global.AbstractAjaxPro
         return storyData;
     },
     
-    _getParticipants: function(sessionId, storyId) {
+    _getParticipants: function(sessionId, storyId, sessionGr) {
         var participants = [];
         
         // Pre-load voters for the current story in one query
@@ -165,6 +165,9 @@ PlanningPokerSessionAjax.prototype = Object.extendsObject(global.AbstractAjaxPro
                 voterSet[voteGr.getValue('voter')] = true;
             }
         }
+        
+        // Pre-compute dealer permission set efficiently
+        var dealerPermSet = this._buildDealerPermissionSet(sessionId, sessionGr);
         
         var partGr = new GlideRecord('x_902080_planningw_session_participant');
         partGr.addQuery('session', sessionId);
@@ -191,6 +194,7 @@ PlanningPokerSessionAjax.prototype = Object.extendsObject(global.AbstractAjaxPro
                 firstName: partGr.user.first_name.toString(),
                 lastName: partGr.user.last_name.toString(),
                 role: role,
+                isDealer: dealerPermSet[userId] === true,
                 isPresenter: partGr.getValue('is_presenter') == 'true',
                 isOnline: partGr.getValue('is_online') == 'true',
                 hasVoted: storyId ? (voterSet[userId] === true) : false,
@@ -199,6 +203,48 @@ PlanningPokerSessionAjax.prototype = Object.extendsObject(global.AbstractAjaxPro
         }
         
         return participants;
+    },
+    
+    // Build a set of user IDs that have dealer permission for this session
+    _buildDealerPermissionSet: function(sessionId, sessionGr) {
+        var dealerSet = {};
+        
+        if (!sessionGr) {
+            sessionGr = new GlideRecord('x_902080_planningw_planning_session');
+            if (!sessionGr.get(sessionId)) return dealerSet;
+        }
+        
+        // Session dealer always has permission
+        var dealerId = sessionGr.getValue('dealer');
+        if (dealerId) {
+            dealerSet[dealerId] = true;
+        }
+        
+        // Dealer group members have permission
+        var dealerGroupId = sessionGr.getValue('dealer_group');
+        if (dealerGroupId) {
+            var memberGr = new GlideRecord('sys_user_grmember');
+            memberGr.addQuery('group', dealerGroupId);
+            memberGr.query();
+            while (memberGr.next()) {
+                dealerSet[memberGr.getValue('user')] = true;
+            }
+        }
+        
+        // Admins have permission — check active participants with admin role
+        var security = new PlanningPokerSecurity();
+        var partGr = new GlideRecord('x_902080_planningw_session_participant');
+        partGr.addQuery('session', sessionId);
+        partGr.addQuery('status', PlanningPokerConstants.STATUS.ACTIVE);
+        partGr.query();
+        while (partGr.next()) {
+            var uid = partGr.getValue('user');
+            if (!dealerSet[uid] && security.hasAdminAccess(uid)) {
+                dealerSet[uid] = true;
+            }
+        }
+        
+        return dealerSet;
     },
     
     _getScoringValues: function(methodId) {

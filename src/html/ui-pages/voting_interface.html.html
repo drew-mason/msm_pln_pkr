@@ -2046,7 +2046,11 @@
             participants.forEach(function(participant) {
                 var indicator = document.getElementById('vote-indicator-' + participant.userId);
                 if (indicator) {
-                    if (participant.hasVoted) {
+                    // Active dealer always keeps green checkmark
+                    if (participant.role === 'dealer') {
+                        indicator.classList.add('voted');
+                        indicator.textContent = '✓';
+                    } else if (participant.hasVoted) {
                         indicator.classList.add('voted');
                         indicator.textContent = '✓';
                     } else {
@@ -2066,17 +2070,18 @@
             dealersList.innerHTML = '';
             participantsList.innerHTML = '';
             
-            var dealers = participants.filter(function(p) { return p.role === 'dealer'; });
-            var others = participants.filter(function(p) { return p.role !== 'dealer'; });
+            // Group by dealer permission (isDealer), not current role
+            var officers = participants.filter(function(p) { return p.isDealer || p.role === 'dealer'; });
+            var crew = participants.filter(function(p) { return !p.isDealer && p.role !== 'dealer'; });
             
-            // Render dealers
-            dealers.forEach(function(participant) {
+            // Render officers (users with dealer permission)
+            officers.forEach(function(participant) {
                 var li = createParticipantItem(participant);
                 dealersList.appendChild(li);
             });
             
-            // Render other participants
-            others.forEach(function(participant) {
+            // Render crew (regular voters)
+            crew.forEach(function(participant) {
                 var li = createParticipantItem(participant);
                 participantsList.appendChild(li);
             });
@@ -2094,13 +2099,24 @@
             
             var roleSpan = document.createElement('span');
             roleSpan.className = 'participant-role';
-            roleSpan.textContent = participant.role;
+            // Show meaningful role label: active dealer vs officer (has permission but not active)
+            if (participant.role === 'dealer') {
+                roleSpan.textContent = 'active dealer';
+            } else if (participant.isDealer) {
+                roleSpan.textContent = 'officer';
+            } else {
+                roleSpan.textContent = participant.role;
+            }
             
             var indicator = document.createElement('div');
             indicator.className = 'vote-indicator';
             indicator.id = 'vote-indicator-' + participant.userId;
             
-            if (participant.hasVoted) {
+            // Active dealer gets a green checkmark (like voted indicator)
+            if (participant.role === 'dealer') {
+                indicator.classList.add('voted');
+                indicator.textContent = '✓';
+            } else if (participant.hasVoted) {
                 indicator.classList.add('voted');
                 indicator.textContent = '✓';
             }
