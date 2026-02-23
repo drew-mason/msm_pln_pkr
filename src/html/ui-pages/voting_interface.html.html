@@ -1339,6 +1339,28 @@
         </div>
     </div>
 
+    <!-- Complete Session Confirmation Modal -->
+    <div class="modal" id="completeSessionModal" role="dialog" aria-modal="true" aria-labelledby="completeSessionModalTitle">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="completeSessionModalTitle">Complete Session</h3>
+                <button class="btn btn-secondary" data-dismiss="modal" aria-label="Close">×</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-family: 'Share Tech Mono', monospace; color: rgba(200,214,229,0.8); font-size: 0.9rem; line-height: 1.6;">
+                    This will end the session for all participants and redirect everyone to the session statistics page.
+                </p>
+                <p style="font-family: 'Share Tech Mono', monospace; color: rgba(255,59,48,0.7); font-size: 0.8rem; margin-top: 0.75rem;">
+                    ⚠ This action cannot be undone.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button class="btn btn-sm" onclick="completeSession();" style="background: rgba(255,59,48,0.2); border-color: rgba(255,59,48,0.5); color: #ff6b6b; padding: 0.5rem 1.25rem;">◼ Complete Session</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast Notifications -->
     <div class="toast" id="toast" role="alert" aria-live="assertive">
         <span id="toastMessage"></span>
@@ -1627,6 +1649,12 @@
             var userRole = sessionData.userRole;
             var revealedVotes = sessionData.revealedVotes;
             
+            // If session is completed, redirect everyone to stats page
+            if (session.status === 'completed') {
+                window.location.href = 'x_902080_planningw_session_statistics.do?session_id=' + sessionId;
+                return;
+            }
+            
             // Update header
             document.getElementById('sessionCode').textContent = session.sessionCode;
             document.getElementById('sessionTitle').textContent = session.name;
@@ -1672,10 +1700,11 @@
                 }
             } else {
                 document.getElementById('currentStoryCard').style.display = 'none';
-                if (userRole.effectiveRole === 'voter') {
-                    document.getElementById('votingCards').innerHTML = '<p style="text-align: center; color: rgba(200, 214, 229, 0.4); padding: 2rem; font-family: Share Tech Mono, monospace; letter-spacing: 1px;">// No active objective. Standing by for orders.</p>';
+                document.getElementById('votingCards').innerHTML = '';
+                if (userRole.effectiveRole === 'dealer') {
+                    renderNoStoryDealerPanel();
                 } else {
-                    document.getElementById('votingCards').innerHTML = '';
+                    document.getElementById('votingCards').innerHTML = '<p style="text-align: center; color: rgba(200, 214, 229, 0.4); padding: 2rem; font-family: Share Tech Mono, monospace; letter-spacing: 1px;">// No active objective. Standing by for orders.</p>';
                 }
             }
             
@@ -1684,6 +1713,9 @@
             
             // Render story queue
             renderStoryQueue(sessionData.storyQueue || []);
+            
+            // Show/hide Add Objective button based on easy mode
+            document.getElementById('addStoryBtn').parentElement.style.display = session.easyMode ? '' : 'none';
         }
         
         // Render current story
@@ -2171,6 +2203,13 @@
             var officers = participants.filter(function(p) { return p.isDealer || p.role === 'dealer'; });
             var crew = participants.filter(function(p) { return !p.isDealer && p.role !== 'dealer'; });
             
+            // Sort officers: active dealer always at top
+            officers.sort(function(a, b) {
+                if (a.role === 'dealer' && b.role !== 'dealer') return -1;
+                if (a.role !== 'dealer' && b.role === 'dealer') return 1;
+                return 0;
+            });
+            
             // Render officers (users with dealer permission)
             officers.forEach(function(participant) {
                 var li = createParticipantItem(participant);
@@ -2417,7 +2456,10 @@
                 if (result.success) {
                     showToast('Estimate locked: ' + points + ' pts', 'success');
                     hideAllModals();
-                    loadSession(); // Reload to update UI
+                    if (!result.data.nextStoryId) {
+                        showToast('All missions complete \u2014 review session status', 'info');
+                    }
+                    loadSession();
                 } else {
                     showToast(result.message, 'error');
                 }
@@ -2608,6 +2650,74 @@
             });
         }
         
+        // --- No-Story Dealer Panel ---
+
+        function renderNoStoryDealerPanel() {
+            var votingCards = document.getElementById('votingCards');
+            document.getElementById('currentStoryCard').style.display = 'none';
+
+            // Find other dealers with pending stories
+            var stories = (sessionData && sessionData.storyQueue) ? sessionData.storyQueue : [];
+            var myId = currentUser.id;
+            var pendingByDealer = {};
+            stories.forEach(function(s) {
+                if (s.status === 'pending' && s.added_by !== myId) {
+                    if (!pendingByDealer[s.added_by]) {
+                        pendingByDealer[s.added_by] = { name: s.added_by_name, stories: [] };
+                    }
+                    pendingByDealer[s.added_by].stories.push(s);
+                }
+            });
+
+            var dealerKeys = Object.keys(pendingByDealer);
+            var easyMode = sessionData && sessionData.session && sessionData.session.easyMode;
+
+            var html = '<div style="text-align:center; padding: 2rem 1rem;">';
+            html += '<div style="font-size: 2.5rem; margin-bottom: 0.75rem; opacity: 0.6;">✦</div>';
+            html += '<h3 style="color: var(--primary-color); font-family: Orbitron, sans-serif; font-size: 1.1rem; margin-bottom: 0.5rem; letter-spacing: 2px;">NO ACTIVE MISSIONS</h3>';
+            html += '<p style="color: rgba(200,214,229,0.5); font-family: Share Tech Mono, monospace; font-size: 0.85rem; margin-bottom: 1.5rem;">Your objectives have been completed, Commander.</p>';
+
+            if (dealerKeys.length > 0) {
+                html += '<div style="margin-bottom: 1.5rem;">';
+                html += '<p style="color: rgba(200,214,229,0.6); font-family: Share Tech Mono, monospace; font-size: 0.8rem; margin-bottom: 0.75rem; letter-spacing: 1px;">// Switch to another dealer\'s queue:</p>';
+                dealerKeys.forEach(function(key) {
+                    var dealer = pendingByDealer[key];
+                    var firstStory = dealer.stories[0];
+                    html += '<button class="btn btn-primary btn-sm" onclick="switchToStory(\'' + firstStory.sys_id + '\', \'' + firstStory.story_title.replace(/'/g, "\\'") + '\')" style="margin: 0.25rem; padding: 0.5rem 1rem;">';
+                    html += '◆ ' + dealer.name + ' (' + dealer.stories.length + ' pending)';
+                    html += '</button>';
+                });
+                html += '</div>';
+            }
+
+            html += '<div style="display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">';
+            if (easyMode) {
+                html += '<button class="btn btn-primary btn-sm" onclick="document.getElementById(\'addStoryBtn\').click();" style="padding: 0.5rem 1.25rem;">+ Add Objective</button>';
+            }
+            html += '<button class="btn btn-sm" onclick="showModal(\'completeSessionModal\');" style="padding: 0.5rem 1.25rem; background: rgba(255,59,48,0.15); border-color: rgba(255,59,48,0.4); color: #ff6b6b;">◼ Complete Session</button>';
+            html += '</div>';
+            html += '</div>';
+
+            votingCards.innerHTML = html;
+        }
+
+        function completeSession() {
+            var ga = new GlideAjax('PlanningPokerStoryAjax');
+            ga.addParam('sysparm_name', 'stopSession');
+            ga.addParam('session_id', sessionId);
+            ga.getXML(function(response) {
+                var result = parseAjaxResponse(response);
+                if (!result) { showToast('Comm failure — unable to complete session', 'error'); return; }
+
+                if (result.success) {
+                    hideAllModals();
+                    window.location.href = 'x_902080_planningw_session_statistics.do?session_id=' + sessionId;
+                } else {
+                    showToast(result.message || 'Error completing session', 'error');
+                }
+            });
+        }
+
         // --- Story Queue Rendering ---
         
         function renderStoryQueue(stories) {

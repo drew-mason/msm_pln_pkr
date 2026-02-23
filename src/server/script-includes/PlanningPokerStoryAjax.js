@@ -407,8 +407,7 @@ PlanningPokerStoryAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
         
         var nextStory = this._getNextPendingStory(sessionId);
         if (nextStory) {
-            nextStory.setValue('status', PlanningPokerConstants.STATUS.VOTING);
-            nextStory.setValue('voting_started', new GlideDateTime());
+            // Keep as pending — dealer must explicitly start voting
             nextStory.setValue('is_current_story', true);
             nextStory.update();
             
