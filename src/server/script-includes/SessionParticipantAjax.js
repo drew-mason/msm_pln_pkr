@@ -45,9 +45,10 @@ SessionParticipantAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
                 if (participantGr.getValue('status') !== 'active') {
                     participantGr.setValue('status', 'active');
                     participantGr.setValue('joined_at', new GlideDateTime());
-                    participantGr.setValue('is_online', true);
-                    participantGr.update();
                 }
+                participantGr.setValue('is_online', true);
+                participantGr.setValue('last_seen', new GlideDateTime());
+                participantGr.update();
                 
                 var role = participantGr.getValue('role');
                 // Normalize role (strip scope prefix if present)
@@ -76,6 +77,7 @@ SessionParticipantAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
                 participantGr.setValue('status', 'active');
                 participantGr.setValue('joined_at', new GlideDateTime());
                 participantGr.setValue('is_online', true);
+                participantGr.setValue('last_seen', new GlideDateTime());
                 participantGr.insert();
                 
                 gs.debug('[SessionParticipantAjax] User ' + userId + ' joined session ' + sessionId + ' as ' + role);

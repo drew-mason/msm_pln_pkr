@@ -2133,6 +2133,13 @@
                     if (d.sessionStatus && d.sessionStatus !== currentSessionStatus) {
                         needsReload = true;
                     }
+                    
+                    // Check if participant list changed (user joined or left)
+                    if (d.participants && sessionData && sessionData.participants) {
+                        if (d.participants.length !== sessionData.participants.length) {
+                            needsReload = true;
+                        }
+                    }
                 }
                 
                 if (needsReload) {
@@ -3150,10 +3157,22 @@
             return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
         }
         
-        // Cleanup on page unload
+        // Cleanup on page unload — notify server that user left
         window.addEventListener('beforeunload', function() {
             if (pollInterval) {
                 clearInterval(pollInterval);
+            }
+            // Fire-and-forget leave notification
+            // For tab close: heartbeat cleanup marks user offline within 15s
+            if (sessionId) {
+                try {
+                    var ga = new GlideAjax('SessionParticipantAjax');
+                    ga.addParam('sysparm_name', 'leaveSession');
+                    ga.addParam('session_id', sessionId);
+                    ga.getXML(function() {}); // fire and forget
+                } catch (e) {
+                    // Best-effort
+                }
             }
         });
     //]]>
