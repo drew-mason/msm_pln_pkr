@@ -1356,7 +1356,7 @@
         function initializeEventListeners() {
             // Header controls
             document.getElementById('backBtn').addEventListener('click', function() {
-                window.location.href = 'session_management.do';
+                window.location.href = 'x_902080_planningw_session_management.do';
             });
             
             document.getElementById('sessionCode').addEventListener('click', copyJoinLink);
@@ -2659,7 +2659,7 @@
                 return;
             }
             var sessionCode = sessionData.session.sessionCode;
-            var joinUrl = window.location.protocol + '//' + window.location.host + '/join.do?session_code=' + sessionCode;
+            var joinUrl = window.location.protocol + '//' + window.location.host + '/x_902080_planningw_join.do?session_code=' + sessionCode;
             
             if (navigator.clipboard) {
                 navigator.clipboard.writeText(joinUrl).then(function() {
