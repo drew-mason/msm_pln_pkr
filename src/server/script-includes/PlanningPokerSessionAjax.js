@@ -93,6 +93,10 @@ PlanningPokerSessionAjax.prototype = Object.extendsObject(global.AbstractAjaxPro
                 hasCurrentStory: true,
                 storyId: currentStory.sys_id,
                 storyStatus: currentStory.status,
+                storyTitle: currentStory.story_title,
+                storyDescription: currentStory.story_description,
+                acceptanceCriteria: currentStory.acceptance_criteria,
+                dealerComments: currentStory.dealer_comments,
                 sessionStatus: sessionGr.getValue('status'),
                 participants: participants,
                 totalVoteCount: totalVoteCount

@@ -800,6 +800,38 @@
         .collapsed .section-content { display: none; }
         .collapsed .section-content + div { display: none; }
 
+        /* Inline editable story fields for dealers */
+        .editable-field {
+            border: 1px solid transparent;
+            border-radius: 4px;
+            padding: 4px 6px;
+            margin: -4px -6px;
+            transition: border-color 0.2s, background 0.2s;
+            outline: none;
+            min-height: 1.4em;
+            white-space: pre-wrap;
+        }
+        .editable-field:hover {
+            border-color: rgba(0, 212, 255, 0.15);
+            background: rgba(0, 212, 255, 0.03);
+        }
+        .editable-field:focus {
+            border-color: var(--primary-color);
+            background: rgba(0, 212, 255, 0.06);
+            box-shadow: 0 0 8px rgba(0, 212, 255, 0.1);
+        }
+        .editable-field.saving {
+            border-color: var(--warning-color);
+        }
+        .editable-field.saved {
+            border-color: var(--success-color);
+        }
+        .editable-field[data-placeholder]:empty::before {
+            content: attr(data-placeholder);
+            color: rgba(200, 214, 229, 0.25);
+            font-style: italic;
+        }
+
         .theme-toggle {
             background: rgba(255, 153, 0, 0.1);
             border: 1px solid var(--lcars-orange);
@@ -1332,17 +1364,79 @@
         }
         
         // Render current story
+        var storyFieldSaveTimers = {};
+        var activeEditField = null; // Track which field dealer is currently editing
+        var currentEditStoryId = null; // Track which story the edit listeners are for
+        
         function renderCurrentStory(story) {
             document.getElementById('currentStoryCard').style.display = 'block';
             document.getElementById('storyNumber').textContent = story.story_number || 'N/A';
-            document.getElementById('storyTitle').textContent = story.story_title || 'Untitled Story';
-            document.getElementById('storyDescription').textContent = story.story_description || 'No description provided.';
             
-            if (story.acceptance_criteria) {
-                document.getElementById('acceptanceCriteria').style.display = 'block';
-                document.getElementById('acceptanceCriteriaContent').textContent = story.acceptance_criteria;
+            var isDealer = sessionData && sessionData.userRole && sessionData.userRole.effectiveRole === 'dealer';
+            
+            // If story changed, reset edit state
+            if (story.sys_id !== currentEditStoryId) {
+                currentEditStoryId = story.sys_id;
+                activeEditField = null;
+                clearSetupFlags();
+            }
+            
+            // Story Title
+            var titleEl = document.getElementById('storyTitle');
+            if (isDealer) {
+                if (activeEditField !== 'storyTitle') {
+                    titleEl.contentEditable = 'true';
+                    titleEl.classList.add('editable-field');
+                    titleEl.setAttribute('data-placeholder', 'Enter title...');
+                    titleEl.textContent = story.story_title || '';
+                    setupFieldSave(titleEl, story.sys_id, 'story_title');
+                }
             } else {
-                document.getElementById('acceptanceCriteria').style.display = 'none';
+                titleEl.contentEditable = 'false';
+                titleEl.classList.remove('editable-field');
+                titleEl.removeAttribute('data-placeholder');
+                titleEl.textContent = story.story_title || 'Untitled Story';
+            }
+            
+            // Story Description
+            var descEl = document.getElementById('storyDescription');
+            if (isDealer) {
+                if (activeEditField !== 'storyDescription') {
+                    descEl.contentEditable = 'true';
+                    descEl.classList.add('editable-field');
+                    descEl.setAttribute('data-placeholder', 'Enter description...');
+                    descEl.textContent = story.story_description || '';
+                    setupFieldSave(descEl, story.sys_id, 'story_description');
+                }
+            } else {
+                descEl.contentEditable = 'false';
+                descEl.classList.remove('editable-field');
+                descEl.removeAttribute('data-placeholder');
+                descEl.textContent = story.story_description || 'No description provided.';
+            }
+            
+            // Acceptance Criteria
+            var acSection = document.getElementById('acceptanceCriteria');
+            var acEl = document.getElementById('acceptanceCriteriaContent');
+            if (isDealer) {
+                acSection.style.display = 'block';
+                if (activeEditField !== 'acceptanceCriteriaContent') {
+                    acEl.contentEditable = 'true';
+                    acEl.classList.add('editable-field');
+                    acEl.setAttribute('data-placeholder', 'Enter acceptance criteria...');
+                    acEl.textContent = story.acceptance_criteria || '';
+                    setupFieldSave(acEl, story.sys_id, 'acceptance_criteria');
+                }
+            } else {
+                acEl.contentEditable = 'false';
+                acEl.classList.remove('editable-field');
+                acEl.removeAttribute('data-placeholder');
+                if (story.acceptance_criteria) {
+                    acSection.style.display = 'block';
+                    acEl.textContent = story.acceptance_criteria;
+                } else {
+                    acSection.style.display = 'none';
+                }
             }
             
             if (story.dealer_comments) {
@@ -1355,6 +1449,87 @@
             if (story.presenter) {
                 document.getElementById('storyPresenter').textContent = 'Presented by: ' + story.presenter;
             }
+        }
+        
+        function clearSetupFlags() {
+            ['storyTitle', 'storyDescription', 'acceptanceCriteriaContent'].forEach(function(id) {
+                var el = document.getElementById(id);
+                if (el && el._saveSetup) {
+                    var clone = el.cloneNode(true);
+                    clone._saveSetup = false;
+                    el.parentNode.replaceChild(clone, el);
+                }
+            });
+        }
+        
+        function setupFieldSave(el, storyId, fieldName) {
+            if (el._saveSetup) return; // Already set up for this story
+            
+            el._saveSetup = true;
+            
+            el.addEventListener('focus', function() {
+                activeEditField = el.id;
+            });
+            
+            el.addEventListener('blur', function() {
+                activeEditField = null;
+                // Save immediately on blur
+                saveStoryField(el, storyId, fieldName);
+            });
+            
+            el.addEventListener('input', function() {
+                // Debounced auto-save while typing (1.5s after last keystroke)
+                if (storyFieldSaveTimers[fieldName]) {
+                    clearTimeout(storyFieldSaveTimers[fieldName]);
+                }
+                storyFieldSaveTimers[fieldName] = setTimeout(function() {
+                    saveStoryField(el, storyId, fieldName);
+                }, 1500);
+            });
+            
+            // Prevent Enter from creating divs in contenteditable (except for description/AC)
+            if (fieldName === 'story_title') {
+                el.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        el.blur();
+                    }
+                });
+            }
+        }
+        
+        function saveStoryField(el, storyId, fieldName) {
+            var value = el.textContent.trim();
+            
+            // Skip if unchanged from server data
+            var serverValue = '';
+            if (sessionData && sessionData.currentStory) {
+                serverValue = sessionData.currentStory[fieldName] || '';
+            }
+            if (value === serverValue) return;
+            
+            el.classList.add('saving');
+            el.classList.remove('saved');
+            
+            var ga = new GlideAjax('PlanningPokerStoryAjax');
+            ga.addParam('sysparm_name', 'updateStoryDetails');
+            ga.addParam('story_id', storyId);
+            ga.addParam('field', fieldName);
+            ga.addParam('value', value);
+            ga.getXML(function(response) {
+                el.classList.remove('saving');
+                var result = parseAjaxResponse(response);
+                if (result && result.success) {
+                    el.classList.add('saved');
+                    // Update local sessionData so we don't re-save same value
+                    if (sessionData && sessionData.currentStory) {
+                        sessionData.currentStory[fieldName] = value;
+                    }
+                    setTimeout(function() { el.classList.remove('saved'); }, 1500);
+                } else {
+                    showToast('Failed to save ' + fieldName.replace(/_/g, ' '), 'error');
+                }
+            });
         }
         
         // Render voting cards
@@ -1440,6 +1615,32 @@
                 pollFailCount = 0;
                 if (result.success && result.data.hasCurrentStory) {
                     updateVotingIndicators(result.data.participants);
+                    
+                    // Update story content for non-editing users (propagate dealer edits)
+                    if (!activeEditField && sessionData && sessionData.currentStory) {
+                        var d = result.data;
+                        var cs = sessionData.currentStory;
+                        var changed = false;
+                        if (d.storyTitle !== undefined && d.storyTitle !== cs.story_title) {
+                            cs.story_title = d.storyTitle;
+                            changed = true;
+                        }
+                        if (d.storyDescription !== undefined && d.storyDescription !== cs.story_description) {
+                            cs.story_description = d.storyDescription;
+                            changed = true;
+                        }
+                        if (d.acceptanceCriteria !== undefined && d.acceptanceCriteria !== cs.acceptance_criteria) {
+                            cs.acceptance_criteria = d.acceptanceCriteria;
+                            changed = true;
+                        }
+                        if (d.dealerComments !== undefined && d.dealerComments !== cs.dealer_comments) {
+                            cs.dealer_comments = d.dealerComments;
+                            changed = true;
+                        }
+                        if (changed) {
+                            renderCurrentStory(cs);
+                        }
+                    }
                 }
             });
         }
