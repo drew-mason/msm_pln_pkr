@@ -662,6 +662,64 @@ SessionManagementAjax.prototype = Object.extendsObject(global.AbstractAjaxProces
             return this._buildResponse(false, 'Error cancelling session: ' + e, null);
         }
     },
+
+    deleteSession: function() {
+        try {
+            var sessionId = this.getParameter('session_id');
+
+            if (!sessionId) {
+                return this._buildResponse(false, 'Session ID required', null);
+            }
+
+            var userId = gs.getUserID();
+
+            // Check permissions
+            var sessionGr = new GlideRecord('x_902080_planningw_planning_session');
+            if (!sessionGr.get(sessionId)) {
+                return this._buildResponse(false, 'Session not found', null);
+            }
+
+            var security = new PlanningPokerSecurity();
+            if (!security.canManageSession(sessionId, userId)) {
+                return this._buildResponse(false, 'Access denied', null);
+            }
+
+            // Only allow deleting planning (ready) and live sessions
+            var status = sessionGr.getValue('status');
+            if (status !== 'ready' && status !== 'live') {
+                return this._buildResponse(false, 'Only planning and active sessions can be deleted', null);
+            }
+
+            // Delete votes for all stories in this session
+            var storyGr = new GlideRecord('x_902080_planningw_session_stories');
+            storyGr.addQuery('session', sessionId);
+            storyGr.query();
+            while (storyGr.next()) {
+                var voteGr = new GlideRecord('x_902080_planningw_planning_vote');
+                voteGr.addQuery('story', storyGr.getUniqueValue());
+                voteGr.deleteMultiple();
+            }
+
+            // Delete session stories
+            var storyDelGr = new GlideRecord('x_902080_planningw_session_stories');
+            storyDelGr.addQuery('session', sessionId);
+            storyDelGr.deleteMultiple();
+
+            // Delete participants
+            var partGr = new GlideRecord('x_902080_planningw_session_participant');
+            partGr.addQuery('session', sessionId);
+            partGr.deleteMultiple();
+
+            // Delete the session itself
+            sessionGr.deleteRecord();
+
+            return this._buildResponse(true, 'Session deleted successfully', null);
+
+        } catch (e) {
+            gs.error('[SessionManagementAjax] deleteSession error: ' + e);
+            return this._buildResponse(false, 'Error deleting session: ' + e, null);
+        }
+    },
     
     addManualStory: function() {
         try {

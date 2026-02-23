@@ -1535,10 +1535,11 @@
             if (type === 'planning') {
                 actionsHtml = '<button class="btn btn-success btn-sm" data-action="goLive">▶ Launch</button>' +
                              '<button class="btn btn-secondary btn-sm" data-action="editSession">◈ Configure</button>' +
-                             '<button class="btn btn-danger btn-sm" data-action="cancelSession">✕ Abort</button>';
+                             '<button class="btn btn-danger btn-sm" data-action="deleteSession">⌧ Remove</button>';
             } else if (type === 'live') {
                 actionsHtml = '<button class="btn btn-primary btn-sm" data-action="openVoting">◉ Enter Bridge</button>' +
-                             '<button class="btn btn-secondary btn-sm" data-action="copyJoinLink">⟐ Transmit Link</button>';
+                             '<button class="btn btn-secondary btn-sm" data-action="copyJoinLink">⟐ Transmit Link</button>' +
+                             '<button class="btn btn-danger btn-sm" data-action="deleteSession">⌧ Remove</button>';
             } else if (type === 'completed') {
                 actionsHtml = '<button class="btn btn-secondary btn-sm" data-action="viewStatistics">◇ Mission Report</button>';
             }
@@ -1603,6 +1604,9 @@
                     break;
                 case 'cancelSession':
                     cancelSession(sessionId);
+                    break;
+                case 'deleteSession':
+                    deleteSession(sessionId);
                     break;
                 case 'openVoting':
                     openVoting(sessionId);
@@ -1693,6 +1697,27 @@
             });
         }
         
+        function deleteSession(sessionId) {
+            if (!confirm('Permanently delete this session? All stories, votes, and participants will be removed. This cannot be undone.')) {
+                return;
+            }
+
+            var ga = new GlideAjax('SessionManagementAjax');
+            ga.addParam('sysparm_name', 'deleteSession');
+            ga.addParam('session_id', sessionId);
+            ga.getXML(function(response) {
+                var result = parseAjaxResponse(response);
+                if (!result) { showToast('Error deleting session', 'error'); return; }
+
+                if (result.success) {
+                    showToast('Session permanently removed', 'success');
+                    loadSessions();
+                } else {
+                    showToast(result.message, 'error');
+                }
+            });
+        }
+
         function cancelAllSessions() {
             var planningSessions = sessions.planning.filter(function(s) { return s.status === 'ready'; });
             
