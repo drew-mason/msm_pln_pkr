@@ -2392,8 +2392,16 @@
                 
                 if (result.success) {
                     showToast('Votes decloaked', 'success');
+                    
+                    // Immediately update local state so dealer controls enable without waiting for loadSession
+                    if (sessionData && sessionData.currentStory) {
+                        sessionData.currentStory.status = 'revealed';
+                        sessionData.revealedVotes = result.data;
+                        updateDealerControls(sessionData.currentStory);
+                    }
+                    
                     renderVoteResults(result.data);
-                    loadSession(); // Refresh session to update story status and enable Lock Estimate
+                    loadSession(); // Full refresh for all other data
                 } else {
                     showToast(result.message, 'error');
                 }
@@ -3092,6 +3100,12 @@
         var pollPausedForModal = false;
         
         function showModal(modalId) {
+            // Close any other open modal first to prevent stacking
+            var modals = document.querySelectorAll('.modal.show');
+            modals.forEach(function(modal) {
+                modal.classList.remove('show');
+            });
+            
             document.getElementById(modalId).classList.add('show');
             // Pause polling while modal is open to prevent sessionData overwrites
             if (pollInterval) {
