@@ -1433,7 +1433,7 @@
                 acEl.removeAttribute('data-placeholder');
                 if (story.acceptance_criteria) {
                     acSection.style.display = 'block';
-                    acEl.textContent = story.acceptance_criteria;
+                    acEl.innerHTML = story.acceptance_criteria;
                 } else {
                     acSection.style.display = 'none';
                 }
