@@ -97,6 +97,10 @@ declare global {
                         table: 'sys_script_include'
                         id: '702e5c09c97d485ca9ebbad73c3fdda3'
                     }
+                    si_planning_poker_constants: {
+                        table: 'sys_script_include'
+                        id: 'd0d97fcefa6e40de91bcca26baca4aa7'
+                    }
                     si_planning_poker_security: {
                         table: 'sys_script_include'
                         id: 'fdbbef4a4bbb48a1b7e1a29c8c66988c'
