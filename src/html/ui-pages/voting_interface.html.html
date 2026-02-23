@@ -1479,9 +1479,14 @@
             document.getElementById('revealVotesBtn').addEventListener('click', revealVotes);
             document.getElementById('resetVotesBtn').addEventListener('click', resetVotes);
             document.getElementById('skipStoryBtn').addEventListener('click', function() {
+                console.log('[PP-DEBUG] skipStoryBtn CLICKED, disabled=' + this.disabled);
                 showModal('skipStoryModal');
             });
             document.getElementById('completeStoryBtn').addEventListener('click', function() {
+                console.log('[PP-DEBUG] completeStoryBtn CLICKED, disabled=' + this.disabled);
+                console.log('[PP-DEBUG] story status:', sessionData && sessionData.currentStory ? sessionData.currentStory.status : 'NO STORY');
+                console.log('[PP-DEBUG] revealedVotes:', sessionData && sessionData.revealedVotes ? 'present' : 'null');
+                console.log('[PP-DEBUG] scoringValues:', sessionData && sessionData.scoringValues ? sessionData.scoringValues.length + ' values' : 'null');
                 // Populate scoring values dropdown
                 var select = document.getElementById('finalStoryPoints');
                 select.innerHTML = '<option value="">Select points...</option>';
@@ -1659,8 +1664,18 @@
             var userRole = sessionData.userRole;
             var revealedVotes = sessionData.revealedVotes;
             
+            console.log('[PP-DEBUG] renderSession: session.status=' + session.status + ' currentStory.status=' + (currentStory ? currentStory.status : 'NULL') + ' role=' + (userRole ? userRole.effectiveRole : 'NULL') + ' hasRevealedVotes=' + !!revealedVotes);
+            
+            // Check if any modals are open — don't redirect while user is interacting
+            var modalOpen = document.querySelector('.modal.show');
+            if (modalOpen) {
+                console.log('[PP-DEBUG] renderSession: modal is open (' + modalOpen.id + '), skipping full render to avoid interference');
+                return;
+            }
+            
             // If session is completed, redirect everyone to stats page
             if (session.status === 'completed') {
+                console.log('[PP-DEBUG] renderSession: session completed — REDIRECTING to stats');
                 window.location.href = 'x_902080_planningw_session_statistics.do?session_id=' + sessionId;
                 return;
             }
@@ -2392,15 +2407,20 @@
                 
                 if (result.success) {
                     showToast('Votes decloaked', 'success');
+                    console.log('[PP-DEBUG] revealVotes SUCCESS');
                     
                     // Immediately update local state so dealer controls enable without waiting for loadSession
                     if (sessionData && sessionData.currentStory) {
                         sessionData.currentStory.status = 'revealed';
                         sessionData.revealedVotes = result.data;
+                        console.log('[PP-DEBUG] revealVotes: set status=revealed, calling updateDealerControls');
                         updateDealerControls(sessionData.currentStory);
+                    } else {
+                        console.warn('[PP-DEBUG] revealVotes: sessionData.currentStory MISSING');
                     }
                     
                     renderVoteResults(result.data);
+                    console.log('[PP-DEBUG] revealVotes: calling loadSession for full refresh');
                     loadSession(); // Full refresh for all other data
                 } else {
                     showToast(result.message, 'error');
@@ -2438,8 +2458,10 @@
         }
         
         function skipStory() {
+            console.log('[PP-DEBUG] skipStory called');
             var currentStory = sessionData && sessionData.currentStory;
             if (!currentStory) {
+                console.warn('[PP-DEBUG] skipStory: no currentStory');
                 showToast('No active objective to bypass', 'error');
                 hideAllModals();
                 return;
@@ -2473,8 +2495,10 @@
         }
         
         function completeStory() {
+            console.log('[PP-DEBUG] completeStory called, story=' + (sessionData && sessionData.currentStory ? sessionData.currentStory.sys_id : 'NULL'));
             var currentStory = sessionData && sessionData.currentStory;
             if (!currentStory) {
+                console.warn('[PP-DEBUG] completeStory: no currentStory');
                 showToast('No active objective to lock', 'error');
                 hideAllModals();
                 return;
@@ -2560,6 +2584,7 @@
             var completeBtn = document.getElementById('completeStoryBtn');
             
             if (!currentStory) {
+                console.log('[PP-DEBUG] updateDealerControls: no currentStory — disabling all buttons');
                 startBtn.disabled = true;
                 revealBtn.disabled = true;
                 resetBtn.disabled = true;
@@ -2569,6 +2594,7 @@
             }
             
             var status = currentStory.status;
+            console.log('[PP-DEBUG] updateDealerControls: status=' + status + ' -> skip=enabled, complete=' + (status === 'revealed' ? 'enabled' : 'DISABLED'));
             
             startBtn.disabled = (status !== 'pending');
             revealBtn.disabled = (status !== 'voting');
@@ -3100,18 +3126,28 @@
         var pollPausedForModal = false;
         
         function showModal(modalId) {
+            console.log('[PP-DEBUG] showModal called:', modalId);
             // Close any other open modal first to prevent stacking
             var openModals = document.querySelectorAll('.modal.show');
+            console.log('[PP-DEBUG] showModal: closing', openModals.length, 'open modals');
             for (var i = 0; i < openModals.length; i++) {
                 openModals[i].classList.remove('show');
             }
             
-            document.getElementById(modalId).classList.add('show');
+            var targetModal = document.getElementById(modalId);
+            if (!targetModal) {
+                console.error('[PP-DEBUG] showModal: element NOT FOUND:', modalId);
+                return;
+            }
+            targetModal.classList.add('show');
+            var computed = window.getComputedStyle(targetModal);
+            console.log('[PP-DEBUG] showModal: display=' + computed.display + ' visibility=' + computed.visibility + ' zIndex=' + computed.zIndex + ' opacity=' + computed.opacity);
             // Pause polling while modal is open to prevent sessionData overwrites
             if (pollInterval) {
                 clearInterval(pollInterval);
                 pollInterval = null;
                 pollPausedForModal = true;
+                console.log('[PP-DEBUG] showModal: polling paused');
             }
         }
         
@@ -3121,6 +3157,7 @@
         }
         
         function hideAllModals() {
+            console.log('[PP-DEBUG] hideAllModals called, trace:', new Error().stack.split('\n').slice(1,4).join(' <- '));
             var modals = document.querySelectorAll('.modal');
             for (var i = 0; i < modals.length; i++) {
                 modals[i].classList.remove('show');
