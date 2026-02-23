@@ -1353,7 +1353,11 @@
                 }
             } else {
                 document.getElementById('currentStoryCard').style.display = 'none';
-                document.getElementById('votingCards').innerHTML = '<p style="text-align: center; color: rgba(200, 214, 229, 0.4); padding: 2rem; font-family: Share Tech Mono, monospace; letter-spacing: 1px;">// No active objective. Standing by for orders.</p>';
+                if (userRole.effectiveRole === 'voter') {
+                    document.getElementById('votingCards').innerHTML = '<p style="text-align: center; color: rgba(200, 214, 229, 0.4); padding: 2rem; font-family: Share Tech Mono, monospace; letter-spacing: 1px;">// No active objective. Standing by for orders.</p>';
+                } else {
+                    document.getElementById('votingCards').innerHTML = '';
+                }
             }
             
             // Render participants
@@ -1532,10 +1536,17 @@
             });
         }
         
-        // Render voting cards
+        // Render voting cards (voters only)
         function renderVotingCards(scoringValues, currentStory) {
             var votingCardsContainer = document.getElementById('votingCards');
             votingCardsContainer.innerHTML = '';
+            
+            // Only voters can see voting cards
+            var userRole = sessionData && sessionData.userRole ? sessionData.userRole.effectiveRole : '';
+            if (userRole !== 'voter') {
+                votingCardsContainer.innerHTML = '';
+                return;
+            }
             
             if (!currentStory || currentStory.status !== 'voting') {
                 votingCardsContainer.innerHTML = '<p style="text-align: center; color: rgba(200, 214, 229, 0.4); padding: 2rem; font-family: Share Tech Mono, monospace; letter-spacing: 1px;">// Estimation array offline. Awaiting commanding officer.</p>';
