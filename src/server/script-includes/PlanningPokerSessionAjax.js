@@ -289,6 +289,7 @@ PlanningPokerSessionAjax.prototype = Object.extendsObject(global.AbstractAjaxPro
         }
         
         return {
+            userId: userId,
             effectiveRole: normalizedEffectiveRole,
             isDealer: isDealer,
             participantRole: participantRole,
@@ -371,17 +372,46 @@ PlanningPokerSessionAjax.prototype = Object.extendsObject(global.AbstractAjaxPro
         storyGr.setLimit(500); // Cap stories per session
         storyGr.query();
 
+        // Collect added_by user IDs for batch lookup
+        var userIds = [];
+        var storyData = [];
         while (storyGr.next()) {
-            stories.push({
+            var addedBy = storyGr.getValue('added_by') || '';
+            storyData.push({
                 sys_id: storyGr.getValue('sys_id'),
                 story_number: storyGr.getValue('story_number'),
                 story_title: storyGr.getValue('story_title'),
                 status: storyGr.getValue('status'),
                 order: storyGr.getValue('order'),
                 story_points: storyGr.getValue('story_points'),
-                vote_count: storyGr.getValue('vote_count') || 0
+                vote_count: storyGr.getValue('vote_count') || 0,
+                added_by: addedBy,
+                added_by_name: ''
             });
+            if (addedBy && userIds.indexOf(addedBy) === -1) {
+                userIds.push(addedBy);
+            }
         }
+
+        // Batch lookup user names
+        var userNames = {};
+        if (userIds.length > 0) {
+            var userGr = new GlideRecord('sys_user');
+            userGr.addQuery('sys_id', 'IN', userIds.join(','));
+            userGr.query();
+            while (userGr.next()) {
+                userNames[userGr.getValue('sys_id')] = userGr.getValue('name');
+            }
+        }
+
+        // Populate names
+        for (var i = 0; i < storyData.length; i++) {
+            if (storyData[i].added_by && userNames[storyData[i].added_by]) {
+                storyData[i].added_by_name = userNames[storyData[i].added_by];
+            }
+            stories.push(storyData[i]);
+        }
+
         return stories;
     },
     

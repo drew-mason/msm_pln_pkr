@@ -82,6 +82,10 @@ export const x_902080_planningw_session_stories = Table({
         presenter: ReferenceColumn({
             label: 'Presenter',
             referenceTable: 'sys_user'
+        }),
+        added_by: ReferenceColumn({
+            label: 'Added By',
+            referenceTable: 'sys_user'
         })
     },
     accessible_from: 'public',

@@ -381,6 +381,7 @@ SessionManagementAjax.prototype = Object.extendsObject(global.AbstractAjaxProces
                         sessionStoryGr.setValue('order', nextOrder);
                         sessionStoryGr.setValue('vote_count', 0);
                         sessionStoryGr.setValue('times_revoted', 0);
+                        sessionStoryGr.setValue('added_by', userId);
                         sessionStoryGr.insert();
                         
                         addedCount++;
@@ -726,6 +727,7 @@ SessionManagementAjax.prototype = Object.extendsObject(global.AbstractAjaxProces
             sessionStoryGr.setValue('order', nextOrder);
             sessionStoryGr.setValue('vote_count', 0);
             sessionStoryGr.setValue('times_revoted', 0);
+            sessionStoryGr.setValue('added_by', userId);
             var storyId = sessionStoryGr.insert();
             
             return this._buildResponse(true, 'Manual story added successfully', {

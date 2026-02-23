@@ -2065,10 +2065,57 @@
             leftDiv.appendChild(nameDiv);
             leftDiv.appendChild(roleSpan);
             
+            var rightDiv = document.createElement('div');
+            rightDiv.style.cssText = 'display:flex;align-items:center;gap:0.4rem;';
+            
+            // Show promote/demote button if current user is active dealer and participant is a voter
+            var iAmDealer = sessionData && sessionData.userRole && sessionData.userRole.effectiveRole === 'dealer';
+            var currentUserId = sessionData && sessionData.userRole ? sessionData.userRole.userId : null;
+            var isOtherUser = participant.userId !== currentUserId;
+            
+            if (iAmDealer && isOtherUser && participant.role === 'voter') {
+                var promoteBtn = document.createElement('button');
+                promoteBtn.style.cssText = 'background:rgba(0,212,255,0.15);border:1px solid rgba(0,212,255,0.3);color:var(--primary-color);padding:2px 8px;border-radius:3px;font-size:0.65rem;font-family:Share Tech Mono,monospace;cursor:pointer;text-transform:uppercase;letter-spacing:1px;transition:all 0.2s;';
+                promoteBtn.textContent = '↑ Promote';
+                promoteBtn.title = 'Promote to dealer';
+                promoteBtn.addEventListener('mouseenter', function() { this.style.background = 'rgba(0,212,255,0.3)'; });
+                promoteBtn.addEventListener('mouseleave', function() { this.style.background = 'rgba(0,212,255,0.15)'; });
+                (function(userId, userName) {
+                    promoteBtn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        promoteParticipantToDealer(userId, userName);
+                    });
+                })(participant.userId, participant.firstName + ' ' + participant.lastName);
+                rightDiv.appendChild(promoteBtn);
+            }
+            
+            rightDiv.appendChild(indicator);
+            
             li.appendChild(leftDiv);
-            li.appendChild(indicator);
+            li.appendChild(rightDiv);
             
             return li;
+        }
+        
+        function promoteParticipantToDealer(userId, userName) {
+            if (!confirm('Promote ' + userName + ' to dealer?\nYou will be switched to voter role.')) return;
+            
+            var ga = new GlideAjax('SessionParticipantAjax');
+            ga.addParam('sysparm_name', 'changeParticipantRole');
+            ga.addParam('session_id', sessionId);
+            ga.addParam('participant_user_id', userId);
+            ga.addParam('new_role', 'dealer');
+            ga.getXML(function(response) {
+                var result = parseAjaxResponse(response);
+                if (!result) { showToast('Comm failure — promotion error', 'error'); return; }
+                
+                if (result.success) {
+                    showToast(userName + ' promoted to dealer', 'success');
+                    loadSession();
+                } else {
+                    showToast(result.message || 'Error promoting participant', 'error');
+                }
+            });
         }
         
         // Dealer actions
@@ -2281,7 +2328,37 @@
             
             var currentStoryId = sessionData && sessionData.currentStory ? sessionData.currentStory.sys_id : null;
             
-            stories.forEach(function(story, index) {
+            // Group stories by added_by_name
+            var groups = [];
+            var groupMap = {};
+            stories.forEach(function(story) {
+                var key = story.added_by_name || 'Unassigned';
+                if (!groupMap[key]) {
+                    groupMap[key] = { name: key, stories: [] };
+                    groups.push(groupMap[key]);
+                }
+                groupMap[key].stories.push(story);
+            });
+            
+            // Only show group headers if there are multiple groups
+            var showGroups = groups.length > 1;
+            
+            groups.forEach(function(group) {
+                if (showGroups) {
+                    var header = document.createElement('div');
+                    header.style.cssText = 'padding:0.4rem 0.6rem;font-family:Share Tech Mono,monospace;font-size:0.7rem;color:var(--primary-color);text-transform:uppercase;letter-spacing:2px;border-bottom:1px solid rgba(0,212,255,0.15);margin-top:0.3rem;background:rgba(0,212,255,0.04);';
+                    header.textContent = '► ' + group.name;
+                    container.appendChild(header);
+                }
+                
+                group.stories.forEach(function(story, index) {
+                    var div = _createStoryQueueItem(story, currentStoryId);
+                    container.appendChild(div);
+                });
+            });
+        }
+        
+        function _createStoryQueueItem(story, currentStoryId) {
                 var div = document.createElement('div');
                 var isCurrent = story.sys_id === currentStoryId;
                 var statusIcon = '';
@@ -2336,8 +2413,7 @@
                     })(story.sys_id, story.story_title || story.story_number || 'this objective');
                 }
                 
-                container.appendChild(div);
-            });
+                return div;
         }
         
         function switchToStory(storyId, storyTitle) {
