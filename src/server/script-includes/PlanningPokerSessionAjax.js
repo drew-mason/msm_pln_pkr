@@ -132,7 +132,8 @@ PlanningPokerSessionAjax.prototype = Object.extendsObject(global.AbstractAjaxPro
             order: storyGr.getValue('order'),
             story_points: storyGr.getValue('story_points'),
             presenter: storyGr.getValue('presenter'),
-            dealer_comments: storyGr.getValue('dealer_comments')
+            dealer_comments: storyGr.getValue('dealer_comments'),
+            story_ref: storyGr.getValue('story')
         };
         
         // Try to read from rm_story if reference exists

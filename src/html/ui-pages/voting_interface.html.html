@@ -388,6 +388,13 @@
             font-size: 1rem;
             color: var(--lcars-orange);
             font-weight: bold;
+            text-decoration: none;
+            transition: color 0.2s, text-shadow 0.2s;
+        }
+        .story-number:hover {
+            color: #ffcc44;
+            text-decoration: underline;
+            text-shadow: 0 0 8px rgba(255, 153, 0, 0.4);
         }
 
         .story-title {
@@ -1055,7 +1062,7 @@
             <!-- Current Story -->
             <div class="story-card" id="currentStoryCard" style="display: none;">
                 <div class="story-header">
-                    <span class="story-number" id="storyNumber">#123</span>
+                    <a class="story-number" id="storyNumber" href="#" target="_blank" title="Open in platform">#123</a>
                     <div id="storyPresenter" style="font-size: 0.8rem; color: rgba(200, 214, 229, 0.5); font-family: 'Share Tech Mono', monospace;"></div>
                 </div>
                 <div class="story-title" id="storyTitle">Story Title</div>
@@ -1503,7 +1510,13 @@
         
         function renderCurrentStory(story) {
             document.getElementById('currentStoryCard').style.display = 'block';
-            document.getElementById('storyNumber').textContent = story.story_number || 'N/A';
+            var storyNumEl = document.getElementById('storyNumber');
+            storyNumEl.textContent = story.story_number || 'N/A';
+            if (story.story_ref) {
+                storyNumEl.href = '/rm_story.do?sys_id=' + story.story_ref;
+            } else {
+                storyNumEl.href = '/x_902080_planningw_session_stories.do?sys_id=' + story.sys_id;
+            }
             
             var isDealer = sessionData && sessionData.userRole && sessionData.userRole.effectiveRole === 'dealer';
             
