@@ -3101,10 +3101,10 @@
         
         function showModal(modalId) {
             // Close any other open modal first to prevent stacking
-            var modals = document.querySelectorAll('.modal.show');
-            modals.forEach(function(modal) {
-                modal.classList.remove('show');
-            });
+            var openModals = document.querySelectorAll('.modal.show');
+            for (var i = 0; i < openModals.length; i++) {
+                openModals[i].classList.remove('show');
+            }
             
             document.getElementById(modalId).classList.add('show');
             // Pause polling while modal is open to prevent sessionData overwrites
@@ -3122,9 +3122,9 @@
         
         function hideAllModals() {
             var modals = document.querySelectorAll('.modal');
-            modals.forEach(function(modal) {
-                modal.classList.remove('show');
-            });
+            for (var i = 0; i < modals.length; i++) {
+                modals[i].classList.remove('show');
+            }
             resumePollingIfNeeded();
         }
         
