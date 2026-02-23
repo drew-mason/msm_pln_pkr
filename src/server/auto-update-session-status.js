@@ -20,7 +20,7 @@ export function autoUpdateSessionStatus(current, previous) {
         var statusChanged = (currentStatus !== previousStatus);
 
         if (!storyFinalized && !pointsAdded && !statusChanged) {
-            return; // Nothing to process
+            return; // Nothing meaningful to process
         }
 
         // Use GlideAggregate to count stories by status for the session
@@ -39,7 +39,8 @@ export function autoUpdateSessionStatus(current, previous) {
 
         var pendingCount = statusCounts['pending'] || 0;
         var votingCount = statusCounts['voting'] || 0;
-        var completedCount = (statusCounts['completed'] || 0) + (statusCounts['revealed'] || 0);
+        var revealedCount = statusCounts['revealed'] || 0;
+        var completedCount = (statusCounts['completed'] || 0);
         var skippedCount = statusCounts['skipped'] || 0;
         var totalStories = 0;
         
@@ -62,15 +63,16 @@ export function autoUpdateSessionStatus(current, previous) {
         if (sessionGr.get(sessionId)) {
             var currentSessionStatus = sessionGr.getValue('status');
             
-            // Always update counters
+            // Always update counters (revealed stories count toward voted total)
             sessionGr.setValue('total_stories', totalStories);
             sessionGr.setValue('stories_voted', completedCount + skippedCount);
             sessionGr.setValue('stories_completed', completedCount);
             sessionGr.setValue('stories_skipped', skippedCount);
             sessionGr.setValue('total_votes', totalVotes);
 
-            // Auto-complete session if all stories are done
-            if ((pendingCount === 0 && votingCount === 0) && totalStories > 0) {
+            // Auto-complete session only when ALL stories have a terminal status
+            // 'revealed' is NOT terminal — dealer still needs to lock estimate or bypass
+            if ((pendingCount === 0 && votingCount === 0 && revealedCount === 0) && totalStories > 0) {
                 // Skip if session is already completed or cancelled (idempotent check)
                 if (currentSessionStatus !== 'completed' && currentSessionStatus !== 'cancelled') {
                     sessionGr.setValue('status', 'completed');

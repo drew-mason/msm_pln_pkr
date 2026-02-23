@@ -90,21 +90,25 @@ PlanningPokerStoryAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
                 return this._buildResponse(false, validation.message, null);
             }
             
-            var sessionGr = validation.sessionGr;
             var storyGr = validation.storyGr;
             
-            storyGr.setValue('story_points', storyPoints);
-            storyGr.setValue('status', PlanningPokerConstants.STATUS.COMPLETED);
-            storyGr.setValue('voting_completed', new GlideDateTime());
-            storyGr.update();
-            
-            // Build work notes from vote data
+            // Build work notes from vote data (before updating story to avoid double update)
             var workNotes = this.getParameter('work_notes') || '';
             var voteLog = this._buildVoteLog(storyId, sessionId, storyPoints);
             var fullWorkNotes = voteLog;
             if (workNotes) {
                 fullWorkNotes += '\n\n[b]Dealer Notes:[/b]\n' + workNotes;
             }
+            
+            // Set all story fields and update once (single BR trigger)
+            storyGr.setValue('story_points', storyPoints);
+            storyGr.setValue('status', PlanningPokerConstants.STATUS.COMPLETED);
+            storyGr.setValue('voting_completed', new GlideDateTime());
+            var existingComments = storyGr.getValue('dealer_comments') || '';
+            if (workNotes) {
+                storyGr.setValue('dealer_comments', existingComments + '\n' + workNotes);
+            }
+            storyGr.update();
             
             // Update linked rm_story if present
             var rmStoryId = storyGr.getValue('story');
@@ -117,12 +121,8 @@ PlanningPokerStoryAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
                 }
             }
             
-            // Also store work notes on session story for reference
-            storyGr.setValue('dealer_comments', (storyGr.getValue('dealer_comments') || '') + (workNotes ? '\n' + workNotes : ''));
-            storyGr.update();
-            
             // Auto-advance to next pending story
-            var nextStory = this._advanceToNextStory(sessionId, sessionGr);
+            var nextStory = this._advanceToNextStory(sessionId);
             
             return this._buildResponse(true, 'Story points set successfully', {
                 storyId: storyId,
@@ -223,7 +223,6 @@ PlanningPokerStoryAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
                 return this._buildResponse(false, validation.message, null);
             }
             
-            var sessionGr = validation.sessionGr;
             var storyGr = validation.storyGr;
             
             storyGr.setValue('status', PlanningPokerConstants.STATUS.COMPLETED);
@@ -237,7 +236,7 @@ PlanningPokerStoryAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
             storyGr.update();
             
             // Auto-advance to next story
-            var nextStory = this._advanceToNextStory(sessionId, sessionGr);
+            var nextStory = this._advanceToNextStory(sessionId);
             
             return this._buildResponse(true, 'Story completed successfully', {
                 storyId: storyId,
@@ -261,7 +260,6 @@ PlanningPokerStoryAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
                 return this._buildResponse(false, validation.message, null);
             }
             
-            var sessionGr = validation.sessionGr;
             var storyGr = validation.storyGr;
             
             storyGr.setValue('status', PlanningPokerConstants.STATUS.SKIPPED);
@@ -269,7 +267,7 @@ PlanningPokerStoryAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
             storyGr.update();
             
             // Auto-advance to next story
-            var nextStory = this._advanceToNextStory(sessionId, sessionGr);
+            var nextStory = this._advanceToNextStory(sessionId);
             
             return this._buildResponse(true, 'Story skipped successfully', {
                 storyId: storyId,
@@ -397,25 +395,39 @@ PlanningPokerStoryAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
         };
     },
 
-    _advanceToNextStory: function(sessionId, sessionGr) {
-        // Clear is_current_story flag on all stories for this session
+    _advanceToNextStory: function(sessionId) {
+        // Clear is_current_story flag (housekeeping — suppress business rules)
         var clearGr = new GlideRecord('x_902080_planningw_session_stories');
         clearGr.addQuery('session', sessionId);
         clearGr.addQuery('is_current_story', true);
+        clearGr.setWorkflow(false);
         clearGr.setValue('is_current_story', false);
         clearGr.updateMultiple();
+        
+        // Re-load session to get latest state (avoids stale data after BR cascades)
+        var freshSessionGr = new GlideRecord('x_902080_planningw_planning_session');
+        if (!freshSessionGr.get(sessionId)) {
+            return null;
+        }
+        
+        // Don't advance if session was already completed/cancelled by business rule
+        var currentStatus = freshSessionGr.getValue('status');
+        if (currentStatus === 'completed' || currentStatus === 'cancelled') {
+            return null;
+        }
         
         var nextStory = this._getNextPendingStory(sessionId);
         if (nextStory) {
             // Keep as pending — dealer must explicitly start voting
             nextStory.setValue('is_current_story', true);
+            nextStory.setWorkflow(false);
             nextStory.update();
             
-            sessionGr.setValue('current_story', nextStory.getValue('sys_id'));
-            sessionGr.update();
+            freshSessionGr.setValue('current_story', nextStory.getValue('sys_id'));
+            freshSessionGr.update();
         } else {
-            sessionGr.setValue('current_story', '');
-            sessionGr.update();
+            freshSessionGr.setValue('current_story', '');
+            freshSessionGr.update();
         }
         return nextStory;
     },

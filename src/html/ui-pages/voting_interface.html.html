@@ -2428,8 +2428,17 @@
         }
         
         function skipStory() {
-            var currentStory = sessionData.currentStory;
+            var currentStory = sessionData && sessionData.currentStory;
+            if (!currentStory) {
+                showToast('No active objective to bypass', 'error');
+                hideAllModals();
+                return;
+            }
             var comments = document.getElementById('skipComments').value;
+            
+            var confirmBtn = document.getElementById('confirmSkipStoryBtn');
+            confirmBtn.disabled = true;
+            confirmBtn.textContent = 'Processing...';
             
             var ga = new GlideAjax('PlanningPokerStoryAjax');
             ga.addParam('sysparm_name', 'skipStory');
@@ -2437,8 +2446,10 @@
             ga.addParam('story_id', currentStory.sys_id);
             ga.addParam('comments', comments);
             ga.getXML(function(response) {
+                confirmBtn.disabled = false;
+                confirmBtn.textContent = 'Confirm Bypass';
                 var result = parseAjaxResponse(response);
-                if (!result) { showToast('Comm failure — bypass error', 'error'); return; }
+                if (!result) { showToast('Comm failure — bypass error', 'error'); hideAllModals(); return; }
                 
                 if (result.success) {
                     showToast('Objective bypassed', 'success');
@@ -2446,12 +2457,18 @@
                     loadSession(); // Reload to update UI
                 } else {
                     showToast(result.message, 'error');
+                    hideAllModals();
                 }
             });
         }
         
         function completeStory() {
-            var currentStory = sessionData.currentStory;
+            var currentStory = sessionData && sessionData.currentStory;
+            if (!currentStory) {
+                showToast('No active objective to lock', 'error');
+                hideAllModals();
+                return;
+            }
             var points = document.getElementById('finalStoryPoints').value;
             var workNotes = document.getElementById('completionWorkNotes').value;
             
@@ -2460,6 +2477,10 @@
                 return;
             }
             
+            var confirmBtn = document.getElementById('confirmCompleteStoryBtn');
+            confirmBtn.disabled = true;
+            confirmBtn.textContent = 'Processing...';
+            
             var ga = new GlideAjax('PlanningPokerStoryAjax');
             ga.addParam('sysparm_name', 'setStoryPoints');
             ga.addParam('session_id', sessionId);
@@ -2467,8 +2488,10 @@
             ga.addParam('story_points', points);
             ga.addParam('work_notes', workNotes);
             ga.getXML(function(response) {
+                confirmBtn.disabled = false;
+                confirmBtn.innerHTML = '◆ Lock Estimate';
                 var result = parseAjaxResponse(response);
-                if (!result) { showToast('Comm failure — estimate lock error', 'error'); return; }
+                if (!result) { showToast('Comm failure — estimate lock error', 'error'); hideAllModals(); return; }
                 
                 if (result.success) {
                     showToast('Estimate locked: ' + points + ' pts', 'success');
@@ -2479,6 +2502,7 @@
                     loadSession();
                 } else {
                     showToast(result.message, 'error');
+                    hideAllModals();
                 }
             });
         }
@@ -3063,12 +3087,21 @@
         }
         
         // Utility functions
+        var pollPausedForModal = false;
+        
         function showModal(modalId) {
             document.getElementById(modalId).classList.add('show');
+            // Pause polling while modal is open to prevent sessionData overwrites
+            if (pollInterval) {
+                clearInterval(pollInterval);
+                pollInterval = null;
+                pollPausedForModal = true;
+            }
         }
         
         function hideModal(modalId) {
             document.getElementById(modalId).classList.remove('show');
+            resumePollingIfNeeded();
         }
         
         function hideAllModals() {
@@ -3076,6 +3109,16 @@
             modals.forEach(function(modal) {
                 modal.classList.remove('show');
             });
+            resumePollingIfNeeded();
+        }
+        
+        function resumePollingIfNeeded() {
+            // Only resume if no modals are still open
+            var anyOpen = document.querySelector('.modal.show');
+            if (!anyOpen && pollPausedForModal && !pollInterval) {
+                pollPausedForModal = false;
+                startPolling();
+            }
         }
         
         var _toastTimer = null;

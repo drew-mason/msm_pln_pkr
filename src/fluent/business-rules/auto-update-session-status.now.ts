@@ -13,5 +13,5 @@ export const autoUpdateSessionStatusBR = BusinessRule({
     script: autoUpdateSessionStatus,
     order: 100,
     active: true,
-    description: 'Updates session status to completed when all stories are in final states'
+    description: 'Updates session counters and auto-completes session when all stories reach terminal status (completed/skipped). Revealed stories are not terminal.'
 })
