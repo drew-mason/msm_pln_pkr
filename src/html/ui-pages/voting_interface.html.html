@@ -800,6 +800,73 @@
         .collapsed .section-content { display: none; }
         .collapsed .section-content + div { display: none; }
 
+        /* WYSIWYG toolbar for rich text editing */
+        .wysiwyg-toolbar {
+            display: none;
+            background: rgba(13, 25, 42, 0.95);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            border-bottom: none;
+            border-radius: 6px 6px 0 0;
+            padding: 4px 6px;
+            gap: 2px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin: -4px -6px 0 -6px;
+        }
+        .wysiwyg-toolbar.active {
+            display: flex;
+        }
+        .wysiwyg-toolbar .toolbar-group {
+            display: flex;
+            gap: 1px;
+            padding: 0 4px;
+            border-right: 1px solid rgba(0, 212, 255, 0.1);
+        }
+        .wysiwyg-toolbar .toolbar-group:last-child {
+            border-right: none;
+        }
+        .wysiwyg-toolbar button {
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: 3px;
+            color: rgba(200, 214, 229, 0.7);
+            cursor: pointer;
+            width: 28px;
+            height: 26px;
+            font-size: 0.8rem;
+            font-family: 'Share Tech Mono', monospace;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            padding: 0;
+        }
+        .wysiwyg-toolbar button:hover {
+            background: rgba(0, 212, 255, 0.1);
+            border-color: rgba(0, 212, 255, 0.2);
+            color: var(--primary-color);
+        }
+        .wysiwyg-toolbar button.active {
+            background: rgba(0, 212, 255, 0.15);
+            border-color: rgba(0, 212, 255, 0.3);
+            color: var(--primary-color);
+        }
+        .wysiwyg-toolbar .toolbar-separator {
+            width: 1px;
+            height: 18px;
+            background: rgba(0, 212, 255, 0.1);
+            margin: 0 3px;
+        }
+        .wysiwyg-editor-wrap {
+            position: relative;
+        }
+        .wysiwyg-editor-wrap .editable-field {
+            border-radius: 0 0 6px 6px;
+        }
+        .wysiwyg-editor-wrap .wysiwyg-toolbar.active + .editable-field {
+            border-top-color: rgba(0, 212, 255, 0.2);
+        }
+
         /* Inline editable story fields for dealers */
         .editable-field {
             border: 1px solid transparent;
@@ -810,6 +877,40 @@
             outline: none;
             min-height: 1.4em;
             white-space: pre-wrap;
+        }
+        .editable-field.rich-text {
+            min-height: 80px;
+            white-space: normal;
+        }
+        .editable-field.rich-text ul,
+        .editable-field.rich-text ol {
+            margin: 4px 0;
+            padding-left: 24px;
+        }
+        .editable-field.rich-text a {
+            color: var(--primary-color);
+            text-decoration: underline;
+        }
+        .editable-field.rich-text blockquote {
+            border-left: 3px solid rgba(0, 212, 255, 0.3);
+            padding-left: 10px;
+            margin: 4px 0;
+            color: rgba(200, 214, 229, 0.6);
+        }
+        .editable-field.rich-text h1,
+        .editable-field.rich-text h2,
+        .editable-field.rich-text h3 {
+            margin: 6px 0 4px;
+        }
+        .editable-field.rich-text table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 6px 0;
+        }
+        .editable-field.rich-text table td,
+        .editable-field.rich-text table th {
+            border: 1px solid rgba(0, 212, 255, 0.15);
+            padding: 4px 8px;
         }
         .editable-field:hover {
             border-color: rgba(0, 212, 255, 0.15);
@@ -958,7 +1059,32 @@
                 <div class="story-description" id="storyDescription">Story description goes here...</div>
                 <div class="acceptance-criteria" id="acceptanceCriteria" style="display: none;">
                     <h4>Acceptance Criteria</h4>
-                    <div id="acceptanceCriteriaContent"></div>
+                    <div class="wysiwyg-editor-wrap" id="acEditorWrap">
+                        <div class="wysiwyg-toolbar" id="acToolbar">
+                            <div class="toolbar-group">
+                                <button type="button" data-cmd="bold" title="Bold (Ctrl+B)"><b>B</b></button>
+                                <button type="button" data-cmd="italic" title="Italic (Ctrl+I)"><i>I</i></button>
+                                <button type="button" data-cmd="underline" title="Underline (Ctrl+U)"><u>U</u></button>
+                                <button type="button" data-cmd="strikeThrough" title="Strikethrough"><s>S</s></button>
+                            </div>
+                            <div class="toolbar-group">
+                                <button type="button" data-cmd="insertUnorderedList" title="Bullet List">&#8226;</button>
+                                <button type="button" data-cmd="insertOrderedList" title="Numbered List">1.</button>
+                            </div>
+                            <div class="toolbar-group">
+                                <button type="button" data-cmd="formatBlock" data-value="blockquote" title="Blockquote">&#10077;</button>
+                                <button type="button" data-cmd="formatBlock" data-value="h3" title="Heading">H</button>
+                            </div>
+                            <div class="toolbar-group">
+                                <button type="button" data-cmd="createLink" title="Insert Link">&#128279;</button>
+                                <button type="button" data-cmd="unlink" title="Remove Link">&#10060;</button>
+                            </div>
+                            <div class="toolbar-group">
+                                <button type="button" data-cmd="removeFormat" title="Clear Formatting">&#8999;</button>
+                            </div>
+                        </div>
+                        <div id="acceptanceCriteriaContent"></div>
+                    </div>
                 </div>
                 <div id="dealerComments" style="display: none;">
                     <h4>Dealer Comments</h4>
@@ -1419,22 +1545,25 @@
                 descEl.textContent = story.story_description || 'No description provided.';
             }
             
-            // Acceptance Criteria
+            // Acceptance Criteria (WYSIWYG for dealers)
             var acSection = document.getElementById('acceptanceCriteria');
             var acEl = document.getElementById('acceptanceCriteriaContent');
+            var acToolbar = document.getElementById('acToolbar');
             if (isDealer) {
                 acSection.style.display = 'block';
                 if (activeEditField !== 'acceptanceCriteriaContent') {
                     acEl.contentEditable = 'true';
-                    acEl.classList.add('editable-field');
+                    acEl.classList.add('editable-field', 'rich-text');
                     acEl.setAttribute('data-placeholder', 'Enter acceptance criteria...');
-                    acEl.textContent = story.acceptance_criteria || '';
+                    acEl.innerHTML = story.acceptance_criteria || '';
                     setupFieldSave(acEl, story.sys_id, 'acceptance_criteria');
+                    setupWysiwygToolbar(acEl, acToolbar);
                 }
             } else {
                 acEl.contentEditable = 'false';
-                acEl.classList.remove('editable-field');
+                acEl.classList.remove('editable-field', 'rich-text');
                 acEl.removeAttribute('data-placeholder');
+                if (acToolbar) acToolbar.classList.remove('active');
                 if (story.acceptance_criteria) {
                     acSection.style.display = 'block';
                     acEl.innerHTML = story.acceptance_criteria;
@@ -1464,6 +1593,12 @@
                     el.parentNode.replaceChild(clone, el);
                 }
             });
+            // Reset toolbar setup flag
+            var toolbar = document.getElementById('acToolbar');
+            if (toolbar) {
+                toolbar._wysiwygSetup = false;
+                toolbar.classList.remove('active');
+            }
         }
         
         function setupFieldSave(el, storyId, fieldName) {
@@ -1502,8 +1637,89 @@
             }
         }
         
+        function setupWysiwygToolbar(editorEl, toolbarEl) {
+            if (!toolbarEl || toolbarEl._wysiwygSetup) return;
+            toolbarEl._wysiwygSetup = true;
+            
+            // Show toolbar when editor gains focus
+            editorEl.addEventListener('focus', function() {
+                toolbarEl.classList.add('active');
+            });
+            
+            // Hide toolbar when editor loses focus (delay to allow button clicks)
+            editorEl.addEventListener('blur', function() {
+                setTimeout(function() {
+                    if (!toolbarEl.contains(document.activeElement)) {
+                        toolbarEl.classList.remove('active');
+                    }
+                }, 200);
+            });
+            
+            // Handle toolbar button clicks
+            var buttons = toolbarEl.querySelectorAll('button[data-cmd]');
+            for (var i = 0; i < buttons.length; i++) {
+                (function(btn) {
+                    btn.addEventListener('mousedown', function(e) {
+                        e.preventDefault(); // Prevent stealing focus from editor
+                    });
+                    btn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        var cmd = btn.getAttribute('data-cmd');
+                        var val = btn.getAttribute('data-value') || null;
+                        
+                        editorEl.focus();
+                        
+                        if (cmd === 'createLink') {
+                            var url = prompt('Enter URL:');
+                            if (url) {
+                                document.execCommand('createLink', false, url);
+                            }
+                        } else if (cmd === 'formatBlock') {
+                            document.execCommand('formatBlock', false, '<' + val + '>');
+                        } else {
+                            document.execCommand(cmd, false, val);
+                        }
+                        
+                        updateToolbarState(toolbarEl, editorEl);
+                    });
+                })(buttons[i]);
+            }
+            
+            // Update active state on selection change
+            editorEl.addEventListener('keyup', function() {
+                updateToolbarState(toolbarEl, editorEl);
+            });
+            editorEl.addEventListener('mouseup', function() {
+                updateToolbarState(toolbarEl, editorEl);
+            });
+        }
+        
+        function updateToolbarState(toolbarEl, editorEl) {
+            var buttons = toolbarEl.querySelectorAll('button[data-cmd]');
+            for (var i = 0; i < buttons.length; i++) {
+                var cmd = buttons[i].getAttribute('data-cmd');
+                if (['bold', 'italic', 'underline', 'strikeThrough', 'insertUnorderedList', 'insertOrderedList'].indexOf(cmd) > -1) {
+                    try {
+                        if (document.queryCommandState(cmd)) {
+                            buttons[i].classList.add('active');
+                        } else {
+                            buttons[i].classList.remove('active');
+                        }
+                    } catch(e) {
+                        // queryCommandState can throw in some browsers
+                    }
+                }
+            }
+        }
+        
         function saveStoryField(el, storyId, fieldName) {
-            var value = el.textContent.trim();
+            var isRichText = el.classList.contains('rich-text');
+            var value = isRichText ? el.innerHTML.trim() : el.textContent.trim();
+            
+            // Clean up empty rich text (contenteditable leaves behind <br> etc)
+            if (isRichText && (value === '<br>' || value === '<div><br></div>' || value === '&nbsp;')) {
+                value = '';
+            }
             
             // Skip if unchanged from server data
             var serverValue = '';
