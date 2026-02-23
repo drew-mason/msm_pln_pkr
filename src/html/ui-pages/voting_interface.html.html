@@ -1724,8 +1724,9 @@
             // Render story queue
             renderStoryQueue(sessionData.storyQueue || []);
             
-            // Show/hide Add Objective button based on easy mode
-            document.getElementById('addStoryBtn').parentElement.style.display = session.easyMode ? '' : 'none';
+            // Show/hide Add Objective button for dealers (always available)
+            var isDealer = userRole && userRole.effectiveRole === 'dealer';
+            document.getElementById('addStoryBtn').parentElement.style.display = isDealer ? '' : 'none';
         }
         
         // Render current story
