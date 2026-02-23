@@ -1212,15 +1212,17 @@
                 <button class="btn btn-secondary" data-dismiss="modal" aria-label="Close">×</button>
             </div>
             <div class="modal-body">
+                <div id="voteSummaryInModal" style="margin-bottom: 1rem; padding: 0.75rem; background: rgba(0,212,255,0.05); border: 1px solid rgba(0,212,255,0.1); border-radius: 6px; font-family: 'Share Tech Mono', monospace; font-size: 0.8rem; color: rgba(200,214,229,0.7); white-space: pre-wrap; max-height: 200px; overflow-y: auto;"></div>
                 <div class="form-group">
                     <label class="form-label">Final Complexity Rating</label>
                     <select class="form-control" id="finalStoryPoints">
                         <option value="">Select points...</option>
                     </select>
+                    <div id="modeIndicator" style="margin-top: 0.3rem; font-family: 'Share Tech Mono', monospace; font-size: 0.75rem; color: var(--primary-color);"></div>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Mission Notes (Optional)</label>
-                    <textarea class="form-control" id="completionComments" placeholder="Add any notes about the estimation..."></textarea>
+                    <label class="form-label">Work Notes (added to story record)</label>
+                    <textarea class="form-control" id="completionWorkNotes" rows="3" placeholder="Add notes about this estimation decision..."></textarea>
                 </div>
             </div>
             <div class="modal-footer">
@@ -1359,6 +1361,69 @@
                         select.appendChild(opt);
                     });
                 }
+                
+                // Build vote summary and auto-select mode
+                var summaryEl = document.getElementById('voteSummaryInModal');
+                var modeEl = document.getElementById('modeIndicator');
+                summaryEl.textContent = '';
+                modeEl.textContent = '';
+                document.getElementById('completionWorkNotes').value = '';
+                
+                if (sessionData && sessionData.revealedVotes) {
+                    var votes = sessionData.revealedVotes.votes || [];
+                    var participants = sessionData.participants || [];
+                    
+                    // Build tally
+                    var tally = {};
+                    var voterIds = {};
+                    votes.forEach(function(v) {
+                        var val = v.vote_value;
+                        if (!tally[val]) tally[val] = { count: 0, voters: [] };
+                        tally[val].count++;
+                        tally[val].voters.push(v.voterName || v.voter);
+                        voterIds[v.voter] = true;
+                    });
+                    
+                    // Find mode (most voted value)
+                    var modeValue = '';
+                    var modeCount = 0;
+                    for (var val in tally) {
+                        if (tally.hasOwnProperty(val) && tally[val].count > modeCount) {
+                            modeCount = tally[val].count;
+                            modeValue = val;
+                        }
+                    }
+                    
+                    // Auto-select mode in dropdown
+                    if (modeValue) {
+                        select.value = modeValue;
+                        modeEl.textContent = '▸ Most voted: ' + modeValue + ' (' + modeCount + ' vote' + (modeCount > 1 ? 's' : '') + ')';
+                    }
+                    
+                    // Build summary text
+                    var summaryText = 'VOTE BREAKDOWN:\n';
+                    for (var v2 in tally) {
+                        if (tally.hasOwnProperty(v2)) {
+                            summaryText += '  ' + v2 + ' (' + tally[v2].count + '): ' + tally[v2].voters.join(', ') + '\n';
+                        }
+                    }
+                    
+                    // Find non-voters
+                    var nonVoters = [];
+                    participants.forEach(function(p) {
+                        if (p.role === 'voter' && !voterIds[p.userId]) {
+                            nonVoters.push(p.name);
+                        }
+                    });
+                    if (nonVoters.length > 0) {
+                        summaryText += '\nDID NOT VOTE:\n  ' + nonVoters.join(', ');
+                    } else {
+                        summaryText += '\nAll voters participated.';
+                    }
+                    
+                    summaryEl.textContent = summaryText;
+                }
+                
                 showModal('completeStoryModal');
             });
             
@@ -2120,7 +2185,7 @@
         function completeStory() {
             var currentStory = sessionData.currentStory;
             var points = document.getElementById('finalStoryPoints').value;
-            var comments = document.getElementById('completionComments').value;
+            var workNotes = document.getElementById('completionWorkNotes').value;
             
             if (!points) {
                 showToast('Complexity rating required', 'error');
@@ -2132,7 +2197,7 @@
             ga.addParam('session_id', sessionId);
             ga.addParam('story_id', currentStory.sys_id);
             ga.addParam('story_points', points);
-            ga.addParam('comments', comments);
+            ga.addParam('work_notes', workNotes);
             ga.getXML(function(response) {
                 var result = parseAjaxResponse(response);
                 if (!result) { showToast('Comm failure — estimate lock error', 'error'); return; }

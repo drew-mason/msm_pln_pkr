@@ -98,15 +98,28 @@ PlanningPokerStoryAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
             storyGr.setValue('voting_completed', new GlideDateTime());
             storyGr.update();
             
+            // Build work notes from vote data
+            var workNotes = this.getParameter('work_notes') || '';
+            var voteLog = this._buildVoteLog(storyId, sessionId, storyPoints);
+            var fullWorkNotes = voteLog;
+            if (workNotes) {
+                fullWorkNotes += '\n\n[b]Dealer Notes:[/b]\n' + workNotes;
+            }
+            
             // Update linked rm_story if present
             var rmStoryId = storyGr.getValue('story');
             if (rmStoryId) {
                 var rmStoryGr = new GlideRecord('rm_story');
                 if (rmStoryGr.get(rmStoryId)) {
                     rmStoryGr.setValue('story_points', storyPoints);
+                    rmStoryGr.work_notes = fullWorkNotes;
                     rmStoryGr.update();
                 }
             }
+            
+            // Also store work notes on session story for reference
+            storyGr.setValue('dealer_comments', (storyGr.getValue('dealer_comments') || '') + (workNotes ? '\n' + workNotes : ''));
+            storyGr.update();
             
             // Auto-advance to next pending story
             var nextStory = this._advanceToNextStory(sessionId, sessionGr);
@@ -421,6 +434,76 @@ PlanningPokerStoryAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
         return null;
     },
     
+    _buildVoteLog: function(storyId, sessionId, finalPoints) {
+        var log = '[b]Planning Poker Vote Summary[/b]\n';
+        log += 'Final Estimate: ' + finalPoints + '\n';
+        log += 'Finalized: ' + new GlideDateTime().getDisplayValue() + '\n\n';
+
+        // Get all votes for this story
+        var votes = [];
+        var voterIds = {};
+        var voteGr = new GlideRecord('x_902080_planningw_planning_vote');
+        voteGr.addQuery('story', storyId);
+        voteGr.orderBy('vote_time');
+        voteGr.query();
+        while (voteGr.next()) {
+            var voterId = voteGr.getValue('voter');
+            var voterGr = new GlideRecord('sys_user');
+            var voterName = voterId;
+            if (voterGr.get(voterId)) {
+                voterName = voterGr.getValue('name');
+            }
+            votes.push({
+                name: voterName,
+                value: voteGr.getValue('vote_value')
+            });
+            voterIds[voterId] = true;
+        }
+
+        // Build vote tally (group by value)
+        var tally = {};
+        for (var i = 0; i < votes.length; i++) {
+            var val = votes[i].value;
+            if (!tally[val]) {
+                tally[val] = { count: 0, voters: [] };
+            }
+            tally[val].count++;
+            tally[val].voters.push(votes[i].name);
+        }
+
+        log += '[b]Votes Cast:[/b]\n';
+        for (var v in tally) {
+            if (tally.hasOwnProperty(v)) {
+                log += '  ' + v + ' (' + tally[v].count + '): ' + tally[v].voters.join(', ') + '\n';
+            }
+        }
+
+        // Find participants who didn't vote (voters only)
+        var nonVoters = [];
+        var partGr = new GlideRecord('x_902080_planningw_session_participant');
+        partGr.addQuery('session', sessionId);
+        partGr.addQuery('status', PlanningPokerConstants.STATUS.ACTIVE);
+        partGr.query();
+        while (partGr.next()) {
+            var role = partGr.getValue('role') || '';
+            var isVoter = (role === PlanningPokerConstants.ROLES.VOTER || role.indexOf('voter') > -1);
+            if (isVoter) {
+                var uid = partGr.getValue('user');
+                if (!voterIds[uid]) {
+                    nonVoters.push(partGr.getDisplayValue('user'));
+                }
+            }
+        }
+
+        if (nonVoters.length > 0) {
+            log += '\n[b]Did Not Vote:[/b]\n  ' + nonVoters.join(', ') + '\n';
+        } else {
+            log += '\n[i]All voters participated.[/i]\n';
+        }
+
+        return log;
+    },
+
     _buildResponse: function(success, message, data) {
         return JSON.stringify({
             success: success,
