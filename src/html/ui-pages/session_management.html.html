@@ -1011,28 +1011,29 @@
             top: 0; left: 0; width: 100%; height: 100%;
             background: #000;
             z-index: 10000;
-            perspective: 800px;
-            perspective-origin: 50% 40%;
             overflow: hidden;
         }
 
-        #crawl-container.show { display: flex; align-items: flex-end; justify-content: center; }
+        #crawl-container.show { display: block; }
 
         .crawl-text {
-            position: relative;
-            width: 60%;
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            width: 70%;
+            transform: translateX(-50%) perspective(800px) rotateX(12deg);
+            transform-origin: 50% 0%;
             text-align: center;
             color: #ffd700;
             font-family: 'Rajdhani', sans-serif;
-            font-size: 2.2rem;
-            line-height: 2;
-            transform-origin: 50% 100%;
-            animation: crawlUp 50s linear forwards;
+            font-size: 4.4rem;
+            line-height: 1.8;
+            animation: crawlUp 55s linear forwards;
         }
 
         @keyframes crawlUp {
-            0% { transform: rotateX(12deg) translateY(0); }
-            100% { transform: rotateX(12deg) translateY(-250vh); }
+            0% { top: 100%; }
+            100% { top: -350%; }
         }
 
         .crawl-close {
