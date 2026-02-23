@@ -1163,7 +1163,7 @@
             <!-- Story Queue -->
             <div class="sidebar-section flex-fill">
                 <div class="section-header collapsible" data-target="storyQueueContent">
-                    <span>Mission Queue</span>
+                    <span>Mission Queue <span id="missionQueueCount" style="font-size:0.7rem;opacity:0.6;"></span></span>
                     <span>▼</span>
                 </div>
                 <div class="section-content fixed-scroll-area" id="storyQueueContent">
@@ -2381,6 +2381,17 @@
             var container = document.getElementById('storyQueue');
             container.innerHTML = '';
             
+            // Update Mission Queue header with voted/total count
+            var queueCountEl = document.getElementById('missionQueueCount');
+            if (queueCountEl) {
+                if (stories && stories.length > 0) {
+                    var completedCount = stories.filter(function(s) { return s.status === 'completed'; }).length;
+                    queueCountEl.textContent = '(' + completedCount + '/' + stories.length + ')';
+                } else {
+                    queueCountEl.textContent = '';
+                }
+            }
+            
             if (!stories || stories.length === 0) {
                 container.innerHTML = '<div style="padding:0.5rem;color:rgba(200,214,229,0.4);font-family:Share Tech Mono,monospace;font-size:0.85rem;letter-spacing:1px;">// No objectives loaded</div>';
                 return;
@@ -2405,24 +2416,25 @@
             
             groups.forEach(function(group) {
                 if (showGroups) {
+                    var groupLabel = group.name + ' (' + group.stories.length + ')';
                     var header = document.createElement('div');
                     header.style.cssText = 'padding:0.4rem 0.6rem;font-family:Share Tech Mono,monospace;font-size:0.7rem;color:var(--primary-color);text-transform:uppercase;letter-spacing:2px;border-bottom:1px solid rgba(0,212,255,0.15);margin-top:0.3rem;background:rgba(0,212,255,0.04);cursor:pointer;user-select:none;';
                     
                     var groupKey = 'storyGroup_' + group.name;
                     var isOpen = openStoryGroups[groupKey] === true;
-                    header.textContent = (isOpen ? '▼ ' : '► ') + group.name;
+                    header.textContent = (isOpen ? '▼ ' : '► ') + groupLabel;
                     
                     var groupContainer = document.createElement('div');
                     groupContainer.style.display = isOpen ? '' : 'none';
                     
-                    (function(h, gc, key) {
+                    (function(h, gc, key, label) {
                         h.addEventListener('click', function() {
                             var nowOpen = gc.style.display !== 'none';
                             gc.style.display = nowOpen ? 'none' : '';
-                            h.textContent = (nowOpen ? '► ' : '▼ ') + key.replace('storyGroup_', '');
+                            h.textContent = (nowOpen ? '► ' : '▼ ') + label;
                             openStoryGroups[key] = !nowOpen;
                         });
-                    })(header, groupContainer, groupKey);
+                    })(header, groupContainer, groupKey, groupLabel);
                     
                     container.appendChild(header);
                     
@@ -2481,9 +2493,38 @@
                 div.appendChild(icon);
                 div.appendChild(info);
                 
-                // Allow dealers to click a story to switch to it
+                var actionsDiv = document.createElement('div');
+                actionsDiv.style.cssText = 'display:flex;align-items:center;gap:0.3rem;flex-shrink:0;';
+                
+                // Allow the user who added the story to remove it (if not current/completed)
+                var currentUserId = sessionData && sessionData.userRole ? sessionData.userRole.userId : null;
+                var canRemove = !isCurrent && story.status !== 'completed' && story.status !== 'voting' && story.added_by === currentUserId;
+                // Dealers can also remove any non-current story
                 var isDealer = sessionData && sessionData.userRole && 
                     (sessionData.userRole.effectiveRole === 'dealer' || sessionData.userRole.isDealer);
+                if (isDealer && !isCurrent && story.status !== 'completed') {
+                    canRemove = true;
+                }
+                
+                if (canRemove) {
+                    var removeBtn = document.createElement('button');
+                    removeBtn.style.cssText = 'background:none;border:1px solid rgba(255,51,102,0.3);color:var(--danger-color);width:20px;height:20px;border-radius:3px;font-size:0.7rem;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;opacity:0.5;transition:all 0.2s;flex-shrink:0;';
+                    removeBtn.textContent = '✕';
+                    removeBtn.title = 'Remove from queue';
+                    removeBtn.addEventListener('mouseenter', function() { this.style.opacity = '1'; this.style.background = 'rgba(255,51,102,0.15)'; });
+                    removeBtn.addEventListener('mouseleave', function() { this.style.opacity = '0.5'; this.style.background = 'none'; });
+                    (function(storyId, storyTitle) {
+                        removeBtn.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            removeStoryFromQueue(storyId, storyTitle);
+                        });
+                    })(story.sys_id, story.story_title || story.story_number || 'this objective');
+                    actionsDiv.appendChild(removeBtn);
+                }
+                
+                div.appendChild(actionsDiv);
+                
+                // Allow dealers to click a story to switch to it
                 if (isDealer && !isCurrent && story.status !== 'completed') {
                     div.style.cursor = 'pointer';
                     div.addEventListener('mouseenter', function() { this.style.background = 'rgba(0,212,255,0.06)'; });
@@ -2514,6 +2555,26 @@
                     loadSession();
                 } else {
                     showToast(result.message || 'Error switching objective', 'error');
+                }
+            });
+        }
+        
+        function removeStoryFromQueue(storyId, storyTitle) {
+            if (!confirm('Remove "' + storyTitle + '" from the queue?')) return;
+            
+            var ga = new GlideAjax('SessionManagementAjax');
+            ga.addParam('sysparm_name', 'removeStory');
+            ga.addParam('session_id', sessionId);
+            ga.addParam('session_story_id', storyId);
+            ga.getXML(function(response) {
+                var result = parseAjaxResponse(response);
+                if (!result) { showToast('Failed to remove objective', 'error'); return; }
+                
+                if (result.success) {
+                    showToast('Objective removed', 'success');
+                    loadSession();
+                } else {
+                    showToast(result.message || 'Error removing objective', 'error');
                 }
             });
         }

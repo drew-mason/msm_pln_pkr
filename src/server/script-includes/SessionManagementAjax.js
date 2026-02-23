@@ -421,7 +421,18 @@ SessionManagementAjax.prototype = Object.extendsObject(global.AbstractAjaxProces
             }
             
             var security = new PlanningPokerSecurity();
-            if (!security.canManageSession(sessionId, userId)) {
+            var canManage = security.canManageSession(sessionId, userId);
+            
+            // Also allow the user who added the story to remove it
+            var canRemoveOwn = false;
+            if (!canManage) {
+                var checkGr = new GlideRecord('x_902080_planningw_session_stories');
+                if (checkGr.get(sessionStoryId) && checkGr.getValue('added_by') === userId) {
+                    canRemoveOwn = true;
+                }
+            }
+            
+            if (!canManage && !canRemoveOwn) {
                 return this._buildResponse(false, 'Access denied', null);
             }
             
