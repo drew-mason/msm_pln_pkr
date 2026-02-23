@@ -140,10 +140,11 @@ PlanningPokerSessionAjax.prototype = Object.extendsObject(global.AbstractAjaxPro
         if (rmStoryId) {
             var rmStoryGr = new GlideRecord('rm_story');
             if (rmStoryGr.get(rmStoryId)) {
-                storyData.story_title = rmStoryGr.getValue('short_description') || storyData.story_title;
-                storyData.story_description = rmStoryGr.getValue('description') || storyData.story_description;
-                storyData.acceptance_criteria = rmStoryGr.getValue('acceptance_criteria') || storyData.acceptance_criteria;
-                storyData.story_number = rmStoryGr.getValue('number') || storyData.story_number;
+                // Only override if the session story fields are empty/default
+                if (!storyData.story_title) storyData.story_title = rmStoryGr.getValue('short_description');
+                if (!storyData.story_description) storyData.story_description = rmStoryGr.getValue('description');
+                if (!storyData.acceptance_criteria) storyData.acceptance_criteria = rmStoryGr.getValue('acceptance_criteria');
+                if (!storyData.story_number) storyData.story_number = rmStoryGr.getValue('number');
             }
         }
         
@@ -173,13 +174,22 @@ PlanningPokerSessionAjax.prototype = Object.extendsObject(global.AbstractAjaxPro
         
         while (partGr.next()) {
             var userId = partGr.getValue('user');
+            var rawRole = partGr.getValue('role');
+            var role = rawRole;
+            
+            // Normalize role for client consumption (strip scope prefix if present)
+            if (role === PlanningPokerConstants.ROLES.DEALER || (role && role.indexOf('dealer') > -1)) {
+                role = 'dealer';
+            } else if (role === PlanningPokerConstants.ROLES.VOTER || (role && role.indexOf('voter') > -1)) {
+                role = 'voter';
+            }
             
             participants.push({
                 userId: userId,
                 name: partGr.getDisplayValue('user'),
                 firstName: partGr.user.first_name.toString(),
                 lastName: partGr.user.last_name.toString(),
-                role: partGr.getValue('role'),
+                role: role,
                 isPresenter: partGr.getValue('is_presenter') == 'true',
                 isOnline: partGr.getValue('is_online') == 'true',
                 hasVoted: storyId ? (voterSet[userId] === true) : false,
@@ -215,6 +225,13 @@ PlanningPokerSessionAjax.prototype = Object.extendsObject(global.AbstractAjaxPro
         var roleData = security.getUserRole(sessionId, userId);
         
         var effectiveRole = roleData.role;
+        // Normalize role for client consumption (strip scope prefix if present)
+        if (effectiveRole === PlanningPokerConstants.ROLES.DEALER || (effectiveRole && effectiveRole.indexOf('dealer') > -1)) {
+            effectiveRole = 'dealer';
+        } else if (effectiveRole === PlanningPokerConstants.ROLES.VOTER || (effectiveRole && effectiveRole.indexOf('voter') > -1)) {
+            effectiveRole = 'voter';
+        }
+        
         var isDealer = roleData.isDealer;
         var participantRole = roleData.participantRole;
         
