@@ -1293,13 +1293,22 @@
             if (userRole.canSwitchToVoter || userRole.canSwitchToDealer) {
                 var roleSwitchBtn = document.getElementById('roleSwitch');
                 roleSwitchBtn.style.display = 'block';
-                roleSwitchBtn.textContent = userRole.effectiveRole === 'dealer' ? 'Switch to Voter' : 'Switch to Dealer';
+                if (userRole.effectiveRole === 'dealer') {
+                    roleSwitchBtn.textContent = 'Switch to Voter';
+                } else if (userRole.activeDealerName) {
+                    roleSwitchBtn.textContent = 'Take Over as Dealer';
+                    roleSwitchBtn.title = 'Current dealer: ' + userRole.activeDealerName;
+                } else {
+                    roleSwitchBtn.textContent = 'Switch to Dealer';
+                }
             }
             
-            // Show dealer controls if user can manage
-            if (userRole.effectiveRole === 'dealer' || userRole.isDealer) {
+            // Show dealer controls only for the active dealer
+            if (userRole.effectiveRole === 'dealer') {
                 document.getElementById('dealerControls').style.display = 'block';
                 updateDealerControls(currentStory);
+            } else {
+                document.getElementById('dealerControls').style.display = 'none';
             }
             
             // Render current story
@@ -1983,6 +1992,13 @@
             if (!sessionData || !sessionData.userRole) return;
             var currentRole = sessionData.userRole.effectiveRole;
             var newRole = currentRole === 'dealer' ? 'voter' : 'dealer';
+            
+            // Confirm when taking over from another dealer
+            if (newRole === 'dealer' && sessionData.userRole.activeDealerName) {
+                if (!confirm('Take over dealer role from ' + sessionData.userRole.activeDealerName + '?\nThey will be switched to voter.')) {
+                    return;
+                }
+            }
             
             var ga = new GlideAjax('SessionParticipantAjax');
             ga.addParam('sysparm_name', 'switchRole');

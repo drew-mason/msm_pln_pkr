@@ -246,14 +246,32 @@ PlanningPokerSessionAjax.prototype = Object.extendsObject(global.AbstractAjaxPro
         var effectiveRole = participantRole || 'voter';
         var isDealer = isSessionDealer || isInDealerGroup;
         var canSwitchToVoter = isDealer && participantRole === 'dealer';
-        var canSwitchToDealer = isDealer && participantRole === 'voter';
+        var canSwitchToDealer = isDealer && participantRole !== 'dealer';
+        
+        // Find current active dealer name (for UI context)
+        var activeDealerName = '';
+        if (canSwitchToDealer) {
+            var activeDealerGr = new GlideRecord('x_902080_planningw_session_participant');
+            activeDealerGr.addQuery('session', sessionId);
+            activeDealerGr.addQuery('role', 'dealer');
+            activeDealerGr.addQuery('status', 'active');
+            activeDealerGr.setLimit(1);
+            activeDealerGr.query();
+            if (activeDealerGr.next()) {
+                var dealerUserGr = new GlideRecord('sys_user');
+                if (dealerUserGr.get(activeDealerGr.getValue('user'))) {
+                    activeDealerName = dealerUserGr.getValue('name');
+                }
+            }
+        }
         
         return {
             effectiveRole: effectiveRole,
             isDealer: isDealer,
             participantRole: participantRole,
             canSwitchToVoter: canSwitchToVoter,
-            canSwitchToDealer: canSwitchToDealer
+            canSwitchToDealer: canSwitchToDealer,
+            activeDealerName: activeDealerName
         };
     },
     

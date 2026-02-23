@@ -214,6 +214,11 @@ SessionParticipantAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
                 return this._buildResponse(false, 'You do not have permission to switch to dealer role', null);
             }
             
+            // Enforce single active dealer: demote any existing dealers to voter
+            if (newRole === 'dealer') {
+                this._demoteExistingDealers(sessionId, userId);
+            }
+            
             // Update participant role
             var participantGr = new GlideRecord('x_902080_planningw_session_participant');
             participantGr.addQuery('session', sessionId);
@@ -269,6 +274,11 @@ SessionParticipantAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
                 return this._buildResponse(false, 'Invalid role', null);
             }
             
+            // Enforce single active dealer: demote any existing dealers to voter
+            if (newRole === 'dealer') {
+                this._demoteExistingDealers(sessionId, participantUserId);
+            }
+            
             // Update participant role
             var participantGr = new GlideRecord('x_902080_planningw_session_participant');
             participantGr.addQuery('session', sessionId);
@@ -290,6 +300,34 @@ SessionParticipantAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
         }
     },
     
+    // Demote all existing dealers in a session to voter (except excludeUserId)
+    _demoteExistingDealers: function(sessionId, excludeUserId) {
+        var dealerGr = new GlideRecord('x_902080_planningw_session_participant');
+        dealerGr.addQuery('session', sessionId);
+        dealerGr.addQuery('role', 'dealer');
+        dealerGr.addQuery('status', 'active');
+        if (excludeUserId) {
+            dealerGr.addQuery('user', '!=', excludeUserId);
+        }
+        dealerGr.query();
+        
+        while (dealerGr.next()) {
+            dealerGr.setValue('role', 'voter');
+            dealerGr.update();
+        }
+    },
+    
+    // Check if session already has an active dealer participant
+    _hasActiveDealer: function(sessionId) {
+        var dealerGr = new GlideRecord('x_902080_planningw_session_participant');
+        dealerGr.addQuery('session', sessionId);
+        dealerGr.addQuery('role', 'dealer');
+        dealerGr.addQuery('status', 'active');
+        dealerGr.setLimit(1);
+        dealerGr.query();
+        return dealerGr.hasNext();
+    },
+    
     // Helper methods
     _determineJoinRole: function(sessionGr, userId) {
         var sessionId = sessionGr.getValue('sys_id');
@@ -297,21 +335,25 @@ SessionParticipantAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
         // Check if user is session dealer/facilitator
         var dealerId = sessionGr.getValue('dealer');
         var facilitatorId = sessionGr.getValue('facilitator');
-        if (userId == dealerId || userId == facilitatorId) {
-            return 'dealer';
-        }
+        var hasDealerPermission = (userId == dealerId || userId == facilitatorId);
         
         // Check if user is in dealer group
         var dealerGroupId = sessionGr.getValue('dealer_group');
-        if (dealerGroupId) {
+        if (!hasDealerPermission && dealerGroupId) {
             var groupMemberGr = new GlideRecord('sys_user_grmember');
             groupMemberGr.addQuery('group', dealerGroupId);
             groupMemberGr.addQuery('user', userId);
             groupMemberGr.query();
-            
-            if (groupMemberGr.hasNext()) {
+            hasDealerPermission = groupMemberGr.hasNext();
+        }
+        
+        // If user has dealer permission, only assign dealer role if no active dealer exists
+        if (hasDealerPermission) {
+            if (!this._hasActiveDealer(sessionId)) {
                 return 'dealer';
             }
+            // Another dealer is active — join as voter (can switch later)
+            return 'voter';
         }
         
         // Check voter group restrictions

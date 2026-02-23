@@ -812,20 +812,17 @@ SessionManagementAjax.prototype = Object.extendsObject(global.AbstractAjaxProces
             existingGr.query();
             
             if (!existingGr.hasNext()) {
+                // Add dealer group members as voters — only one active dealer at a time
+                // They retain permission to switch to dealer role via the UI
                 var participantGr = new GlideRecord('x_902080_planningw_session_participant');
                 participantGr.initialize();
                 participantGr.setValue('session', sessionId);
                 participantGr.setValue('user', memberId);
-                participantGr.setValue('role', 'dealer');
+                participantGr.setValue('role', 'voter');
                 participantGr.setValue('status', 'active');
                 participantGr.setValue('joined_at', new GlideDateTime());
                 participantGr.setValue('is_online', false);
                 participantGr.insert();
-                addedCount++;
-            } else if (existingGr.next() && existingGr.getValue('role') !== 'dealer') {
-                // Upgrade existing participant to dealer role
-                existingGr.setValue('role', 'dealer');
-                existingGr.update();
                 addedCount++;
             }
         }
