@@ -790,15 +790,16 @@
             border-radius: var(--radius);
             z-index: 2000;
             transform: translateX(400px);
-            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            opacity: 0;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s ease;
             font-family: 'Share Tech Mono', monospace;
             font-size: 0.85rem;
             letter-spacing: 1px;
-            border: 1px solid;
+            border: 1px solid transparent;
             backdrop-filter: blur(10px);
             pointer-events: none;
         }
-        .toast.show { transform: translateX(0); pointer-events: auto; }
+        .toast.show { transform: translateX(0); opacity: 1; pointer-events: auto; }
 
         .toast-success {
             background: rgba(0, 255, 136, 0.15);
@@ -3058,11 +3059,13 @@
         }
         
         var _toastTimer = null;
+        var _toastClearTimer = null;
         function showToast(message, type) {
             var toast = document.getElementById('toast');
             var toastMessage = document.getElementById('toastMessage');
             
             if (_toastTimer) { clearTimeout(_toastTimer); _toastTimer = null; }
+            if (_toastClearTimer) { clearTimeout(_toastClearTimer); _toastClearTimer = null; }
             
             toastMessage.textContent = message;
             toast.className = 'toast toast-' + type + ' show';
@@ -3070,6 +3073,12 @@
             _toastTimer = setTimeout(function() {
                 toast.classList.remove('show');
                 _toastTimer = null;
+                // Fully reset after slide-out transition completes
+                _toastClearTimer = setTimeout(function() {
+                    toast.className = 'toast';
+                    toastMessage.textContent = '';
+                    _toastClearTimer = null;
+                }, 500);
             }, 3000);
         }
         
