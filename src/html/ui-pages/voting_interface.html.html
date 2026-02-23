@@ -1337,6 +1337,7 @@
         var sessionId = getUrlParameter('session_id');
         var storySearchDebounce = null;
         var selectedStoryIds = [];
+        var openStoryGroups = {};
 
         // Initialize page
         (function() { if (/[?&]scan\b/.test(location.search)) document.body.classList.add('scanlines-on'); })();
@@ -2389,15 +2390,37 @@
             groups.forEach(function(group) {
                 if (showGroups) {
                     var header = document.createElement('div');
-                    header.style.cssText = 'padding:0.4rem 0.6rem;font-family:Share Tech Mono,monospace;font-size:0.7rem;color:var(--primary-color);text-transform:uppercase;letter-spacing:2px;border-bottom:1px solid rgba(0,212,255,0.15);margin-top:0.3rem;background:rgba(0,212,255,0.04);';
-                    header.textContent = '► ' + group.name;
+                    header.style.cssText = 'padding:0.4rem 0.6rem;font-family:Share Tech Mono,monospace;font-size:0.7rem;color:var(--primary-color);text-transform:uppercase;letter-spacing:2px;border-bottom:1px solid rgba(0,212,255,0.15);margin-top:0.3rem;background:rgba(0,212,255,0.04);cursor:pointer;user-select:none;';
+                    
+                    var groupKey = 'storyGroup_' + group.name;
+                    var isOpen = openStoryGroups[groupKey] === true;
+                    header.textContent = (isOpen ? '▼ ' : '► ') + group.name;
+                    
+                    var groupContainer = document.createElement('div');
+                    groupContainer.style.display = isOpen ? '' : 'none';
+                    
+                    (function(h, gc, key) {
+                        h.addEventListener('click', function() {
+                            var nowOpen = gc.style.display !== 'none';
+                            gc.style.display = nowOpen ? 'none' : '';
+                            h.textContent = (nowOpen ? '► ' : '▼ ') + key.replace('storyGroup_', '');
+                            openStoryGroups[key] = !nowOpen;
+                        });
+                    })(header, groupContainer, groupKey);
+                    
                     container.appendChild(header);
+                    
+                    group.stories.forEach(function(story, index) {
+                        var div = _createStoryQueueItem(story, currentStoryId);
+                        groupContainer.appendChild(div);
+                    });
+                    container.appendChild(groupContainer);
+                } else {
+                    group.stories.forEach(function(story, index) {
+                        var div = _createStoryQueueItem(story, currentStoryId);
+                        container.appendChild(div);
+                    });
                 }
-                
-                group.stories.forEach(function(story, index) {
-                    var div = _createStoryQueueItem(story, currentStoryId);
-                    container.appendChild(div);
-                });
             });
         }
         
