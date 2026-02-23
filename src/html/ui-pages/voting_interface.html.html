@@ -1592,9 +1592,7 @@
         // Polling for real-time updates
         function startPolling() {
             pollInterval = setInterval(function() {
-                if (sessionData && sessionData.currentStory && sessionData.currentStory.status === 'voting') {
-                    pollVotingStatus();
-                }
+                pollVotingStatus();
             }, 3000);
         }
         
@@ -1613,12 +1611,53 @@
                 }
                 
                 pollFailCount = 0;
-                if (result.success && result.data.hasCurrentStory) {
-                    updateVotingIndicators(result.data.participants);
+                var d = result.data;
+                
+                // Detect state changes that require a full session reload:
+                // 1. Current story changed (new story selected by dealer)
+                // 2. Story status changed (pending→voting, voting→revealed, etc.)
+                // 3. Session had no story but now has one (or vice versa)
+                // 4. Session status changed
+                var needsReload = false;
+                var currentStoryId = sessionData && sessionData.currentStory ? sessionData.currentStory.sys_id : null;
+                var currentStoryStatus = sessionData && sessionData.currentStory ? sessionData.currentStory.status : null;
+                var currentSessionStatus = sessionData && sessionData.session ? sessionData.session.status : null;
+                
+                if (result.success && d) {
+                    // Check if a story appeared or disappeared
+                    if (d.hasCurrentStory && !currentStoryId) {
+                        needsReload = true;
+                    } else if (!d.hasCurrentStory && currentStoryId) {
+                        needsReload = true;
+                    }
+                    
+                    // Check if story changed
+                    if (d.hasCurrentStory && d.storyId && d.storyId !== currentStoryId) {
+                        needsReload = true;
+                    }
+                    
+                    // Check if story status changed (e.g. pending→voting, voting→revealed)
+                    if (d.hasCurrentStory && d.storyStatus && d.storyStatus !== currentStoryStatus) {
+                        needsReload = true;
+                    }
+                    
+                    // Check if session status changed (e.g. ready→live, live→completed)
+                    if (d.sessionStatus && d.sessionStatus !== currentSessionStatus) {
+                        needsReload = true;
+                    }
+                }
+                
+                if (needsReload) {
+                    loadSession();
+                    return;
+                }
+                
+                // No state change — just update vote indicators and story content
+                if (result.success && d && d.hasCurrentStory) {
+                    updateVotingIndicators(d.participants);
                     
                     // Update story content for non-editing users (propagate dealer edits)
                     if (!activeEditField && sessionData && sessionData.currentStory) {
-                        var d = result.data;
                         var cs = sessionData.currentStory;
                         var changed = false;
                         if (d.storyTitle !== undefined && d.storyTitle !== cs.story_title) {
