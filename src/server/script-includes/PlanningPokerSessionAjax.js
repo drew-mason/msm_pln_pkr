@@ -229,31 +229,31 @@ PlanningPokerSessionAjax.prototype = Object.extendsObject(global.AbstractAjaxPro
             if (!sessionGr.get(sessionId)) return dealerSet;
         }
         
-        // Session dealer always has permission
+        // Session creator (dealer field) always has permission
         var dealerId = sessionGr.getValue('dealer');
         if (dealerId) {
             dealerSet[dealerId] = true;
         }
         
-        // Dealer group members have permission
-        var dealerGroupId = sessionGr.getValue('dealer_group');
-        if (dealerGroupId) {
-            var memberGr = new GlideRecord('sys_user_grmember');
-            memberGr.addQuery('group', dealerGroupId);
-            memberGr.query();
-            while (memberGr.next()) {
-                dealerSet[memberGr.getValue('user')] = true;
-            }
-        }
-        
-        // Admins have permission — check active participants with admin role
-        var security = new PlanningPokerSecurity();
+        // Any participant with dealer role has permission (promoted dealers)
         var partGr = new GlideRecord('x_902080_planningw_session_participant');
         partGr.addQuery('session', sessionId);
         partGr.addQuery('status', PlanningPokerConstants.STATUS.ACTIVE);
+        partGr.addQuery('is_online', true);
+        partGr.addQuery('role', 'dealer');
         partGr.query();
         while (partGr.next()) {
-            var uid = partGr.getValue('user');
+            dealerSet[partGr.getValue('user')] = true;
+        }
+        
+        // Admins have permission
+        var security = new PlanningPokerSecurity();
+        var allPartGr = new GlideRecord('x_902080_planningw_session_participant');
+        allPartGr.addQuery('session', sessionId);
+        allPartGr.addQuery('status', PlanningPokerConstants.STATUS.ACTIVE);
+        allPartGr.query();
+        while (allPartGr.next()) {
+            var uid = allPartGr.getValue('user');
             if (!dealerSet[uid] && security.hasAdminAccess(uid)) {
                 dealerSet[uid] = true;
             }

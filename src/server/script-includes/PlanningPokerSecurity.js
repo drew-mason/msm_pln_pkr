@@ -60,14 +60,17 @@ PlanningPokerSecurity.prototype = {
             var sessionGr = new GlideRecord('x_902080_planningw_planning_session');
             if (!sessionGr.get(sessionId)) return false;
 
-            // Check if user is session dealer
+            // Check if user is session creator/dealer
             if (this.isSessionDealer(sessionGr, userId)) return true;
 
-            // Check if user is in dealer group
-            var dealerGroupId = sessionGr.getValue('dealer_group');
-            if (dealerGroupId && this.isUserInGroup(userId, dealerGroupId)) {
-                return true;
-            }
+            // Check if user has been promoted to dealer role in this session
+            var partGr = new GlideRecord('x_902080_planningw_session_participant');
+            partGr.addQuery('session', sessionId);
+            partGr.addQuery('user', userId);
+            partGr.addQuery('role', 'dealer');
+            partGr.setLimit(1);
+            partGr.query();
+            if (partGr.next()) return true;
 
             return false;
 

@@ -55,7 +55,6 @@ SessionManagementAjax.prototype = Object.extendsObject(global.AbstractAjaxProces
             var sessionName = this._sanitizeString(this.getParameter('session_name'), 200);
             var description = this._sanitizeString(this.getParameter('description') || '', 4000);
             var scoringMethodId = this.getParameter('scoring_method');
-            var dealerGroupId = this.getParameter('dealer_group');
             var allowSpectators = this.getParameter('allow_spectators') == 'true';
             var easyMode = this.getParameter('easy_mode') == 'true';
             
@@ -65,10 +64,6 @@ SessionManagementAjax.prototype = Object.extendsObject(global.AbstractAjaxProces
 
             if (!this._isValidSysId(scoringMethodId)) {
                 return this._buildResponse(false, 'Invalid scoring method ID', null);
-            }
-
-            if (dealerGroupId && !this._isValidSysId(dealerGroupId)) {
-                return this._buildResponse(false, 'Invalid dealer group ID', null);
             }
             
             var userId = gs.getUserID();
@@ -95,10 +90,6 @@ SessionManagementAjax.prototype = Object.extendsObject(global.AbstractAjaxProces
             sessionGr.setValue('demo_mode', false);
             sessionGr.setValue('active', true);
             
-            if (dealerGroupId) {
-                sessionGr.setValue('dealer_group', dealerGroupId);
-            }
-            
             var sessionId = sessionGr.insert();
             
             if (sessionId) {
@@ -113,11 +104,6 @@ SessionManagementAjax.prototype = Object.extendsObject(global.AbstractAjaxProces
                 participantGr.setValue('is_presenter', true);
                 participantGr.setValue('is_online', true);
                 participantGr.insert();
-                
-                // Auto-add dealer group members
-                if (dealerGroupId) {
-                    this._addDealerGroupMembers(sessionId, dealerGroupId, userId);
-                }
                 
                 gs.debug('[SessionManagementAjax] Created session: ' + sessionId);
                 
@@ -153,14 +139,13 @@ SessionManagementAjax.prototype = Object.extendsObject(global.AbstractAjaxProces
             var qc = sessionGr.addQuery('dealer', userId);
             qc.addOrCondition('facilitator', userId);
             
-            // Check dealer group membership
-            var userGroupGr = new GlideRecord('sys_user_grmember');
-            userGroupGr.addQuery('user', userId);
-            userGroupGr.query();
-            
-            while (userGroupGr.next()) {
-                var groupId = userGroupGr.getValue('group');
-                qc.addOrCondition('dealer_group', groupId);
+            // Also show sessions where user is/was a dealer participant
+            var partGr = new GlideRecord('x_902080_planningw_session_participant');
+            partGr.addQuery('user', userId);
+            partGr.addQuery('role', 'dealer');
+            partGr.query();
+            while (partGr.next()) {
+                qc.addOrCondition('sys_id', partGr.getValue('session'));
             }
             
             // Filter by status if specified
@@ -304,7 +289,6 @@ SessionManagementAjax.prototype = Object.extendsObject(global.AbstractAjaxProces
                 status: sessionGr.getValue('status'),
                 sessionCode: sessionGr.getValue('session_code'),
                 scoringMethod: sessionGr.getValue('scoring_method'),
-                dealerGroup: sessionGr.getValue('dealer_group'),
                 allowSpectators: sessionGr.getValue('allow_spectators') == 'true',
                 easyMode: sessionGr.getValue('easy_mode') == 'true',
                 stories: stories
@@ -532,7 +516,6 @@ SessionManagementAjax.prototype = Object.extendsObject(global.AbstractAjaxProces
             var sessionName = this.getParameter('session_name');
             var description = this.getParameter('description');
             var scoringMethodId = this.getParameter('scoring_method');
-            var dealerGroupId = this.getParameter('dealer_group');
             var allowSpectators = this.getParameter('allow_spectators');
             var easyMode = this.getParameter('easy_mode');
             
@@ -544,10 +527,6 @@ SessionManagementAjax.prototype = Object.extendsObject(global.AbstractAjaxProces
             }
             if (scoringMethodId) {
                 sessionGr.setValue('scoring_method', scoringMethodId);
-            }
-            // Allow clearing the dealer group
-            if (dealerGroupId !== null && dealerGroupId !== undefined) {
-                sessionGr.setValue('dealer_group', dealerGroupId);
             }
             if (allowSpectators !== null && allowSpectators !== undefined) {
                 sessionGr.setValue('allow_spectators', allowSpectators == 'true');

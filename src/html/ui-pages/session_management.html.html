@@ -1194,13 +1194,6 @@
                         <option value="">Select scoring protocol...</option>
                     </select>
                 </div>
-                <div class="form-group">
-                    <label class="form-label" for="dealerGroup">Command Crew</label>
-                    <select class="form-control" id="dealerGroup">
-                        <option value="">Select command crew (optional)...</option>
-                    </select>
-                    <small>Crew members will be auto-assigned as bridge officers</small>
-                </div>
                 <div class="form-check">
                     <input type="checkbox" id="allowSpectators" checked />
                     <label for="allowSpectators">Allow Observers on Bridge</label>
@@ -1250,13 +1243,6 @@
                         <select class="form-control" id="editScoringMethod" required>
                             <option value="">Select scoring protocol...</option>
                         </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" for="editDealerGroup">Command Crew</label>
-                        <select class="form-control" id="editDealerGroup">
-                            <option value="">Select command crew (optional)...</option>
-                        </select>
-                        <small>Crew members will be auto-assigned as bridge officers</small>
                     </div>
                     <div class="form-check">
                         <input type="checkbox" id="editAllowSpectators" />
@@ -1338,7 +1324,6 @@
             completed: []
         };
         var scoringMethods = [];
-        var userGroups = [];
         var editingSessionId = null;
         var editingStories = [];
         var searchDebounceTimer = null;
@@ -1423,7 +1408,6 @@
         // Load initial data
         function loadInitialData() {
             loadScoringMethods();
-            loadUserGroups();
             loadSessions();
         }
         
@@ -1440,25 +1424,6 @@
                     populateScoringMethods();
                 } else {
                     showToast(result.message, 'error');
-                }
-            });
-        }
-        
-        // Load user groups
-        function loadUserGroups() {
-            var ga = new GlideAjax('SessionManagementAjax');
-            ga.addParam('sysparm_name', 'getUserGroups');
-            ga.getXML(function(response) {
-                var result = parseAjaxResponse(response);
-                if (!result) {
-                    console.warn('User groups: empty response, groups feature may be unavailable');
-                    return;
-                }
-                if (result.success) {
-                    userGroups = result.data;
-                    populateUserGroups();
-                } else {
-                    console.error('Failed to load user groups:', result.message);
                 }
             });
         }
@@ -1501,18 +1466,6 @@
                 if (method.isDefault) {
                     option.selected = true;
                 }
-                select.appendChild(option);
-            });
-        }
-        
-        function populateUserGroups() {
-            var select = document.getElementById('dealerGroup');
-            select.innerHTML = '<option value="">Select dealer group (optional)...</option>';
-            
-            userGroups.forEach(function(group) {
-                var option = document.createElement('option');
-                option.value = group.sys_id;
-                option.textContent = group.name;
                 select.appendChild(option);
             });
         }
@@ -1668,7 +1621,6 @@
             var sessionName = document.getElementById('sessionName').value;
             var description = document.getElementById('sessionDescription').value;
             var scoringMethod = document.getElementById('scoringMethod').value;
-            var dealerGroup = document.getElementById('dealerGroup').value;
             var allowSpectators = document.getElementById('allowSpectators').checked;
             var easyMode = document.getElementById('easyMode').checked;
             
@@ -1682,7 +1634,6 @@
             ga.addParam('session_name', sessionName);
             ga.addParam('description', description);
             ga.addParam('scoring_method', scoringMethod);
-            ga.addParam('dealer_group', dealerGroup);
             ga.addParam('allow_spectators', allowSpectators);
             ga.addParam('easy_mode', easyMode);
             ga.getXML(function(response) {
@@ -1809,7 +1760,6 @@
                 document.getElementById('editSessionName').value = data.name || '';
                 document.getElementById('editSessionDescription').value = data.description || '';
                 document.getElementById('editScoringMethod').value = data.scoringMethod || '';
-                document.getElementById('editDealerGroup').value = data.dealerGroup || '';
                 document.getElementById('editAllowSpectators').checked = data.allowSpectators;
                 document.getElementById('editEasyMode').checked = data.easyMode;
                 
@@ -1878,15 +1828,6 @@
                 smSelect.appendChild(option);
             });
             
-            // User groups
-            var groupSelect = document.getElementById('editDealerGroup');
-            groupSelect.innerHTML = '<option value="">Select dealer group (optional)...</option>';
-            userGroups.forEach(function(group) {
-                var option = document.createElement('option');
-                option.value = group.sys_id;
-                option.textContent = group.name;
-                groupSelect.appendChild(option);
-            });
         }
         
         function renderEditStories() {
@@ -2139,7 +2080,6 @@
             ga.addParam('session_name', sessionName);
             ga.addParam('description', document.getElementById('editSessionDescription').value);
             ga.addParam('scoring_method', scoringMethod);
-            ga.addParam('dealer_group', document.getElementById('editDealerGroup').value);
             ga.addParam('allow_spectators', document.getElementById('editAllowSpectators').checked.toString());
             ga.addParam('easy_mode', document.getElementById('editEasyMode').checked.toString());
             ga.getXML(function(response) {
@@ -2185,7 +2125,6 @@
             document.getElementById('sessionName').value = '';
             document.getElementById('sessionDescription').value = '';
             document.getElementById('scoringMethod').selectedIndex = 0;
-            document.getElementById('dealerGroup').selectedIndex = 0;
             document.getElementById('allowSpectators').checked = true;
             document.getElementById('easyMode').checked = false;
         }
