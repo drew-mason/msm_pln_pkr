@@ -327,8 +327,15 @@ PlanningPokerSessionAjax.prototype = Object.extendsObject(global.AbstractAjaxPro
         voteGr.query();
         
         while (voteGr.next()) {
+            var voterId = voteGr.getValue('voter');
+            var voterName = voterId;
+            var voterGr = new GlideRecord('sys_user');
+            if (voterGr.get(voterId)) {
+                voterName = voterGr.getValue('name');
+            }
             votes.push({
-                voter: voteGr.getValue('voter'),
+                voter: voterId,
+                voterName: voterName,
                 vote_value: voteGr.getValue('vote_value'),
                 vote_numeric_value: voteGr.getValue('vote_numeric_value'),
                 vote_time: voteGr.getValue('vote_time')

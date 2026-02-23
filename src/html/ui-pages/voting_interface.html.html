@@ -2237,7 +2237,7 @@
             votes.forEach(function(vote) {
                 var chip = document.createElement('span');
                 chip.className = 'vote-chip';
-                chip.textContent = vote.voterName + ': ' + vote.voteValue;
+                chip.textContent = (vote.voterName || 'Unknown') + ': ' + (vote.vote_value || '?');
                 distributionContainer.appendChild(chip);
             });
         }
