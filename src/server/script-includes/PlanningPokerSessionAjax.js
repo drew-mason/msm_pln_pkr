@@ -203,6 +203,7 @@ PlanningPokerSessionAjax.prototype = Object.extendsObject(global.AbstractAjaxPro
     _getScoringValues: function(methodId) {
         if (!methodId) return [];
         
+        // First try individual scoring_value records
         var values = [];
         var valueGr = new GlideRecord('x_902080_planningw_scoring_value');
         valueGr.addQuery('scoring_method', methodId);
@@ -215,6 +216,35 @@ PlanningPokerSessionAjax.prototype = Object.extendsObject(global.AbstractAjaxPro
                 numericValue: valueGr.getValue('numeric_value'),
                 isSpecial: valueGr.getValue('is_special') == 'true'
             });
+        }
+        
+        // Fallback: parse comma-separated values from the scoring method record
+        if (values.length === 0) {
+            var methodGr = new GlideRecord('x_902080_planningw_scoring_method');
+            if (methodGr.get(methodId)) {
+                var csvValues = methodGr.getValue('values');
+                if (csvValues) {
+                    var specialValues = ['?', 'Pass', 'PASS', 'Break', 'BREAK'];
+                    var tshirtMap = PlanningPokerConstants.VOTE_VALUES.TSHIRT_MAP;
+                    var parts = csvValues.split(',');
+                    for (var i = 0; i < parts.length; i++) {
+                        var val = parts[i].trim();
+                        if (!val) continue;
+                        var isSpecial = specialValues.indexOf(val) > -1;
+                        var numericValue = null;
+                        if (!isNaN(parseFloat(val)) && isFinite(val)) {
+                            numericValue = parseFloat(val);
+                        } else if (tshirtMap && tshirtMap.hasOwnProperty(val.toUpperCase())) {
+                            numericValue = tshirtMap[val.toUpperCase()];
+                        }
+                        values.push({
+                            displayValue: val,
+                            numericValue: numericValue,
+                            isSpecial: isSpecial
+                        });
+                    }
+                }
+            }
         }
         
         return values;

@@ -33,11 +33,26 @@ PlanningPokerVotingAjax.prototype = Object.extendsObject(global.AbstractAjaxProc
             var scoringMethodId = sessionGr.getValue('scoring_method');
             if (scoringMethodId) {
                 var validValues = [];
+                // First try individual scoring_value records
                 var svGr = new GlideRecord('x_902080_planningw_scoring_value');
                 svGr.addQuery('scoring_method', scoringMethodId);
                 svGr.query();
                 while (svGr.next()) {
                     validValues.push(svGr.getValue('display_value'));
+                }
+                // Fallback: parse comma-separated values from the scoring method record
+                if (validValues.length === 0) {
+                    var methodGr = new GlideRecord('x_902080_planningw_scoring_method');
+                    if (methodGr.get(scoringMethodId)) {
+                        var csvValues = methodGr.getValue('values');
+                        if (csvValues) {
+                            var parts = csvValues.split(',');
+                            for (var i = 0; i < parts.length; i++) {
+                                var trimmed = parts[i].trim();
+                                if (trimmed) validValues.push(trimmed);
+                            }
+                        }
+                    }
                 }
                 if (validValues.length > 0 && validValues.indexOf(voteValue) === -1) {
                     return this._buildResponse(false, 'Invalid vote value. Allowed values: ' + validValues.join(', '), null);

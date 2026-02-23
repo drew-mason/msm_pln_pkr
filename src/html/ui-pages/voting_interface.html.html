@@ -1542,6 +1542,11 @@
                 return;
             }
             
+            if (!scoringValues || scoringValues.length === 0) {
+                votingCardsContainer.innerHTML = '<p style="text-align: center; color: rgba(255, 170, 0, 0.6); padding: 2rem; font-family: Share Tech Mono, monospace; letter-spacing: 1px;">// No scoring values configured for this session. Contact commanding officer.</p>';
+                return;
+            }
+            
             scoringValues.forEach(function(value) {
                 var card = document.createElement('div');
                 card.className = 'voting-card';
