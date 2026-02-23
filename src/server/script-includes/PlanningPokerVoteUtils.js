@@ -79,14 +79,30 @@ PlanningPokerVoteUtils.prototype = {
             if (numericVotes.length > 0) {
                 numericVotes.sort(function(a, b) { return a - b; });
                 
-                // Min/Max
+                // Min/Max - find the original display values for min/max numeric values
+                var minNumeric = numericVotes[0];
+                var maxNumeric = numericVotes[numericVotes.length - 1];
+                var minDisplay = String(minNumeric);
+                var maxDisplay = String(maxNumeric);
+                
+                // Look up original display values from the votes
+                for (var k = 0; k < allVotes.length; k++) {
+                    var av = allVotes[k];
+                    if (av.numeric !== null && parseFloat(av.numeric) === minNumeric) {
+                        minDisplay = av.display;
+                    }
+                    if (av.numeric !== null && parseFloat(av.numeric) === maxNumeric) {
+                        maxDisplay = av.display;
+                    }
+                }
+                
                 result.min = {
-                    display: String(numericVotes[0]),
-                    numeric: numericVotes[0]
+                    display: minDisplay,
+                    numeric: minNumeric
                 };
                 result.max = {
-                    display: String(numericVotes[numericVotes.length - 1]),
-                    numeric: numericVotes[numericVotes.length - 1]
+                    display: maxDisplay,
+                    numeric: maxNumeric
                 };
                 
                 // Average
@@ -127,7 +143,8 @@ PlanningPokerVoteUtils.prototype = {
             
             result.mode = {
                 display: modeDisplay,
-                numeric: modeDisplay ? this.getNumericPoints(modeDisplay) : null
+                numeric: modeDisplay ? this.getNumericPoints(modeDisplay) : null,
+                count: maxCount
             };
             
             return result;

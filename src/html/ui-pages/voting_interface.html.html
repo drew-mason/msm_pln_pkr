@@ -2225,8 +2225,9 @@
             if (summary.validVotes > 0) {
                 summaryHtml += '<div class="stat-card"><div class="stat-value">' + escapeHtml(String(summary.min.display)) + '</div><div class="stat-label">Min</div></div>';
                 summaryHtml += '<div class="stat-card"><div class="stat-value">' + escapeHtml(String(summary.max.display)) + '</div><div class="stat-label">Max</div></div>';
-                summaryHtml += '<div class="stat-card"><div class="stat-value">' + escapeHtml(String(summary.avg)) + '</div><div class="stat-label">Average</div></div>';
-                summaryHtml += '<div class="stat-card"><div class="stat-value">' + escapeHtml(String(summary.median.display)) + '</div><div class="stat-label">Median</div></div>';
+                if (summary.mode && summary.mode.display) {
+                    summaryHtml += '<div class="stat-card" style="border-color: var(--success-color);"><div class="stat-value" style="color: var(--success-color);">' + escapeHtml(String(summary.mode.display)) + '</div><div class="stat-label">Most Voted' + (summary.mode.count ? ' (' + summary.mode.count + ')' : '') + '</div></div>';
+                }
             }
             document.getElementById('voteSummary').innerHTML = summaryHtml;
             
