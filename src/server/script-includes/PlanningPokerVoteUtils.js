@@ -131,20 +131,27 @@ PlanningPokerVoteUtils.prototype = {
                 result.median = { display: null, numeric: null };
             }
             
-            // Mode (most frequent display value)
+            // Mode (most frequent display value) with tie detection
             var maxCount = 0;
             var modeDisplay = null;
+            var tiedValues = [];
             for (var display in displayCounts) {
                 if (displayCounts[display] > maxCount) {
                     maxCount = displayCounts[display];
                     modeDisplay = display;
+                    tiedValues = [display];
+                } else if (displayCounts[display] === maxCount && maxCount > 0) {
+                    tiedValues.push(display);
                 }
             }
-            
+
+            var isTied = tiedValues.length > 1;
             result.mode = {
-                display: modeDisplay,
-                numeric: modeDisplay ? this.getNumericPoints(modeDisplay) : null,
-                count: maxCount
+                display: isTied ? null : modeDisplay,
+                numeric: (isTied || !modeDisplay) ? null : this.getNumericPoints(modeDisplay),
+                count: maxCount,
+                tied: isTied,
+                tiedValues: isTied ? tiedValues : []
             };
             
             return result;
