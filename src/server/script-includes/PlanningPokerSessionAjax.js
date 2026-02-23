@@ -188,12 +188,17 @@ PlanningPokerSessionAjax.prototype = Object.extendsObject(global.AbstractAjaxPro
                 role = 'voter';
             }
             
+            // Detect bot participants by username convention
+            var userName = partGr.user.user_name.toString();
+            var isBot = userName.indexOf('ppbot_') === 0;
+            
             participants.push({
                 userId: userId,
                 name: partGr.getDisplayValue('user'),
                 firstName: partGr.user.first_name.toString(),
                 lastName: partGr.user.last_name.toString(),
                 role: role,
+                isBot: isBot,
                 isDealer: dealerPermSet[userId] === true,
                 isPresenter: partGr.getValue('is_presenter') == 'true',
                 isOnline: partGr.getValue('is_online') == 'true',
@@ -312,6 +317,7 @@ PlanningPokerSessionAjax.prototype = Object.extendsObject(global.AbstractAjaxPro
         
         var isDealer = roleData.isDealer;
         var participantRole = roleData.participantRole;
+        var isAdmin = security.hasAdminAccess(userId);
         
         // Logic for UI switching
         var canSwitchToVoter = isDealer && participantRole === PlanningPokerConstants.ROLES.DEALER;
@@ -338,6 +344,7 @@ PlanningPokerSessionAjax.prototype = Object.extendsObject(global.AbstractAjaxPro
             userId: userId,
             effectiveRole: normalizedEffectiveRole,
             isDealer: isDealer,
+            isAdmin: isAdmin,
             participantRole: participantRole,
             canSwitchToVoter: canSwitchToVoter,
             canSwitchToDealer: canSwitchToDealer,

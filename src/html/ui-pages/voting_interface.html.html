@@ -823,6 +823,66 @@
         .collapsed .section-content { display: none; }
         .collapsed .section-content + div { display: none; }
 
+        /* Bot indicator badge */
+        .bot-badge {
+            display: inline-block;
+            font-size: 0.55rem;
+            padding: 1px 5px;
+            border-radius: 3px;
+            background: rgba(139, 92, 246, 0.2);
+            border: 1px solid rgba(139, 92, 246, 0.4);
+            color: #a78bfa;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-family: 'Share Tech Mono', monospace;
+            margin-left: 0.4rem;
+            vertical-align: middle;
+        }
+
+        /* Droid Bay admin panel */
+        .droid-bay-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+            padding: 0.5rem 0;
+        }
+        .droid-bay-controls .btn {
+            padding: 0.4rem 0.6rem;
+            font-size: 0.7rem;
+            width: 100%;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .droid-bay-controls .btn-bot-add {
+            background: rgba(139, 92, 246, 0.12);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            color: #a78bfa;
+        }
+        .droid-bay-controls .btn-bot-add:hover {
+            background: rgba(139, 92, 246, 0.25);
+            box-shadow: 0 0 12px rgba(139, 92, 246, 0.2);
+        }
+        .droid-bay-controls .btn-bot-action {
+            background: rgba(0, 212, 255, 0.12);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            color: var(--primary-color);
+        }
+        .droid-bay-controls .btn-bot-action:hover {
+            background: rgba(0, 212, 255, 0.25);
+            box-shadow: 0 0 12px rgba(0, 212, 255, 0.2);
+        }
+        .droid-bay-controls .btn-bot-danger {
+            background: rgba(255, 51, 102, 0.1);
+            border: 1px solid rgba(255, 51, 102, 0.25);
+            color: var(--danger-color);
+        }
+        .droid-bay-controls .btn-bot-danger:hover {
+            background: rgba(255, 51, 102, 0.2);
+            box-shadow: 0 0 12px rgba(255, 51, 102, 0.15);
+        }
+
         /* WYSIWYG toolbar for rich text editing */
         .wysiwyg-toolbar {
             display: none;
@@ -1160,6 +1220,33 @@
                 </div>
             </div>
 
+            <!-- Droid Bay (admin only) -->
+            <div class="sidebar-section" id="droidBaySection" style="display: none;">
+                <div class="section-header collapsible" data-target="droidBayContent">
+                    <span>Droid Bay</span>
+                    <span>▼</span>
+                </div>
+                <div class="section-content" id="droidBayContent">
+                    <div class="droid-bay-controls">
+                        <button class="btn btn-bot-add" id="addBotVotersBtn" title="Add bot voters to session">
+                            <span>🤖</span> Deploy Voter Droids
+                        </button>
+                        <button class="btn btn-bot-add" id="addBotDealerBtn" title="Add a bot dealer that adds stories">
+                            <span>🤖</span> Deploy Dealer Droid
+                        </button>
+                        <button class="btn btn-bot-action" id="triggerBotVotesBtn" title="All bot voters cast random votes">
+                            <span>◇</span> Trigger Droid Votes
+                        </button>
+                        <button class="btn btn-bot-action" id="triggerBotStoriesBtn" title="Bot dealer adds sample stories">
+                            <span>◇</span> Trigger Droid Stories
+                        </button>
+                        <button class="btn btn-bot-danger" id="removeBotsBtn" title="Remove all bots from session">
+                            <span>✕</span> Recall All Droids
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <!-- Story Queue -->
             <div class="sidebar-section flex-fill">
                 <div class="section-header collapsible" data-target="storyQueueContent">
@@ -1489,6 +1576,13 @@
             // Quick Add manual story button
             document.getElementById('quickAddStoryBtn').addEventListener('click', quickAddStoryToSession);
             
+            // Bot (Droid Bay) controls - admin only
+            document.getElementById('addBotVotersBtn').addEventListener('click', addBotVoters);
+            document.getElementById('addBotDealerBtn').addEventListener('click', addBotDealer);
+            document.getElementById('triggerBotVotesBtn').addEventListener('click', triggerBotVotes);
+            document.getElementById('triggerBotStoriesBtn').addEventListener('click', triggerBotStories);
+            document.getElementById('removeBotsBtn').addEventListener('click', removeBots);
+            
             // Collapsible sections
             var collapsibles = document.querySelectorAll('.collapsible');
             collapsibles.forEach(function(elem) {
@@ -1564,6 +1658,9 @@
             } else {
                 document.getElementById('dealerControls').style.display = 'none';
             }
+            
+            // Show Droid Bay for admins
+            document.getElementById('droidBaySection').style.display = userRole.isAdmin ? '' : 'none';
             
             // Render current story
             if (currentStory) {
@@ -2097,6 +2194,14 @@
             nameDiv.className = 'participant-name';
             nameDiv.textContent = participant.firstName + ' ' + participant.lastName;
             
+            // Show bot badge if participant is a bot
+            if (participant.isBot) {
+                var botBadge = document.createElement('span');
+                botBadge.className = 'bot-badge';
+                botBadge.textContent = 'droid';
+                nameDiv.appendChild(botBadge);
+            }
+            
             var roleSpan = document.createElement('span');
             roleSpan.className = 'participant-role';
             // Show meaningful role label: active dealer vs officer (has permission but not active)
@@ -2373,6 +2478,134 @@
             resetBtn.disabled = (status !== 'revealed');
             skipBtn.disabled = false;
             completeBtn.disabled = (status !== 'revealed');
+        }
+        
+        // --- Droid Bay (Bot) Controls ---
+        
+        function addBotVoters() {
+            var btn = document.getElementById('addBotVotersBtn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Deploying…';
+            
+            var ga = new GlideAjax('DemoSessionAjax');
+            ga.addParam('sysparm_name', 'addBotVoters');
+            ga.addParam('session_id', sessionId);
+            ga.addParam('count', '3');
+            ga.getXML(function(response) {
+                btn.disabled = false;
+                btn.innerHTML = '<span>🤖</span> Deploy Voter Droids';
+                var result = parseAjaxResponse(response);
+                if (!result) { showToast('Droid deployment comm failure', 'error'); return; }
+                if (result.success) {
+                    var data = result.data;
+                    if (data.addedCount > 0) {
+                        showToast(data.addedCount + ' voter droid' + (data.addedCount > 1 ? 's' : '') + ' deployed', 'success');
+                    } else {
+                        showToast('All droids already deployed', 'info');
+                    }
+                    loadSession();
+                } else {
+                    showToast(result.message, 'error');
+                }
+            });
+        }
+        
+        function addBotDealer() {
+            var btn = document.getElementById('addBotDealerBtn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Deploying…';
+            
+            var ga = new GlideAjax('DemoSessionAjax');
+            ga.addParam('sysparm_name', 'addBotDealer');
+            ga.addParam('session_id', sessionId);
+            ga.getXML(function(response) {
+                btn.disabled = false;
+                btn.innerHTML = '<span>🤖</span> Deploy Dealer Droid';
+                var result = parseAjaxResponse(response);
+                if (!result) { showToast('Droid deployment comm failure', 'error'); return; }
+                if (result.success) {
+                    showToast('Dealer droid ' + result.data.name + ' deployed', 'success');
+                    loadSession();
+                } else {
+                    showToast(result.message, 'error');
+                }
+            });
+        }
+        
+        function triggerBotVotes() {
+            var btn = document.getElementById('triggerBotVotesBtn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Droids voting…';
+            
+            var ga = new GlideAjax('DemoSessionAjax');
+            ga.addParam('sysparm_name', 'triggerBotVotes');
+            ga.addParam('session_id', sessionId);
+            ga.getXML(function(response) {
+                btn.disabled = false;
+                btn.innerHTML = '<span>◇</span> Trigger Droid Votes';
+                var result = parseAjaxResponse(response);
+                if (!result) { showToast('Droid voting comm failure', 'error'); return; }
+                if (result.success) {
+                    var data = result.data;
+                    if (data.votedCount > 0) {
+                        showToast(data.votedCount + ' droid vote' + (data.votedCount > 1 ? 's' : '') + ' cast (' + data.totalVotes + ' total)', 'success');
+                    } else if (data.skippedCount > 0) {
+                        showToast('All droids already voted', 'info');
+                    } else {
+                        showToast('No droids in session to vote', 'info');
+                    }
+                    loadSession();
+                } else {
+                    showToast(result.message, 'error');
+                }
+            });
+        }
+        
+        function triggerBotStories() {
+            var btn = document.getElementById('triggerBotStoriesBtn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Generating…';
+            
+            var ga = new GlideAjax('DemoSessionAjax');
+            ga.addParam('sysparm_name', 'triggerBotStories');
+            ga.addParam('session_id', sessionId);
+            ga.addParam('count', '3');
+            ga.getXML(function(response) {
+                btn.disabled = false;
+                btn.innerHTML = '<span>◇</span> Trigger Droid Stories';
+                var result = parseAjaxResponse(response);
+                if (!result) { showToast('Droid story comm failure', 'error'); return; }
+                if (result.success) {
+                    showToast(result.data.addedCount + ' objectives added to queue', 'success');
+                    loadSession();
+                } else {
+                    showToast(result.message, 'error');
+                }
+            });
+        }
+        
+        function removeBots() {
+            if (!confirm('Recall all droids from this session?\nTheir votes will also be removed.')) return;
+            
+            var btn = document.getElementById('removeBotsBtn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Recalling…';
+            
+            var ga = new GlideAjax('DemoSessionAjax');
+            ga.addParam('sysparm_name', 'removeBots');
+            ga.addParam('session_id', sessionId);
+            ga.getXML(function(response) {
+                btn.disabled = false;
+                btn.innerHTML = '<span>✕</span> Recall All Droids';
+                var result = parseAjaxResponse(response);
+                if (!result) { showToast('Droid recall comm failure', 'error'); return; }
+                if (result.success) {
+                    showToast(result.data.removedCount + ' droid' + (result.data.removedCount > 1 ? 's' : '') + ' recalled', 'success');
+                    loadSession();
+                } else {
+                    showToast(result.message, 'error');
+                }
+            });
         }
         
         // --- Story Queue Rendering ---
