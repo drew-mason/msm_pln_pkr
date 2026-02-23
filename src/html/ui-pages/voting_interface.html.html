@@ -2393,6 +2393,7 @@
                 if (result.success) {
                     showToast('Votes decloaked', 'success');
                     renderVoteResults(result.data);
+                    loadSession(); // Refresh session to update story status and enable Lock Estimate
                 } else {
                     showToast(result.message, 'error');
                 }
