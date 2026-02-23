@@ -8,48 +8,29 @@ PlanningPokerStoryAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
             var sessionId = this.getParameter('session_id');
             var storyId = this.getParameter('story_id');
             
-            if (!sessionId || !storyId) {
-                return this._buildResponse(false, 'Session ID and story ID required', null);
+            var validation = this._validateStoryAction(sessionId, storyId);
+            if (!validation.isValid) {
+                return this._buildResponse(false, validation.message, null);
             }
 
-            if (!/^[0-9a-f]{32}$/i.test(sessionId) || !/^[0-9a-f]{32}$/i.test(storyId)) {
-                return this._buildResponse(false, 'Invalid session or story ID format', null);
-            }
-            
-            var userId = gs.getUserID();
-            
-            // Check permissions
-            var sessionGr = new GlideRecord('x_902080_planningw_planning_session');
-            if (!sessionGr.get(sessionId)) {
-                return this._buildResponse(false, 'Session not found', null);
-            }
-            
-            var security = new PlanningPokerSecurity();
-            if (!security.canManageSession(sessionId, userId)) {
-                return this._buildResponse(false, 'You do not have permission to start voting', null);
-            }
+            var sessionGr = validation.sessionGr;
+            var storyGr = validation.storyGr;
             
             // Validate session is not completed/cancelled
             var sessionStatus = sessionGr.getValue('status');
-            if (sessionStatus === 'completed' || sessionStatus === 'cancelled') {
+            if (sessionStatus === PlanningPokerConstants.STATUS.COMPLETED || sessionStatus === PlanningPokerConstants.STATUS.CANCELLED) {
                 return this._buildResponse(false, 'Cannot start voting on a ' + sessionStatus + ' session', null);
             }
             
-            // Update story status and set current story
-            var storyGr = new GlideRecord('x_902080_planningw_session_stories');
-            if (!storyGr.get(storyId)) {
-                return this._buildResponse(false, 'Story not found', null);
-            }
-            
-            storyGr.setValue('status', 'voting');
+            storyGr.setValue('status', PlanningPokerConstants.STATUS.VOTING);
             storyGr.setValue('voting_started', new GlideDateTime());
             storyGr.setValue('is_current_story', true);
             storyGr.update();
             
             // Update session current_story
             sessionGr.setValue('current_story', storyId);
-            if (sessionStatus === 'ready') {
-                sessionGr.setValue('status', 'live');
+            if (sessionStatus === PlanningPokerConstants.STATUS.READY) {
+                sessionGr.setValue('status', PlanningPokerConstants.STATUS.LIVE);
             }
             sessionGr.update();
             
@@ -68,7 +49,7 @@ PlanningPokerStoryAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
             
         } catch (e) {
             gs.error('[PlanningPokerStoryAjax] startVoting error: ' + e);
-            return this._buildResponse(false, 'Error starting voting: ' + e, null);
+            return this._buildResponse(false, PlanningPokerConstants.ERRORS.INTERNAL_ERROR, null);
         }
     },
     
@@ -80,31 +61,40 @@ PlanningPokerStoryAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
             var storyId = this.getParameter('story_id');
             var storyPoints = this.getParameter('story_points');
             
-            if (!sessionId || !storyId || !storyPoints) {
-                return this._buildResponse(false, 'Session ID, story ID, and story points required', null);
+            if (!storyPoints) {
+                return this._buildResponse(false, 'Story points required', null);
             }
             
-            var userId = gs.getUserID();
+            // Validate story points format (simple check to prevent injection/bad data)
+            // Allow numbers, ?, PASS, BREAK, or T-shirt sizes
+            var allowedValues = [
+                PlanningPokerConstants.VOTE_VALUES.UNKNOWN, 
+                PlanningPokerConstants.VOTE_VALUES.PASS, 
+                PlanningPokerConstants.VOTE_VALUES.BREAK
+            ];
+            // Also allow standard poker numbers
+            var isNumeric = !isNaN(parseFloat(storyPoints)) && isFinite(storyPoints);
+            // Also allow T-shirt sizes
+            var isTShirt = PlanningPokerConstants.VOTE_VALUES.TSHIRT_MAP.hasOwnProperty(storyPoints);
             
-            // Check permissions
-            var sessionGr = new GlideRecord('x_902080_planningw_planning_session');
-            if (!sessionGr.get(sessionId)) {
-                return this._buildResponse(false, 'Session not found', null);
+            if (!isNumeric && !isTShirt && allowedValues.indexOf(storyPoints) === -1) {
+                 // Relax validation slightly if needed, but for now enforce known patterns
+                 // Actually, let's just ensure it's not too long or weird.
+                 if (String(storyPoints).length > 10) {
+                     return this._buildResponse(false, 'Invalid story points value', null);
+                 }
+            }
+
+            var validation = this._validateStoryAction(sessionId, storyId);
+            if (!validation.isValid) {
+                return this._buildResponse(false, validation.message, null);
             }
             
-            var security = new PlanningPokerSecurity();
-            if (!security.canManageSession(sessionId, userId)) {
-                return this._buildResponse(false, 'You do not have permission to set story points', null);
-            }
-            
-            // Update story with final points
-            var storyGr = new GlideRecord('x_902080_planningw_session_stories');
-            if (!storyGr.get(storyId)) {
-                return this._buildResponse(false, 'Story not found', null);
-            }
+            var sessionGr = validation.sessionGr;
+            var storyGr = validation.storyGr;
             
             storyGr.setValue('story_points', storyPoints);
-            storyGr.setValue('status', 'completed');
+            storyGr.setValue('status', PlanningPokerConstants.STATUS.COMPLETED);
             storyGr.setValue('voting_completed', new GlideDateTime());
             storyGr.update();
             
@@ -129,7 +119,7 @@ PlanningPokerStoryAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
             
         } catch (e) {
             gs.error('[PlanningPokerStoryAjax] setStoryPoints error: ' + e);
-            return this._buildResponse(false, 'Error setting story points: ' + e, null);
+            return this._buildResponse(false, PlanningPokerConstants.ERRORS.INTERNAL_ERROR, null);
         }
     },
     
@@ -141,6 +131,7 @@ PlanningPokerStoryAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
             var field = this.getParameter('field');
             var value = this.getParameter('value');
             
+            // Note: We need sessionId to validate permission, so we must fetch story first to get session ID
             if (!storyId || !field || value === undefined) {
                 return this._buildResponse(false, 'Story ID, field, and value required', null);
             }
@@ -158,23 +149,17 @@ PlanningPokerStoryAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
                 return this._buildResponse(false, 'Field not allowed for updates: ' + field, null);
             }
             
-            var userId = gs.getUserID();
-            
-            // Get story and validate permissions
+            // Fetch story to get session ID
             var storyGr = new GlideRecord('x_902080_planningw_session_stories');
             if (!storyGr.get(storyId)) {
-                return this._buildResponse(false, 'Story not found', null);
+                return this._buildResponse(false, PlanningPokerConstants.ERRORS.STORY_NOT_FOUND, null);
             }
-            
             var sessionId = storyGr.getValue('session');
-            var sessionGr = new GlideRecord('x_902080_planningw_planning_session');
-            if (!sessionGr.get(sessionId)) {
-                return this._buildResponse(false, 'Session not found', null);
-            }
             
-            var security = new PlanningPokerSecurity();
-            if (!security.canManageSession(sessionId, userId)) {
-                return this._buildResponse(false, 'Access denied', null);
+            // Use standard validation now that we have session ID
+            var validation = this._validateStoryAction(sessionId, storyId);
+            if (!validation.isValid) {
+                return this._buildResponse(false, validation.message, null);
             }
             
             // Update rm_story if reference exists and field is story content
@@ -209,7 +194,7 @@ PlanningPokerStoryAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
             
         } catch (e) {
             gs.error('[PlanningPokerStoryAjax] updateStoryDetails error: ' + e);
-            return this._buildResponse(false, 'Error updating story details: ' + e, null);
+            return this._buildResponse(false, PlanningPokerConstants.ERRORS.INTERNAL_ERROR, null);
         }
     },
     
@@ -220,30 +205,15 @@ PlanningPokerStoryAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
             var storyPoints = this.getParameter('story_points');
             var comments = this.getParameter('comments') || '';
             
-            if (!sessionId || !storyId) {
-                return this._buildResponse(false, 'Session ID and story ID required', null);
+            var validation = this._validateStoryAction(sessionId, storyId);
+            if (!validation.isValid) {
+                return this._buildResponse(false, validation.message, null);
             }
             
-            var userId = gs.getUserID();
+            var sessionGr = validation.sessionGr;
+            var storyGr = validation.storyGr;
             
-            // Check permissions
-            var sessionGr = new GlideRecord('x_902080_planningw_planning_session');
-            if (!sessionGr.get(sessionId)) {
-                return this._buildResponse(false, 'Session not found', null);
-            }
-            
-            var security = new PlanningPokerSecurity();
-            if (!security.canManageSession(sessionId, userId)) {
-                return this._buildResponse(false, 'You do not have permission to complete stories', null);
-            }
-            
-            // Update story
-            var storyGr = new GlideRecord('x_902080_planningw_session_stories');
-            if (!storyGr.get(storyId)) {
-                return this._buildResponse(false, 'Story not found', null);
-            }
-            
-            storyGr.setValue('status', 'completed');
+            storyGr.setValue('status', PlanningPokerConstants.STATUS.COMPLETED);
             storyGr.setValue('voting_completed', new GlideDateTime());
             if (storyPoints) {
                 storyGr.setValue('story_points', storyPoints);
@@ -263,7 +233,7 @@ PlanningPokerStoryAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
             
         } catch (e) {
             gs.error('[PlanningPokerStoryAjax] completeStory error: ' + e);
-            return this._buildResponse(false, 'Error completing story: ' + e, null);
+            return this._buildResponse(false, PlanningPokerConstants.ERRORS.INTERNAL_ERROR, null);
         }
     },
     
@@ -273,30 +243,15 @@ PlanningPokerStoryAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
             var storyId = this.getParameter('story_id');
             var comments = this.getParameter('comments') || '';
             
-            if (!sessionId || !storyId) {
-                return this._buildResponse(false, 'Session ID and story ID required', null);
+            var validation = this._validateStoryAction(sessionId, storyId);
+            if (!validation.isValid) {
+                return this._buildResponse(false, validation.message, null);
             }
             
-            var userId = gs.getUserID();
+            var sessionGr = validation.sessionGr;
+            var storyGr = validation.storyGr;
             
-            // Check permissions
-            var sessionGr = new GlideRecord('x_902080_planningw_planning_session');
-            if (!sessionGr.get(sessionId)) {
-                return this._buildResponse(false, 'Session not found', null);
-            }
-            
-            var security = new PlanningPokerSecurity();
-            if (!security.canManageSession(sessionId, userId)) {
-                return this._buildResponse(false, 'You do not have permission to skip stories', null);
-            }
-            
-            // Update story status
-            var storyGr = new GlideRecord('x_902080_planningw_session_stories');
-            if (!storyGr.get(storyId)) {
-                return this._buildResponse(false, 'Story not found', null);
-            }
-            
-            storyGr.setValue('status', 'skipped');
+            storyGr.setValue('status', PlanningPokerConstants.STATUS.SKIPPED);
             storyGr.setValue('dealer_comments', comments);
             storyGr.update();
             
@@ -310,33 +265,27 @@ PlanningPokerStoryAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
             
         } catch (e) {
             gs.error('[PlanningPokerStoryAjax] skipStory error: ' + e);
-            return this._buildResponse(false, 'Error skipping story: ' + e, null);
+            return this._buildResponse(false, PlanningPokerConstants.ERRORS.INTERNAL_ERROR, null);
         }
     },
     
     stopSession: function() {
         try {
             var sessionId = this.getParameter('session_id');
-            
             if (!sessionId) {
-                return this._buildResponse(false, 'Session ID required', null);
+                return this._buildResponse(false, PlanningPokerConstants.ERRORS.SESSION_ID_REQUIRED, null);
             }
             
-            var userId = gs.getUserID();
-            
-            // Check permissions
-            var sessionGr = new GlideRecord('x_902080_planningw_planning_session');
-            if (!sessionGr.get(sessionId)) {
-                return this._buildResponse(false, 'Session not found', null);
+            // Use common validation but skip story check since this is session-level
+            var validation = this._validateSessionAction(sessionId);
+            if (!validation.isValid) {
+                return this._buildResponse(false, validation.message, null);
             }
             
-            var security = new PlanningPokerSecurity();
-            if (!security.canManageSession(sessionId, userId)) {
-                return this._buildResponse(false, 'You do not have permission to stop sessions', null);
-            }
+            var sessionGr = validation.sessionGr;
             
             // Update session status
-            sessionGr.setValue('status', 'completed');
+            sessionGr.setValue('status', PlanningPokerConstants.STATUS.COMPLETED);
             sessionGr.setValue('current_story', '');
             sessionGr.setValue('active', false);
             sessionGr.update();
@@ -345,7 +294,7 @@ PlanningPokerStoryAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
             
         } catch (e) {
             gs.error('[PlanningPokerStoryAjax] stopSession error: ' + e);
-            return this._buildResponse(false, 'Error stopping session: ' + e, null);
+            return this._buildResponse(false, PlanningPokerConstants.ERRORS.INTERNAL_ERROR, null);
         }
     },
     
@@ -354,22 +303,13 @@ PlanningPokerStoryAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
             var sessionId = this.getParameter('session_id');
             var storyId = this.getParameter('story_id');
             
-            if (!sessionId || !storyId) {
-                return this._buildResponse(false, 'Session ID and story ID required', null);
+            var validation = this._validateStoryAction(sessionId, storyId);
+            if (!validation.isValid) {
+                return this._buildResponse(false, validation.message, null);
             }
             
-            var userId = gs.getUserID();
-            
-            // Check permissions
-            var sessionGr = new GlideRecord('x_902080_planningw_planning_session');
-            if (!sessionGr.get(sessionId)) {
-                return this._buildResponse(false, 'Session not found', null);
-            }
-            
-            var security = new PlanningPokerSecurity();
-            if (!security.canManageSession(sessionId, userId)) {
-                return this._buildResponse(false, 'You do not have permission to switch stories', null);
-            }
+            var sessionGr = validation.sessionGr;
+            var storyGr = validation.storyGr;
             
             // Clear current story flag from all stories
             var allStoriesGr = new GlideRecord('x_902080_planningw_session_stories');
@@ -378,13 +318,7 @@ PlanningPokerStoryAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
             allStoriesGr.setValue('is_current_story', false);
             allStoriesGr.updateMultiple();
             
-            // Set new current story
-            var storyGr = new GlideRecord('x_902080_planningw_session_stories');
-            if (!storyGr.get(storyId)) {
-                return this._buildResponse(false, 'Story not found', null);
-            }
-            
-            storyGr.setValue('status', 'voting');
+            storyGr.setValue('status', PlanningPokerConstants.STATUS.VOTING);
             storyGr.setValue('voting_started', new GlideDateTime());
             storyGr.setValue('is_current_story', true);
             storyGr.update();
@@ -399,11 +333,57 @@ PlanningPokerStoryAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
             
         } catch (e) {
             gs.error('[PlanningPokerStoryAjax] switchToStory error: ' + e);
-            return this._buildResponse(false, 'Error switching to story: ' + e, null);
+            return this._buildResponse(false, PlanningPokerConstants.ERRORS.INTERNAL_ERROR, null);
         }
     },
     
     // Helper methods
+    
+    _validateSessionAction: function(sessionId) {
+        if (!sessionId) return { isValid: false, message: PlanningPokerConstants.ERRORS.SESSION_ID_REQUIRED };
+        if (!/^[0-9a-f]{32}$/i.test(sessionId)) return { isValid: false, message: PlanningPokerConstants.ERRORS.INVALID_SESSION_FORMAT };
+
+        var sessionGr = new GlideRecord('x_902080_planningw_planning_session');
+        if (!sessionGr.get(sessionId)) {
+            return { isValid: false, message: PlanningPokerConstants.ERRORS.SESSION_NOT_FOUND };
+        }
+
+        var userId = gs.getUserID();
+        var security = new PlanningPokerSecurity();
+        if (!security.canManageSession(sessionId, userId)) {
+            return { isValid: false, message: PlanningPokerConstants.ERRORS.PERMISSION_DENIED };
+        }
+
+        return { isValid: true, sessionGr: sessionGr };
+    },
+
+    _validateStoryAction: function(sessionId, storyId) {
+        if (!sessionId || !storyId) {
+            return { isValid: false, message: 'Session ID and story ID required' };
+        }
+        
+        // 1. Validate Session Access
+        var sessionValidation = this._validateSessionAction(sessionId);
+        if (!sessionValidation.isValid) return sessionValidation;
+        
+        // 2. Validate Story Existence
+        var storyGr = new GlideRecord('x_902080_planningw_session_stories');
+        if (!storyGr.get(storyId)) {
+            return { isValid: false, message: PlanningPokerConstants.ERRORS.STORY_NOT_FOUND };
+        }
+
+        // 3. IDOR Check: Ensure story belongs to the session
+        if (storyGr.getValue('session') !== sessionId) {
+            return { isValid: false, message: PlanningPokerConstants.ERRORS.STORY_NOT_IN_SESSION };
+        }
+
+        return { 
+            isValid: true, 
+            sessionGr: sessionValidation.sessionGr, 
+            storyGr: storyGr 
+        };
+    },
+
     _advanceToNextStory: function(sessionId, sessionGr) {
         // Clear is_current_story flag on all stories for this session
         var clearGr = new GlideRecord('x_902080_planningw_session_stories');
@@ -414,7 +394,7 @@ PlanningPokerStoryAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
         
         var nextStory = this._getNextPendingStory(sessionId);
         if (nextStory) {
-            nextStory.setValue('status', 'voting');
+            nextStory.setValue('status', PlanningPokerConstants.STATUS.VOTING);
             nextStory.setValue('voting_started', new GlideDateTime());
             nextStory.setValue('is_current_story', true);
             nextStory.update();
@@ -431,7 +411,7 @@ PlanningPokerStoryAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
     _getNextPendingStory: function(sessionId) {
         var nextStoryGr = new GlideRecord('x_902080_planningw_session_stories');
         nextStoryGr.addQuery('session', sessionId);
-        nextStoryGr.addQuery('status', 'pending');
+        nextStoryGr.addQuery('status', PlanningPokerConstants.STATUS.PENDING);
         nextStoryGr.orderBy('order');
         nextStoryGr.query();
         

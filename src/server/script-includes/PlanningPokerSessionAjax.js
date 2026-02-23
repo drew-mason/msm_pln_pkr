@@ -5,28 +5,14 @@ PlanningPokerSessionAjax.prototype = Object.extendsObject(global.AbstractAjaxPro
         try {
             gs.debug('[PlanningPokerSessionAjax] getSession called');
             
-            var sessionId = this.getParameter('session_id');
-            if (!sessionId) {
-                return this._buildResponse(false, 'Session ID required', null);
-            }
-
-            if (!/^[0-9a-f]{32}$/i.test(sessionId)) {
-                return this._buildResponse(false, 'Invalid session ID format', null);
+            var validation = this._validateAndLoadSession();
+            if (!validation.isValid) {
+                return this._buildResponse(false, validation.message, null);
             }
             
+            var sessionGr = validation.sessionGr;
+            var sessionId = sessionGr.getValue('sys_id');
             var userId = gs.getUserID();
-            
-            // Get session
-            var sessionGr = new GlideRecord('x_902080_planningw_planning_session');
-            if (!sessionGr.get(sessionId)) {
-                return this._buildResponse(false, 'Session not found', null);
-            }
-            
-            // Check access
-            var security = new PlanningPokerSecurity();
-            if (!security.canAccessSession(sessionId, userId)) {
-                return this._buildResponse(false, 'Access denied', null);
-            }
             
             // Build session data
             var data = {
@@ -35,12 +21,12 @@ PlanningPokerSessionAjax.prototype = Object.extendsObject(global.AbstractAjaxPro
                 storyQueue: this._getStoryQueue(sessionId),
                 participants: this._getParticipants(sessionId),
                 scoringValues: this._getScoringValues(sessionGr.getValue('scoring_method')),
-                userRole: this._determineEffectiveRole(sessionId, userId, sessionGr),
+                userRole: this._getUserRoleData(sessionId, userId, sessionGr),
                 revealedVotes: null
             };
             
             // If story is revealed, get votes and statistics
-            if (data.currentStory && data.currentStory.status === 'revealed') {
+            if (data.currentStory && data.currentStory.status === PlanningPokerConstants.STATUS.REVEALED) {
                 data.revealedVotes = this._getRevealedVotes(data.currentStory.sys_id);
             }
             
@@ -48,34 +34,19 @@ PlanningPokerSessionAjax.prototype = Object.extendsObject(global.AbstractAjaxPro
             
         } catch (e) {
             gs.error('[PlanningPokerSessionAjax] getSession error: ' + e);
-            return this._buildResponse(false, 'Error retrieving session: ' + e, null);
+            return this._buildResponse(false, PlanningPokerConstants.ERRORS.INTERNAL_ERROR, null);
         }
     },
     
     getVotingStatus: function() {
         try {
-            var sessionId = this.getParameter('session_id');
-            if (!sessionId) {
-                return this._buildResponse(false, 'Session ID required', null);
-            }
-
-            if (!/^[0-9a-f]{32}$/i.test(sessionId)) {
-                return this._buildResponse(false, 'Invalid session ID format', null);
+            var validation = this._validateAndLoadSession();
+            if (!validation.isValid) {
+                return this._buildResponse(false, validation.message, null);
             }
             
-            var userId = gs.getUserID();
-            
-            // Get session
-            var sessionGr = new GlideRecord('x_902080_planningw_planning_session');
-            if (!sessionGr.get(sessionId)) {
-                return this._buildResponse(false, 'Session not found', null);
-            }
-            
-            // Check access
-            var security = new PlanningPokerSecurity();
-            if (!security.canAccessSession(sessionId, userId)) {
-                return this._buildResponse(false, 'Access denied', null);
-            }
+            var sessionGr = validation.sessionGr;
+            var sessionId = sessionGr.getValue('sys_id');
             
             var currentStory = this._getCurrentStory(sessionId);
             if (!currentStory) {
@@ -106,11 +77,35 @@ PlanningPokerSessionAjax.prototype = Object.extendsObject(global.AbstractAjaxPro
             
         } catch (e) {
             gs.error('[PlanningPokerSessionAjax] getVotingStatus error: ' + e);
-            return this._buildResponse(false, 'Error retrieving voting status: ' + e, null);
+            return this._buildResponse(false, PlanningPokerConstants.ERRORS.INTERNAL_ERROR, null);
         }
     },
     
     // Internal helper methods
+    _validateAndLoadSession: function() {
+        var sessionId = this.getParameter('session_id');
+        if (!sessionId) {
+            return { isValid: false, message: PlanningPokerConstants.ERRORS.SESSION_ID_REQUIRED };
+        }
+
+        if (!/^[0-9a-f]{32}$/i.test(sessionId)) {
+            return { isValid: false, message: PlanningPokerConstants.ERRORS.INVALID_SESSION_FORMAT };
+        }
+        
+        var sessionGr = new GlideRecord('x_902080_planningw_planning_session');
+        if (!sessionGr.get(sessionId)) {
+            return { isValid: false, message: PlanningPokerConstants.ERRORS.SESSION_NOT_FOUND };
+        }
+        
+        var userId = gs.getUserID();
+        var security = new PlanningPokerSecurity();
+        if (!security.canAccessSession(sessionId, userId)) {
+            return { isValid: false, message: PlanningPokerConstants.ERRORS.ACCESS_DENIED };
+        }
+        
+        return { isValid: true, sessionGr: sessionGr };
+    },
+
     _getCurrentStory: function(sessionId) {
         var sessionGr = new GlideRecord('x_902080_planningw_planning_session');
         if (!sessionGr.get(sessionId)) {
@@ -171,7 +166,7 @@ PlanningPokerSessionAjax.prototype = Object.extendsObject(global.AbstractAjaxPro
         
         var partGr = new GlideRecord('x_902080_planningw_session_participant');
         partGr.addQuery('session', sessionId);
-        partGr.addQuery('status', 'active');
+        partGr.addQuery('status', PlanningPokerConstants.STATUS.ACTIVE);
         partGr.orderBy('role');
         partGr.orderBy('user.name');
         partGr.query();
@@ -215,50 +210,25 @@ PlanningPokerSessionAjax.prototype = Object.extendsObject(global.AbstractAjaxPro
         return values;
     },
     
-    _determineEffectiveRole: function(sessionId, userId, sessionGr) {
-        // Get participant record role
-        var partGr = new GlideRecord('x_902080_planningw_session_participant');
-        partGr.addQuery('session', sessionId);
-        partGr.addQuery('user', userId);
-        partGr.query();
+    _getUserRoleData: function(sessionId, userId, sessionGr) {
+        var security = new PlanningPokerSecurity();
+        var roleData = security.getUserRole(sessionId, userId);
         
-        var participantRole = null;
-        if (partGr.next()) {
-            participantRole = partGr.getValue('role');
-        }
+        var effectiveRole = roleData.role;
+        var isDealer = roleData.isDealer;
+        var participantRole = roleData.participantRole;
         
-        // Check if user is session dealer/facilitator
-        var isSessionDealer = false;
-        var dealerId = sessionGr.getValue('dealer');
-        var facilitatorId = sessionGr.getValue('facilitator');
-        if (userId == dealerId || userId == facilitatorId) {
-            isSessionDealer = true;
-        }
-        
-        // Check if user is in dealer group
-        var dealerGroupId = sessionGr.getValue('dealer_group');
-        var isInDealerGroup = false;
-        if (dealerGroupId) {
-            var groupMemberGr = new GlideRecord('sys_user_grmember');
-            groupMemberGr.addQuery('group', dealerGroupId);
-            groupMemberGr.addQuery('user', userId);
-            groupMemberGr.query();
-            isInDealerGroup = groupMemberGr.hasNext();
-        }
-        
-        // Determine effective role with priority
-        var effectiveRole = participantRole || 'voter';
-        var isDealer = isSessionDealer || isInDealerGroup;
-        var canSwitchToVoter = isDealer && participantRole === 'dealer';
-        var canSwitchToDealer = isDealer && participantRole !== 'dealer';
+        // Logic for UI switching
+        var canSwitchToVoter = isDealer && participantRole === PlanningPokerConstants.ROLES.DEALER;
+        var canSwitchToDealer = isDealer && participantRole !== PlanningPokerConstants.ROLES.DEALER;
         
         // Find current active dealer name (for UI context)
         var activeDealerName = '';
         if (canSwitchToDealer) {
             var activeDealerGr = new GlideRecord('x_902080_planningw_session_participant');
             activeDealerGr.addQuery('session', sessionId);
-            activeDealerGr.addQuery('role', 'dealer');
-            activeDealerGr.addQuery('status', 'active');
+            activeDealerGr.addQuery('role', PlanningPokerConstants.ROLES.DEALER);
+            activeDealerGr.addQuery('status', PlanningPokerConstants.STATUS.ACTIVE);
             activeDealerGr.setLimit(1);
             activeDealerGr.query();
             if (activeDealerGr.next()) {

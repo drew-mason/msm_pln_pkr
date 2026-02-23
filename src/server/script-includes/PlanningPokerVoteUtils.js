@@ -5,9 +5,10 @@ PlanningPokerVoteUtils.prototype = {
         if (!displayValue) return null;
         
         var val = String(displayValue).toUpperCase();
+        var voteValues = PlanningPokerConstants.VOTE_VALUES;
         
         // Handle special values
-        if (val === '?' || val === 'PASS' || val === 'BREAK') {
+        if (val === voteValues.UNKNOWN || val === voteValues.PASS || val === voteValues.BREAK) {
             return null;
         }
         
@@ -17,15 +18,7 @@ PlanningPokerVoteUtils.prototype = {
         }
         
         // Handle T-shirt sizes
-        var tshirtMap = {
-            'XS': 1,
-            'S': 3,
-            'M': 5,
-            'L': 8,
-            'XL': 13,
-            'XXL': 21,
-            'XXXL': 34
-        };
+        var tshirtMap = voteValues.TSHIRT_MAP;
         
         if (tshirtMap[val] !== undefined) {
             return tshirtMap[val];
@@ -46,103 +39,114 @@ PlanningPokerVoteUtils.prototype = {
     },
     
     calculateVoteSummary: function(votes) {
-        if (!votes || votes.length === 0) {
-            return {
-                min: { display: null, numeric: null },
-                max: { display: null, numeric: null },
-                avg: null,
-                median: { display: null, numeric: null },
-                mode: { display: null, numeric: null },
-                count: 0,
-                validVotes: 0
-            };
-        }
-        
-        // Separate numeric and non-numeric votes
-        var numericVotes = [];
-        var allVotes = [];
-        var displayCounts = {};
-        
-        for (var i = 0; i < votes.length; i++) {
-            var vote = votes[i];
-            var display = String(vote.vote_value);
-            var numeric = vote.vote_numeric_value;
-            
-            allVotes.push({
-                display: display,
-                numeric: numeric
-            });
-            
-            // Count display values for mode calculation
-            displayCounts[display] = (displayCounts[display] || 0) + 1;
-            
-            // Collect numeric values for statistical calculations
-            if (numeric !== null && numeric !== undefined && !isNaN(numeric)) {
-                numericVotes.push(numeric);
+        try {
+            if (!votes || votes.length === 0) {
+                return this._getEmptySummary();
             }
-        }
-        
-        var result = {
-            count: votes.length,
-            validVotes: numericVotes.length
-        };
-        
-        // Calculate statistics only if we have numeric votes
-        if (numericVotes.length > 0) {
-            numericVotes.sort(function(a, b) { return a - b; });
             
-            // Min/Max
-            result.min = {
-                display: String(numericVotes[0]),
-                numeric: numericVotes[0]
-            };
-            result.max = {
-                display: String(numericVotes[numericVotes.length - 1]),
-                numeric: numericVotes[numericVotes.length - 1]
-            };
+            // Separate numeric and non-numeric votes
+            var numericVotes = [];
+            var allVotes = [];
+            var displayCounts = {};
             
-            // Average
-            var sum = 0;
-            for (var j = 0; j < numericVotes.length; j++) {
-                sum += numericVotes[j];
+            for (var i = 0; i < votes.length; i++) {
+                var vote = votes[i];
+                if (!vote) continue; // Skip null votes
+                
+                var display = String(vote.vote_value);
+                var numeric = vote.vote_numeric_value;
+                
+                allVotes.push({
+                    display: display,
+                    numeric: numeric
+                });
+                
+                // Count display values for mode calculation
+                displayCounts[display] = (displayCounts[display] || 0) + 1;
+                
+                // Collect numeric values for statistical calculations
+                if (numeric !== null && numeric !== undefined && !isNaN(numeric)) {
+                    numericVotes.push(parseFloat(numeric));
+                }
             }
-            result.avg = Math.round((sum / numericVotes.length) * 100) / 100;
             
-            // Median
-            var mid = Math.floor(numericVotes.length / 2);
-            var medianValue;
-            if (numericVotes.length % 2 === 0) {
-                medianValue = (numericVotes[mid - 1] + numericVotes[mid]) / 2;
+            var result = {
+                count: votes.length,
+                validVotes: numericVotes.length
+            };
+            
+            // Calculate statistics only if we have numeric votes
+            if (numericVotes.length > 0) {
+                numericVotes.sort(function(a, b) { return a - b; });
+                
+                // Min/Max
+                result.min = {
+                    display: String(numericVotes[0]),
+                    numeric: numericVotes[0]
+                };
+                result.max = {
+                    display: String(numericVotes[numericVotes.length - 1]),
+                    numeric: numericVotes[numericVotes.length - 1]
+                };
+                
+                // Average
+                var sum = 0;
+                for (var j = 0; j < numericVotes.length; j++) {
+                    sum += numericVotes[j];
+                }
+                result.avg = Math.round((sum / numericVotes.length) * 100) / 100;
+                
+                // Median
+                var mid = Math.floor(numericVotes.length / 2);
+                var medianValue;
+                if (numericVotes.length % 2 === 0) {
+                    medianValue = (numericVotes[mid - 1] + numericVotes[mid]) / 2;
+                } else {
+                    medianValue = numericVotes[mid];
+                }
+                result.median = {
+                    display: String(medianValue),
+                    numeric: medianValue
+                };
             } else {
-                medianValue = numericVotes[mid];
+                result.min = { display: null, numeric: null };
+                result.max = { display: null, numeric: null };
+                result.avg = null;
+                result.median = { display: null, numeric: null };
             }
-            result.median = {
-                display: String(medianValue),
-                numeric: medianValue
+            
+            // Mode (most frequent display value)
+            var maxCount = 0;
+            var modeDisplay = null;
+            for (var display in displayCounts) {
+                if (displayCounts[display] > maxCount) {
+                    maxCount = displayCounts[display];
+                    modeDisplay = display;
+                }
+            }
+            
+            result.mode = {
+                display: modeDisplay,
+                numeric: modeDisplay ? this.getNumericPoints(modeDisplay) : null
             };
-        } else {
-            result.min = { display: null, numeric: null };
-            result.max = { display: null, numeric: null };
-            result.avg = null;
-            result.median = { display: null, numeric: null };
+            
+            return result;
+        } catch (e) {
+            gs.error('[PlanningPokerVoteUtils] calculateVoteSummary error: ' + e);
+            return this._getEmptySummary();
         }
-        
-        // Mode (most frequent display value)
-        var maxCount = 0;
-        var modeDisplay = null;
-        for (var display in displayCounts) {
-            if (displayCounts[display] > maxCount) {
-                maxCount = displayCounts[display];
-                modeDisplay = display;
-            }
-        }
-        
-        result.mode = {
-            display: modeDisplay,
-            numeric: modeDisplay ? this.getNumericPoints(modeDisplay) : null
+    },
+    
+    _getEmptySummary: function() {
+        return {
+            min: { display: null, numeric: null },
+            max: { display: null, numeric: null },
+            avg: null,
+            median: { display: null, numeric: null },
+            mode: { display: null, numeric: null },
+            count: 0,
+            validVotes: 0
         };
-        
-        return result;
     },
 
     type: 'PlanningPokerVoteUtils'
