@@ -226,10 +226,11 @@ PlanningPokerSessionAjax.prototype = Object.extendsObject(global.AbstractAjaxPro
         
         var effectiveRole = roleData.role;
         // Normalize role for client consumption (strip scope prefix if present)
+        var normalizedEffectiveRole = effectiveRole;
         if (effectiveRole === PlanningPokerConstants.ROLES.DEALER || (effectiveRole && effectiveRole.indexOf('dealer') > -1)) {
-            effectiveRole = 'dealer';
+            normalizedEffectiveRole = 'dealer';
         } else if (effectiveRole === PlanningPokerConstants.ROLES.VOTER || (effectiveRole && effectiveRole.indexOf('voter') > -1)) {
-            effectiveRole = 'voter';
+            normalizedEffectiveRole = 'voter';
         }
         
         var isDealer = roleData.isDealer;
@@ -257,7 +258,7 @@ PlanningPokerSessionAjax.prototype = Object.extendsObject(global.AbstractAjaxPro
         }
         
         return {
-            effectiveRole: effectiveRole,
+            effectiveRole: normalizedEffectiveRole,
             isDealer: isDealer,
             participantRole: participantRole,
             canSwitchToVoter: canSwitchToVoter,

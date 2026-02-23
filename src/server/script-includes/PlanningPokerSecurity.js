@@ -118,6 +118,10 @@ PlanningPokerSecurity.prototype = {
             
             if (participantGr.next()) {
                 participantRole = participantGr.getValue('role');
+                // Normalize role if it contains scope prefix
+                if (participantRole && participantRole.indexOf('.') > -1) {
+                    participantRole = participantRole.split('.').pop();
+                }
             }
 
             // 2. Check Dealer permissions (Owner, Facilitator, or Group)

@@ -49,9 +49,15 @@ SessionParticipantAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
                     participantGr.update();
                 }
                 
+                var role = participantGr.getValue('role');
+                // Normalize role (strip scope prefix if present)
+                if (role && role.indexOf('.') > -1) {
+                    role = role.split('.').pop();
+                }
+                
                 return this._buildResponse(true, 'Rejoined session successfully', {
                     sessionId: sessionId,
-                    role: participantGr.getValue('role'),
+                    role: role,
                     sessionName: sessionGr.getValue('name')
                 });
             } else {
@@ -228,6 +234,11 @@ SessionParticipantAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
             if (participantGr.next()) {
                 participantGr.setValue('role', newRole);
                 participantGr.update();
+                
+                // Return normalized role
+                if (newRole && newRole.indexOf('.') > -1) {
+                    newRole = newRole.split('.').pop();
+                }
                 
                 return this._buildResponse(true, 'Role switched to ' + newRole, {
                     newRole: newRole
