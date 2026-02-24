@@ -1375,17 +1375,10 @@
                     <input type="text" class="form-control" id="storySearch" placeholder="Search by title or number...">
                 </div>
                 <div id="storySearchResults"></div>
-                <hr />
-                <div class="form-group">
-                    <label class="form-label">Quick Deploy</label>
-                    <input type="text" class="form-control" id="quickStoryTitle" placeholder="Story title">
-                    <textarea class="form-control" id="quickStoryDescription" placeholder="Story description" style="margin-top: 0.5rem;"></textarea>
-                </div>
             </div>
             <div class="pp-modal-footer">
                 <button class="btn btn-secondary" data-dismiss="modal">Cancel</button>
                 <button class="btn btn-primary" id="addSelectedStoriesBtn">Add Selected</button>
-                <button class="btn btn-success" id="quickAddStoryBtn">Quick Add</button>
             </div>
         </div>
     </div>
@@ -1596,8 +1589,6 @@
                 selectedStoryIds = [];
                 document.getElementById('storySearchResults').innerHTML = '';
                 document.getElementById('storySearch').value = '';
-                document.getElementById('quickStoryTitle').value = '';
-                document.getElementById('quickStoryDescription').value = '';
                 showModal('addStoryModal');
             });
             
@@ -1616,9 +1607,6 @@
             
             // Add Selected stories button
             document.getElementById('addSelectedStoriesBtn').addEventListener('click', addSelectedStoriesToSession);
-            
-            // Quick Add manual story button
-            document.getElementById('quickAddStoryBtn').addEventListener('click', quickAddStoryToSession);
             
             // Bot (Droid Bay) controls - admin only
             document.getElementById('addBotVotersBtn').addEventListener('click', addBotVoters);
@@ -3109,36 +3097,6 @@
                     selectedStoryIds = [];
                     hideAllModals();
                     loadSession(); // Refresh to show new stories
-                } else {
-                    showToast(result.message, 'error');
-                }
-            });
-        }
-        
-        function quickAddStoryToSession() {
-            var title = document.getElementById('quickStoryTitle').value.trim();
-            var description = document.getElementById('quickStoryDescription').value.trim();
-            
-            if (!title) {
-                showToast('Objective title is required', 'error');
-                return;
-            }
-            
-            var ga = new GlideAjax('SessionManagementAjax');
-            ga.addParam('sysparm_name', 'addManualStory');
-            ga.addParam('session_id', sessionId);
-            ga.addParam('title', title);
-            ga.addParam('description', description);
-            ga.getXML(function(response) {
-                var result = parseAjaxResponse(response);
-                if (!result) { showToast('Error adding objective', 'error'); return; }
-                
-                if (result.success) {
-                    showToast('Objective deployed', 'success');
-                    document.getElementById('quickStoryTitle').value = '';
-                    document.getElementById('quickStoryDescription').value = '';
-                    hideAllModals();
-                    loadSession(); // Refresh to show new story
                 } else {
                     showToast(result.message, 'error');
                 }
