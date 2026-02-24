@@ -1419,13 +1419,13 @@
         <div class="pp-modal-content">
             <div class="pp-modal-header">
                 <h3 class="pp-modal-title" id="ppConfirmTitle">Confirm</h3>
-                <button class="btn btn-secondary" id="ppConfirmX" aria-label="Close">×</button>
+                <button class="btn btn-secondary" data-dismiss="modal" aria-label="Close">×</button>
             </div>
             <div class="pp-modal-body">
                 <p id="ppConfirmMsg" style="font-family: 'Share Tech Mono', monospace; color: rgba(200,214,229,0.8); font-size: 0.9rem; line-height: 1.6;"></p>
             </div>
             <div class="pp-modal-footer">
-                <button class="btn btn-secondary" id="ppConfirmCancel">Cancel</button>
+                <button class="btn btn-secondary" data-dismiss="modal">Cancel</button>
                 <button class="btn btn-primary" id="ppConfirmOk">Confirm</button>
             </div>
         </div>
@@ -1436,14 +1436,14 @@
         <div class="pp-modal-content">
             <div class="pp-modal-header">
                 <h3 class="pp-modal-title" id="ppPromptTitle">Input</h3>
-                <button class="btn btn-secondary" id="ppPromptX" aria-label="Close">×</button>
+                <button class="btn btn-secondary" data-dismiss="modal" aria-label="Close">×</button>
             </div>
             <div class="pp-modal-body">
                 <p id="ppPromptMsg" style="font-family: 'Share Tech Mono', monospace; color: rgba(200,214,229,0.8); font-size: 0.9rem; line-height: 1.6; margin-bottom: 0.75rem;"></p>
                 <input id="ppPromptInput" type="text" class="form-control" style="width: 100%; box-sizing: border-box;" />
             </div>
             <div class="pp-modal-footer">
-                <button class="btn btn-secondary" id="ppPromptCancel">Cancel</button>
+                <button class="btn btn-secondary" data-dismiss="modal">Cancel</button>
                 <button class="btn btn-primary" id="ppPromptOk">OK</button>
             </div>
         </div>
@@ -1636,45 +1636,16 @@
                 });
             });
 
-            (function() {
-                function _bindOnce(id, evt, fn) {
-                    var el = document.getElementById(id);
-                    if (el) { el.addEventListener(evt, fn); }
-                }
-                function _closeConfirm(result) {
-                    hideModal('ppConfirmModal');
-                    var cb = _ppConfirmCallback;
-                    _ppConfirmCallback = null;
-                    if (cb) { cb(result); }
-                }
-                _bindOnce('ppConfirmOk',     'click', function() { _closeConfirm(true); });
-                _bindOnce('ppConfirmCancel', 'click', function() { _closeConfirm(false); });
-                _bindOnce('ppConfirmX',      'click', function() { _closeConfirm(false); });
-            }());
-
-            (function() {
-                function _bindOnce(id, evt, fn) {
-                    var el = document.getElementById(id);
-                    if (el) { el.addEventListener(evt, fn); }
-                }
-                function _closePrompt(confirmed) {
-                    var val = confirmed ? document.getElementById('ppPromptInput').value : null;
-                    hideModal('ppPromptModal');
-                    var cb = _ppPromptCallback;
-                    _ppPromptCallback = null;
-                    if (cb) { cb(val); }
-                }
-                _bindOnce('ppPromptOk',     'click', function() { _closePrompt(true); });
-                _bindOnce('ppPromptCancel', 'click', function() { _closePrompt(false); });
-                _bindOnce('ppPromptX',      'click', function() { _closePrompt(false); });
-                var inputEl = document.getElementById('ppPromptInput');
-                if (inputEl) {
-                    inputEl.addEventListener('keydown', function(e) {
-                        if (e.key === 'Enter') { _closePrompt(true); }
-                        if (e.key === 'Escape') { _closePrompt(false); }
-                    });
-                }
-            }());
+            var inputEl = document.getElementById('ppPromptInput');
+            if (inputEl) {
+                inputEl.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        var okBtn = document.getElementById('ppPromptOk');
+                        if (okBtn && okBtn.onclick) { okBtn.onclick(); }
+                    }
+                    if (e.key === 'Escape') { hideAllModals(); }
+                });
+            }
         }
         
         // Load session data
@@ -3366,24 +3337,30 @@
         var _toastTimer = null;
         var _toastClearTimer = null;
 
-        var _ppConfirmCallback = null;
-
         function ppConfirm(title, message, onConfirm, confirmLabel) {
             document.getElementById('ppConfirmTitle').textContent = title;
             document.getElementById('ppConfirmMsg').textContent = message;
             var okBtn = document.getElementById('ppConfirmOk');
             okBtn.textContent = confirmLabel || 'Confirm';
-            _ppConfirmCallback = onConfirm;
+            okBtn.onclick = function() {
+                hideAllModals();
+                okBtn.onclick = null;
+                if (onConfirm) { onConfirm(true); }
+            };
             showModal('ppConfirmModal');
         }
-
-        var _ppPromptCallback = null;
 
         function ppPrompt(title, message, onResult) {
             document.getElementById('ppPromptTitle').textContent = title;
             document.getElementById('ppPromptMsg').textContent = message;
             document.getElementById('ppPromptInput').value = '';
-            _ppPromptCallback = onResult;
+            var okBtn = document.getElementById('ppPromptOk');
+            okBtn.onclick = function() {
+                var val = document.getElementById('ppPromptInput').value;
+                hideAllModals();
+                okBtn.onclick = null;
+                if (onResult) { onResult(val); }
+            };
             showModal('ppPromptModal');
             setTimeout(function() { document.getElementById('ppPromptInput').focus(); }, 50);
         }
