@@ -678,7 +678,7 @@
             letter-spacing: 1px;
         }
 
-        .modal {
+        .pp-modal {
             position: fixed;
             top: 0; left: 0;
             width: 100%; height: 100%;
@@ -689,7 +689,7 @@
             justify-content: center;
             z-index: 1000;
         }
-        .modal.show { display: flex; }
+        .pp-modal.show { display: flex; }
 
         .modal-content {
             background: linear-gradient(160deg, rgba(10, 18, 35, 0.97), rgba(5, 10, 22, 0.98));
@@ -1268,7 +1268,7 @@
     </div>
 
     <!-- Modals -->
-    <div class="modal" id="addStoryModal" role="dialog" aria-modal="true" aria-labelledby="addStoryModalTitle">
+    <div class="pp-modal" id="addStoryModal" role="dialog" aria-modal="true" aria-labelledby="addStoryModalTitle">
         <div class="modal-content">
             <div class="modal-header">
                 <h3 class="modal-title" id="addStoryModalTitle">Add Objective</h3>
@@ -1295,7 +1295,7 @@
         </div>
     </div>
 
-    <div class="modal" id="skipStoryModal" role="dialog" aria-modal="true" aria-labelledby="skipStoryModalTitle">
+    <div class="pp-modal" id="skipStoryModal" role="dialog" aria-modal="true" aria-labelledby="skipStoryModalTitle">
         <div class="modal-content">
             <div class="modal-header">
                 <h3 class="modal-title" id="skipStoryModalTitle">Bypass Objective</h3>
@@ -1314,7 +1314,7 @@
         </div>
     </div>
 
-    <div class="modal" id="completeStoryModal" role="dialog" aria-modal="true" aria-labelledby="completeStoryModalTitle">
+    <div class="pp-modal" id="completeStoryModal" role="dialog" aria-modal="true" aria-labelledby="completeStoryModalTitle">
         <div class="modal-content">
             <div class="modal-header">
                 <h3 class="modal-title" id="completeStoryModalTitle">Lock Estimate</h3>
@@ -1342,7 +1342,7 @@
     </div>
 
     <!-- Complete Session Confirmation Modal -->
-    <div class="modal" id="completeSessionModal" role="dialog" aria-modal="true" aria-labelledby="completeSessionModalTitle">
+    <div class="pp-modal" id="completeSessionModal" role="dialog" aria-modal="true" aria-labelledby="completeSessionModalTitle">
         <div class="modal-content">
             <div class="modal-header">
                 <h3 class="modal-title" id="completeSessionModalTitle">Complete Session</h3>
@@ -1667,7 +1667,7 @@
             console.log('[PP-DEBUG] renderSession: session.status=' + session.status + ' currentStory.status=' + (currentStory ? currentStory.status : 'NULL') + ' role=' + (userRole ? userRole.effectiveRole : 'NULL') + ' hasRevealedVotes=' + !!revealedVotes);
             
             // Check if any modals are open — don't redirect while user is interacting
-            var modalOpen = document.querySelector('.modal.show');
+            var modalOpen = document.querySelector('.pp-modal.show');
             if (modalOpen) {
                 console.log('[PP-DEBUG] renderSession: modal is open (' + modalOpen.id + '), skipping full render to avoid interference');
                 return;
@@ -3128,7 +3128,7 @@
         function showModal(modalId) {
             console.log('[PP-DEBUG] showModal called:', modalId);
             // Close any other open modal first to prevent stacking
-            var openModals = document.querySelectorAll('.modal.show');
+            var openModals = document.querySelectorAll('.pp-modal.show');
             console.log('[PP-DEBUG] showModal: closing', openModals.length, 'open modals');
             for (var i = 0; i < openModals.length; i++) {
                 openModals[i].classList.remove('show');
@@ -3158,7 +3158,7 @@
         
         function hideAllModals() {
             console.log('[PP-DEBUG] hideAllModals called, trace:', new Error().stack.split('\n').slice(1,4).join(' <- '));
-            var modals = document.querySelectorAll('.modal');
+            var modals = document.querySelectorAll('.pp-modal');
             for (var i = 0; i < modals.length; i++) {
                 modals[i].classList.remove('show');
             }
@@ -3167,7 +3167,7 @@
         
         function resumePollingIfNeeded() {
             // Only resume if no modals are still open
-            var anyOpen = document.querySelector('.modal.show');
+            var anyOpen = document.querySelector('.pp-modal.show');
             if (!anyOpen && pollPausedForModal && !pollInterval) {
                 pollPausedForModal = false;
                 startPolling();
