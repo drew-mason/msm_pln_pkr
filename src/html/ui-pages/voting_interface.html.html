@@ -678,6 +678,55 @@
             letter-spacing: 1px;
         }
 
+        /* Inline dealer action panels */
+        .dealer-inline-panel {
+            display: none;
+            background: linear-gradient(160deg, rgba(10, 18, 35, 0.97), rgba(5, 10, 22, 0.98));
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: var(--radius);
+            margin-top: 0.5rem;
+            overflow: hidden;
+            position: relative;
+        }
+        .dealer-inline-panel.panel-active {
+            display: block;
+        }
+        .dealer-inline-panel::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--lcars-orange), var(--primary-color), var(--lcars-purple));
+            background-size: 200% 100%;
+            animation: borderTrace 3s linear infinite;
+        }
+        .dealer-panel-header {
+            padding: 0.6rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .dealer-panel-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            text-shadow: 0 0 8px var(--primary-glow);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        .dealer-panel-body {
+            padding: 0.75rem 1rem;
+        }
+        .dealer-panel-footer {
+            padding: 0.5rem 1rem;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            gap: 0.5rem;
+            justify-content: flex-end;
+        }
+
         .pp-modal {
             position: fixed;
             top: 0; left: 0;
@@ -1141,6 +1190,50 @@
                 <button class="btn btn-success" id="completeStoryBtn">◆ Lock Estimate</button>
             </div>
 
+            <!-- Inline Bypass Objective Panel -->
+            <div class="dealer-inline-panel" id="skipStoryPanel">
+                <div class="dealer-panel-header">
+                    <span class="dealer-panel-title">Bypass Objective</span>
+                    <button class="btn btn-secondary" style="padding:0.2rem 0.5rem; font-size:0.75rem;" id="skipPanelClose">✕</button>
+                </div>
+                <div class="dealer-panel-body">
+                    <div class="form-group" style="margin-bottom:0.5rem;">
+                        <label class="form-label">Bypass Rationale (Optional)</label>
+                        <textarea class="form-control" id="skipComments" rows="2" placeholder="Enter reason for skipping this story..."></textarea>
+                    </div>
+                </div>
+                <div class="dealer-panel-footer">
+                    <button class="btn btn-secondary" id="skipPanelCancel">Cancel</button>
+                    <button class="btn btn-warning" id="confirmSkipStoryBtn">Confirm Bypass</button>
+                </div>
+            </div>
+
+            <!-- Inline Lock Estimate Panel -->
+            <div class="dealer-inline-panel" id="completeStoryPanel">
+                <div class="dealer-panel-header">
+                    <span class="dealer-panel-title">Lock Estimate</span>
+                    <button class="btn btn-secondary" style="padding:0.2rem 0.5rem; font-size:0.75rem;" id="completePanelClose">✕</button>
+                </div>
+                <div class="dealer-panel-body">
+                    <div id="voteSummaryInPanel" style="margin-bottom: 0.75rem; padding: 0.5rem; background: rgba(0,212,255,0.05); border: 1px solid rgba(0,212,255,0.1); border-radius: 6px; font-family: 'Share Tech Mono', monospace; font-size: 0.75rem; color: rgba(200,214,229,0.7); white-space: pre-wrap; max-height: 150px; overflow-y: auto;"></div>
+                    <div class="form-group" style="margin-bottom:0.5rem;">
+                        <label class="form-label">Final Complexity Rating</label>
+                        <select class="form-control" id="finalStoryPoints">
+                            <option value="">Select points...</option>
+                        </select>
+                        <div id="modeIndicator" style="margin-top: 0.3rem; font-family: 'Share Tech Mono', monospace; font-size: 0.75rem; color: var(--primary-color);"></div>
+                    </div>
+                    <div class="form-group" style="margin-bottom:0.5rem;">
+                        <label class="form-label">Work Notes (added to story record)</label>
+                        <textarea class="form-control" id="completionWorkNotes" rows="2" placeholder="Add notes about this estimation decision..."></textarea>
+                    </div>
+                </div>
+                <div class="dealer-panel-footer">
+                    <button class="btn btn-secondary" id="completePanelCancel">Cancel</button>
+                    <button class="btn btn-success" id="confirmCompleteStoryBtn">◆ Lock Estimate</button>
+                </div>
+            </div>
+
             <!-- Current Story -->
             <div class="story-card" id="currentStoryCard" style="display: none;">
                 <div class="story-header">
@@ -1297,51 +1390,7 @@
         </div>
     </div>
 
-    <div class="pp-modal" id="skipStoryModal" role="dialog" aria-modal="true" aria-labelledby="skipStoryModalTitle">
-        <div class="pp-modal-content">
-            <div class="pp-modal-header">
-                <h3 class="pp-modal-title" id="skipStoryModalTitle">Bypass Objective</h3>
-                <button class="btn btn-secondary" data-dismiss="modal" aria-label="Close">×</button>
-            </div>
-            <div class="pp-modal-body">
-                <div class="form-group">
-                    <label class="form-label">Bypass Rationale (Optional)</label>
-                    <textarea class="form-control" id="skipComments" placeholder="Enter reason for skipping this story..."></textarea>
-                </div>
-            </div>
-            <div class="pp-modal-footer">
-                <button class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                <button class="btn btn-warning" id="confirmSkipStoryBtn">Confirm Bypass</button>
-            </div>
-        </div>
-    </div>
 
-    <div class="pp-modal" id="completeStoryModal" role="dialog" aria-modal="true" aria-labelledby="completeStoryModalTitle">
-        <div class="pp-modal-content">
-            <div class="pp-modal-header">
-                <h3 class="pp-modal-title" id="completeStoryModalTitle">Lock Estimate</h3>
-                <button class="btn btn-secondary" data-dismiss="modal" aria-label="Close">×</button>
-            </div>
-            <div class="pp-modal-body">
-                <div id="voteSummaryInModal" style="margin-bottom: 1rem; padding: 0.75rem; background: rgba(0,212,255,0.05); border: 1px solid rgba(0,212,255,0.1); border-radius: 6px; font-family: 'Share Tech Mono', monospace; font-size: 0.8rem; color: rgba(200,214,229,0.7); white-space: pre-wrap; max-height: 200px; overflow-y: auto;"></div>
-                <div class="form-group">
-                    <label class="form-label">Final Complexity Rating</label>
-                    <select class="form-control" id="finalStoryPoints">
-                        <option value="">Select points...</option>
-                    </select>
-                    <div id="modeIndicator" style="margin-top: 0.3rem; font-family: 'Share Tech Mono', monospace; font-size: 0.75rem; color: var(--primary-color);"></div>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Work Notes (added to story record)</label>
-                    <textarea class="form-control" id="completionWorkNotes" rows="3" placeholder="Add notes about this estimation decision..."></textarea>
-                </div>
-            </div>
-            <div class="pp-modal-footer">
-                <button class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                <button class="btn btn-success" id="confirmCompleteStoryBtn">◆ Lock Estimate</button>
-            </div>
-        </div>
-    </div>
 
     <!-- Complete Session Confirmation Modal -->
     <div class="pp-modal" id="completeSessionModal" role="dialog" aria-modal="true" aria-labelledby="completeSessionModalTitle">
@@ -1482,101 +1531,22 @@
             document.getElementById('resetVotesBtn').addEventListener('click', resetVotes);
             document.getElementById('skipStoryBtn').addEventListener('click', function() {
                 console.log('[PP-DEBUG] skipStoryBtn CLICKED, disabled=' + this.disabled);
-                showModal('skipStoryModal');
+                toggleDealerPanel('skipStoryPanel');
             });
             document.getElementById('completeStoryBtn').addEventListener('click', function() {
                 console.log('[PP-DEBUG] completeStoryBtn CLICKED, disabled=' + this.disabled);
                 console.log('[PP-DEBUG] story status:', sessionData && sessionData.currentStory ? sessionData.currentStory.status : 'NO STORY');
-                console.log('[PP-DEBUG] revealedVotes:', sessionData && sessionData.revealedVotes ? 'present' : 'null');
-                console.log('[PP-DEBUG] scoringValues:', sessionData && sessionData.scoringValues ? sessionData.scoringValues.length + ' values' : 'null');
-                // Populate scoring values dropdown
-                var select = document.getElementById('finalStoryPoints');
-                select.innerHTML = '<option value="">Select points...</option>';
-                if (sessionData && sessionData.scoringValues) {
-                    sessionData.scoringValues.forEach(function(sv) {
-                        var opt = document.createElement('option');
-                        opt.value = sv.displayValue;
-                        opt.textContent = sv.displayValue;
-                        select.appendChild(opt);
-                    });
-                }
-                
-                // Build vote summary and auto-select mode
-                var summaryEl = document.getElementById('voteSummaryInModal');
-                var modeEl = document.getElementById('modeIndicator');
-                summaryEl.textContent = '';
-                modeEl.textContent = '';
-                document.getElementById('completionWorkNotes').value = '';
-                
-                if (sessionData && sessionData.revealedVotes) {
-                    var votes = sessionData.revealedVotes.votes || [];
-                    var participants = sessionData.participants || [];
-                    
-                    // Build tally
-                    var tally = {};
-                    var voterIds = {};
-                    votes.forEach(function(v) {
-                        var val = v.vote_value;
-                        if (!tally[val]) tally[val] = { count: 0, voters: [] };
-                        tally[val].count++;
-                        tally[val].voters.push(v.voterName || v.voter);
-                        voterIds[v.voter] = true;
-                    });
-                    
-                    // Find mode (most voted value) with tie detection
-                    var modeValue = '';
-                    var modeCount = 0;
-                    var tiedValues = [];
-                    for (var val in tally) {
-                        if (tally.hasOwnProperty(val) && tally[val].count > modeCount) {
-                            modeCount = tally[val].count;
-                            modeValue = val;
-                            tiedValues = [val];
-                        } else if (tally.hasOwnProperty(val) && tally[val].count === modeCount && modeCount > 0) {
-                            tiedValues.push(val);
-                        }
-                    }
-                    
-                    // Auto-select mode in dropdown (skip if tied)
-                    if (tiedValues.length > 1) {
-                        // Tie detected — do not auto-select, warn the dealer
-                        select.value = '';
-                        modeEl.innerHTML = '<span style="color: var(--warning-color);">⚠ TIE DETECTED: ' + tiedValues.join(' vs ') + ' (' + modeCount + ' votes each) — Dealer must break the tie</span>';
-                    } else if (modeValue) {
-                        select.value = modeValue;
-                        modeEl.textContent = '▸ Most voted: ' + modeValue + ' (' + modeCount + ' vote' + (modeCount > 1 ? 's' : '') + ')';
-                    }
-                    
-                    // Build summary text
-                    var summaryText = 'VOTE BREAKDOWN:\n';
-                    for (var v2 in tally) {
-                        if (tally.hasOwnProperty(v2)) {
-                            summaryText += '  ' + v2 + ' (' + tally[v2].count + '): ' + tally[v2].voters.join(', ') + '\n';
-                        }
-                    }
-                    
-                    // Find non-voters
-                    var nonVoters = [];
-                    participants.forEach(function(p) {
-                        if (p.role === 'voter' && !voterIds[p.userId]) {
-                            nonVoters.push(p.name);
-                        }
-                    });
-                    if (nonVoters.length > 0) {
-                        summaryText += '\nDID NOT VOTE:\n  ' + nonVoters.join(', ');
-                    } else {
-                        summaryText += '\nAll voters participated.';
-                    }
-                    
-                    summaryEl.textContent = summaryText;
-                }
-                
-                showModal('completeStoryModal');
+                populateLockEstimatePanel();
+                toggleDealerPanel('completeStoryPanel');
             });
             
-            // Modal actions
+            // Inline panel actions
             document.getElementById('confirmSkipStoryBtn').addEventListener('click', skipStory);
             document.getElementById('confirmCompleteStoryBtn').addEventListener('click', completeStory);
+            document.getElementById('skipPanelClose').addEventListener('click', function() { closeDealerPanel('skipStoryPanel'); });
+            document.getElementById('skipPanelCancel').addEventListener('click', function() { closeDealerPanel('skipStoryPanel'); });
+            document.getElementById('completePanelClose').addEventListener('click', function() { closeDealerPanel('completeStoryPanel'); });
+            document.getElementById('completePanelCancel').addEventListener('click', function() { closeDealerPanel('completeStoryPanel'); });
             
             // Modal dismiss
             var dismissBtns = document.querySelectorAll('[data-dismiss="modal"]');
@@ -1668,10 +1638,11 @@
             
             console.log('[PP-DEBUG] renderSession: session.status=' + session.status + ' currentStory.status=' + (currentStory ? currentStory.status : 'NULL') + ' role=' + (userRole ? userRole.effectiveRole : 'NULL') + ' hasRevealedVotes=' + !!revealedVotes);
             
-            // Check if any modals are open — don't redirect while user is interacting
+            // Check if any modals or inline panels are open — don't redirect while user is interacting
             var modalOpen = document.querySelector('.pp-modal.pp-active');
-            if (modalOpen) {
-                console.log('[PP-DEBUG] renderSession: modal is open (' + modalOpen.id + '), skipping full render to avoid interference');
+            var panelOpen = document.querySelector('.dealer-inline-panel.panel-active');
+            if (modalOpen || panelOpen) {
+                console.log('[PP-DEBUG] renderSession: interaction open (' + (modalOpen ? modalOpen.id : panelOpen.id) + '), skipping full render');
                 return;
             }
             
@@ -2465,7 +2436,7 @@
             if (!currentStory) {
                 console.warn('[PP-DEBUG] skipStory: no currentStory');
                 showToast('No active objective to bypass', 'error');
-                hideAllModals();
+                closeAllDealerPanels();
                 return;
             }
             var comments = document.getElementById('skipComments').value;
@@ -2483,15 +2454,15 @@
                 confirmBtn.disabled = false;
                 confirmBtn.textContent = 'Confirm Bypass';
                 var result = parseAjaxResponse(response);
-                if (!result) { showToast('Comm failure — bypass error', 'error'); hideAllModals(); return; }
+                if (!result) { showToast('Comm failure — bypass error', 'error'); closeAllDealerPanels(); return; }
                 
                 if (result.success) {
                     showToast('Objective bypassed', 'success');
-                    hideAllModals();
-                    loadSession(); // Reload to update UI
+                    closeAllDealerPanels();
+                    loadSession();
                 } else {
                     showToast(result.message, 'error');
-                    hideAllModals();
+                    closeAllDealerPanels();
                 }
             });
         }
@@ -2502,7 +2473,7 @@
             if (!currentStory) {
                 console.warn('[PP-DEBUG] completeStory: no currentStory');
                 showToast('No active objective to lock', 'error');
-                hideAllModals();
+                closeAllDealerPanels();
                 return;
             }
             var points = document.getElementById('finalStoryPoints').value;
@@ -2527,18 +2498,18 @@
                 confirmBtn.disabled = false;
                 confirmBtn.innerHTML = '◆ Lock Estimate';
                 var result = parseAjaxResponse(response);
-                if (!result) { showToast('Comm failure — estimate lock error', 'error'); hideAllModals(); return; }
+                if (!result) { showToast('Comm failure — estimate lock error', 'error'); closeAllDealerPanels(); return; }
                 
                 if (result.success) {
                     showToast('Estimate locked: ' + points + ' pts', 'success');
-                    hideAllModals();
+                    closeAllDealerPanels();
                     if (!result.data.nextStoryId) {
                         showToast('All missions complete \u2014 review session status', 'info');
                     }
                     loadSession();
                 } else {
                     showToast(result.message, 'error');
-                    hideAllModals();
+                    closeAllDealerPanels();
                 }
             });
         }
@@ -3122,6 +3093,120 @@
             var div = document.createElement('div');
             div.appendChild(document.createTextNode(text || ''));
             return div.innerHTML;
+        }
+        
+        // --- Inline Dealer Panel Functions ---
+        
+        function toggleDealerPanel(panelId) {
+            var panel = document.getElementById(panelId);
+            if (!panel) return;
+            // If already open, close it
+            if (panel.classList.contains('panel-active')) {
+                closeDealerPanel(panelId);
+                return;
+            }
+            // Close other panels first
+            closeAllDealerPanels();
+            panel.classList.add('panel-active');
+            // Scroll panel into view
+            panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+        
+        function closeDealerPanel(panelId) {
+            var panel = document.getElementById(panelId);
+            if (panel) {
+                panel.classList.remove('panel-active');
+            }
+        }
+        
+        function closeAllDealerPanels() {
+            var panels = document.querySelectorAll('.dealer-inline-panel');
+            for (var i = 0; i < panels.length; i++) {
+                panels[i].classList.remove('panel-active');
+            }
+        }
+        
+        function populateLockEstimatePanel() {
+            // Populate scoring values dropdown
+            var select = document.getElementById('finalStoryPoints');
+            select.innerHTML = '<option value="">Select points...</option>';
+            if (sessionData && sessionData.scoringValues) {
+                sessionData.scoringValues.forEach(function(sv) {
+                    var opt = document.createElement('option');
+                    opt.value = sv.displayValue;
+                    opt.textContent = sv.displayValue;
+                    select.appendChild(opt);
+                });
+            }
+            
+            // Build vote summary and auto-select mode
+            var summaryEl = document.getElementById('voteSummaryInPanel');
+            var modeEl = document.getElementById('modeIndicator');
+            summaryEl.textContent = '';
+            modeEl.textContent = '';
+            document.getElementById('completionWorkNotes').value = '';
+            
+            if (sessionData && sessionData.revealedVotes) {
+                var votes = sessionData.revealedVotes.votes || [];
+                var participants = sessionData.participants || [];
+                
+                // Build tally
+                var tally = {};
+                var voterIds = {};
+                votes.forEach(function(v) {
+                    var val = v.vote_value;
+                    if (!tally[val]) tally[val] = { count: 0, voters: [] };
+                    tally[val].count++;
+                    tally[val].voters.push(v.voterName || v.voter);
+                    voterIds[v.voter] = true;
+                });
+                
+                // Find mode (most voted value) with tie detection
+                var modeValue = '';
+                var modeCount = 0;
+                var tiedValues = [];
+                for (var val in tally) {
+                    if (tally.hasOwnProperty(val) && tally[val].count > modeCount) {
+                        modeCount = tally[val].count;
+                        modeValue = val;
+                        tiedValues = [val];
+                    } else if (tally.hasOwnProperty(val) && tally[val].count === modeCount && modeCount > 0) {
+                        tiedValues.push(val);
+                    }
+                }
+                
+                // Auto-select mode in dropdown (skip if tied)
+                if (tiedValues.length > 1) {
+                    select.value = '';
+                    modeEl.innerHTML = '<span style="color: var(--warning-color);">\u26a0 TIE DETECTED: ' + tiedValues.join(' vs ') + ' (' + modeCount + ' votes each) \u2014 Dealer must break the tie</span>';
+                } else if (modeValue) {
+                    select.value = modeValue;
+                    modeEl.textContent = '\u25b8 Most voted: ' + modeValue + ' (' + modeCount + ' vote' + (modeCount > 1 ? 's' : '') + ')';
+                }
+                
+                // Build summary text
+                var summaryText = 'VOTE BREAKDOWN:\n';
+                for (var v2 in tally) {
+                    if (tally.hasOwnProperty(v2)) {
+                        summaryText += '  ' + v2 + ' (' + tally[v2].count + '): ' + tally[v2].voters.join(', ') + '\n';
+                    }
+                }
+                
+                // Find non-voters
+                var nonVoters = [];
+                participants.forEach(function(p) {
+                    if (p.role === 'voter' && !voterIds[p.userId]) {
+                        nonVoters.push(p.name);
+                    }
+                });
+                if (nonVoters.length > 0) {
+                    summaryText += '\nDID NOT VOTE:\n  ' + nonVoters.join(', ');
+                } else {
+                    summaryText += '\nAll voters participated.';
+                }
+                
+                summaryEl.textContent = summaryText;
+            }
         }
         
         // Utility functions
