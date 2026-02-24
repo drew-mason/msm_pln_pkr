@@ -1414,41 +1414,6 @@
         </div>
     </div>
 
-    <!-- Confirm Dialog -->
-    <div class="pp-modal" id="ppConfirmModal" role="dialog" aria-modal="true" aria-labelledby="ppConfirmTitle">
-        <div class="pp-modal-content">
-            <div class="pp-modal-header">
-                <h3 class="pp-modal-title" id="ppConfirmTitle">Confirm</h3>
-                <button class="btn btn-secondary" data-dismiss="modal" aria-label="Close">×</button>
-            </div>
-            <div class="pp-modal-body">
-                <p id="ppConfirmMsg" style="font-family: 'Share Tech Mono', monospace; color: rgba(200,214,229,0.8); font-size: 0.9rem; line-height: 1.6;"></p>
-            </div>
-            <div class="pp-modal-footer">
-                <button class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                <button class="btn btn-primary" id="ppConfirmOk">Confirm</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Prompt Dialog -->
-    <div class="pp-modal" id="ppPromptModal" role="dialog" aria-modal="true" aria-labelledby="ppPromptTitle">
-        <div class="pp-modal-content">
-            <div class="pp-modal-header">
-                <h3 class="pp-modal-title" id="ppPromptTitle">Input</h3>
-                <button class="btn btn-secondary" data-dismiss="modal" aria-label="Close">×</button>
-            </div>
-            <div class="pp-modal-body">
-                <p id="ppPromptMsg" style="font-family: 'Share Tech Mono', monospace; color: rgba(200,214,229,0.8); font-size: 0.9rem; line-height: 1.6; margin-bottom: 0.75rem;"></p>
-                <input id="ppPromptInput" type="text" class="form-control" style="width: 100%; box-sizing: border-box;" />
-            </div>
-            <div class="pp-modal-footer">
-                <button class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                <button class="btn btn-primary" id="ppPromptOk">OK</button>
-            </div>
-        </div>
-    </div>
-
     <!-- Toast Notifications -->
     <div class="toast" id="toast" role="alert" aria-live="assertive">
         <span id="toastMessage"></span>
@@ -1636,16 +1601,6 @@
                 });
             });
 
-            var inputEl = document.getElementById('ppPromptInput');
-            if (inputEl) {
-                inputEl.addEventListener('keydown', function(e) {
-                    if (e.key === 'Enter') {
-                        var okBtn = document.getElementById('ppPromptOk');
-                        if (okBtn && okBtn.onclick) { okBtn.onclick(); }
-                    }
-                    if (e.key === 'Escape') { hideAllModals(); }
-                });
-            }
         }
         
         // Load session data
@@ -1955,28 +1910,19 @@
                         editorEl.focus();
                         
                         if (cmd === 'createLink') {
-                            var savedRange = null;
-                            var sel = window.getSelection && window.getSelection();
-                            if (sel && sel.rangeCount > 0) { savedRange = sel.getRangeAt(0); }
-                            ppPrompt('Insert Link', 'Enter URL:', function(url) {
-                                if (url) {
-                                    if (!/^https?:\/\//i.test(url) && !/^\/\//i.test(url)) {
-                                        url = 'https://' + url;
-                                    }
-                                    editorEl.focus();
-                                    if (savedRange && window.getSelection) {
-                                        var s = window.getSelection();
-                                        s.removeAllRanges();
-                                        s.addRange(savedRange);
-                                    }
-                                    document.execCommand('createLink', false, url);
-                                    var anchors = editorEl.querySelectorAll('a');
-                                    for (var ai = 0; ai < anchors.length; ai++) {
-                                        anchors[ai].setAttribute('target', '_blank');
-                                        anchors[ai].setAttribute('rel', 'noopener noreferrer');
-                                    }
+                            var url = prompt('Enter URL:');
+                            if (url) {
+                                if (!/^https?:\/\//i.test(url) && !/^\/\//i.test(url)) {
+                                    url = 'https://' + url;
                                 }
-                            });
+                                editorEl.focus();
+                                document.execCommand('createLink', false, url);
+                                var anchors = editorEl.querySelectorAll('a');
+                                for (var ai = 0; ai < anchors.length; ai++) {
+                                    anchors[ai].setAttribute('target', '_blank');
+                                    anchors[ai].setAttribute('rel', 'noopener noreferrer');
+                                }
+                            }
                         } else if (cmd === 'formatBlock') {
                             document.execCommand('formatBlock', false, '<' + val + '>');
                         } else {
@@ -2358,23 +2304,21 @@
         }
         
         function promoteParticipantToDealer(userId, userName) {
-            ppConfirm('Promote to Dealer', 'Promote ' + userName + ' to dealer? You will be switched to voter role.', function(ok) {
-                if (!ok) return;
-                var ga = new GlideAjax('SessionParticipantAjax');
-                ga.addParam('sysparm_name', 'changeParticipantRole');
-                ga.addParam('session_id', sessionId);
-                ga.addParam('participant_user_id', userId);
-                ga.addParam('new_role', 'dealer');
-                ga.getXML(function(response) {
-                    var result = parseAjaxResponse(response);
-                    if (!result) { showToast('Comm failure — promotion error', 'error'); return; }
-                    if (result.success) {
-                        showToast(userName + ' promoted to dealer', 'success');
-                        loadSession();
-                    } else {
-                        showToast(result.message || 'Error promoting participant', 'error');
-                    }
-                });
+            if (!confirm('Promote ' + userName + ' to dealer?\nYou will be switched to voter role.')) return;
+            var ga = new GlideAjax('SessionParticipantAjax');
+            ga.addParam('sysparm_name', 'changeParticipantRole');
+            ga.addParam('session_id', sessionId);
+            ga.addParam('participant_user_id', userId);
+            ga.addParam('new_role', 'dealer');
+            ga.getXML(function(response) {
+                var result = parseAjaxResponse(response);
+                if (!result) { showToast('Comm failure — promotion error', 'error'); return; }
+                if (result.success) {
+                    showToast(userName + ' promoted to dealer', 'success');
+                    loadSession();
+                } else {
+                    showToast(result.message || 'Error promoting participant', 'error');
+                }
             });
         }
         
@@ -2457,23 +2401,21 @@
                 showToast('No story selected', 'error');
                 return;
             }
-            ppConfirm('Reset Sensors', 'Purge all registered votes for this objective?', function(ok) {
-                if (!ok) return;
-                var ga = new GlideAjax('PlanningPokerVotingAjax');
-                ga.addParam('sysparm_name', 'resetVotes');
-                ga.addParam('session_id', sessionId);
-                ga.addParam('story_id', currentStory.sys_id);
-                ga.getXML(function(response) {
-                    var result = parseAjaxResponse(response);
-                    if (!result) { showToast('Comm failure — unable to reset', 'error'); return; }
-                    if (result.success) {
-                        showToast('Sensors reset', 'success');
-                        loadSession();
-                        hideModal('voteResultsSection');
-                    } else {
-                        showToast(result.message, 'error');
-                    }
-                });
+            if (!confirm('Purge all registered votes for this objective?')) return;
+            var ga = new GlideAjax('PlanningPokerVotingAjax');
+            ga.addParam('sysparm_name', 'resetVotes');
+            ga.addParam('session_id', sessionId);
+            ga.addParam('story_id', currentStory.sys_id);
+            ga.getXML(function(response) {
+                var result = parseAjaxResponse(response);
+                if (!result) { showToast('Comm failure — unable to reset', 'error'); return; }
+                if (result.success) {
+                    showToast('Sensors reset', 'success');
+                    loadSession();
+                    hideModal('voteResultsSection');
+                } else {
+                    showToast(result.message, 'error');
+                }
             });
         }
         
@@ -2731,27 +2673,26 @@
         }
         
         function removeBots() {
-            ppConfirm('Recall Droids', 'Recall all droids from this session? Their votes will also be removed.', function(ok) {
-                if (!ok) return;
-                var btn = document.getElementById('removeBotsBtn');
-                btn.disabled = true;
-                btn.textContent = '⏳ Recalling…';
-                var ga = new GlideAjax('DemoSessionAjax');
-                ga.addParam('sysparm_name', 'removeBots');
-                ga.addParam('session_id', sessionId);
-                ga.getXML(function(response) {
-                    btn.disabled = false;
-                    btn.innerHTML = '<span>✕</span> Recall All Droids';
-                    var result = parseAjaxResponse(response);
-                    if (!result) { showToast('Droid recall comm failure', 'error'); return; }
-                    if (result.success) {
-                        showToast(result.data.removedCount + ' droid' + (result.data.removedCount > 1 ? 's' : '') + ' recalled', 'success');
-                        loadSession();
-                    } else {
-                        showToast(result.message, 'error');
-                    }
-                });
+            if (!confirm('Recall all droids from this session?\nTheir votes will also be removed.')) return;
+            var btn = document.getElementById('removeBotsBtn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Recalling…';
+            var ga = new GlideAjax('DemoSessionAjax');
+            ga.addParam('sysparm_name', 'removeBots');
+            ga.addParam('session_id', sessionId);
+            ga.getXML(function(response) {
+                btn.disabled = false;
+                btn.innerHTML = '<span>✕</span> Recall All Droids';
+                var result = parseAjaxResponse(response);
+                if (!result) { showToast('Droid recall comm failure', 'error'); return; }
+                if (result.success) {
+                    showToast(result.data.removedCount + ' droid' + (result.data.removedCount > 1 ? 's' : '') + ' recalled', 'success');
+                    loadSession();
+                } else {
+                    showToast(result.message, 'error');
+                }
             });
+        }
         }
         
         // --- No-Story Dealer Panel ---
@@ -2999,42 +2940,38 @@
         }
         
         function switchToStory(storyId, storyTitle) {
-            ppConfirm('Switch Objective', 'Switch active objective to "' + storyTitle + '"?', function(ok) {
-                if (!ok) return;
-                var ga = new GlideAjax('PlanningPokerStoryAjax');
-                ga.addParam('sysparm_name', 'switchToStory');
-                ga.addParam('session_id', sessionId);
-                ga.addParam('story_id', storyId);
-                ga.getXML(function(response) {
-                    var result = parseAjaxResponse(response);
-                    if (!result) { showToast('Failed to switch objective', 'error'); return; }
-                    if (result.success) {
-                        showToast('Switched to objective', 'success');
-                        loadSession();
-                    } else {
-                        showToast(result.message || 'Error switching objective', 'error');
-                    }
-                });
+            if (!confirm('Switch active objective to "' + storyTitle + '"?')) return;
+            var ga = new GlideAjax('PlanningPokerStoryAjax');
+            ga.addParam('sysparm_name', 'switchToStory');
+            ga.addParam('session_id', sessionId);
+            ga.addParam('story_id', storyId);
+            ga.getXML(function(response) {
+                var result = parseAjaxResponse(response);
+                if (!result) { showToast('Failed to switch objective', 'error'); return; }
+                if (result.success) {
+                    showToast('Switched to objective', 'success');
+                    loadSession();
+                } else {
+                    showToast(result.message || 'Error switching objective', 'error');
+                }
             });
         }
 
         function removeStoryFromQueue(storyId, storyTitle) {
-            ppConfirm('Remove Objective', 'Remove "' + storyTitle + '" from the queue?', function(ok) {
-                if (!ok) return;
-                var ga = new GlideAjax('SessionManagementAjax');
-                ga.addParam('sysparm_name', 'removeStory');
-                ga.addParam('session_id', sessionId);
-                ga.addParam('session_story_id', storyId);
-                ga.getXML(function(response) {
-                    var result = parseAjaxResponse(response);
-                    if (!result) { showToast('Failed to remove objective', 'error'); return; }
-                    if (result.success) {
-                        showToast('Objective removed', 'success');
-                        loadSession();
-                    } else {
-                        showToast(result.message || 'Error removing objective', 'error');
-                    }
-                });
+            if (!confirm('Remove "' + storyTitle + '" from the queue?')) return;
+            var ga = new GlideAjax('SessionManagementAjax');
+            ga.addParam('sysparm_name', 'removeStory');
+            ga.addParam('session_id', sessionId);
+            ga.addParam('session_story_id', storyId);
+            ga.getXML(function(response) {
+                var result = parseAjaxResponse(response);
+                if (!result) { showToast('Failed to remove objective', 'error'); return; }
+                if (result.success) {
+                    showToast('Objective removed', 'success');
+                    loadSession();
+                } else {
+                    showToast(result.message || 'Error removing objective', 'error');
+                }
             });
         }
         
@@ -3337,34 +3274,6 @@
         var _toastTimer = null;
         var _toastClearTimer = null;
 
-        function ppConfirm(title, message, onConfirm, confirmLabel) {
-            document.getElementById('ppConfirmTitle').textContent = title;
-            document.getElementById('ppConfirmMsg').textContent = message;
-            var okBtn = document.getElementById('ppConfirmOk');
-            okBtn.textContent = confirmLabel || 'Confirm';
-            okBtn.onclick = function() {
-                hideAllModals();
-                okBtn.onclick = null;
-                if (onConfirm) { onConfirm(true); }
-            };
-            showModal('ppConfirmModal');
-        }
-
-        function ppPrompt(title, message, onResult) {
-            document.getElementById('ppPromptTitle').textContent = title;
-            document.getElementById('ppPromptMsg').textContent = message;
-            document.getElementById('ppPromptInput').value = '';
-            var okBtn = document.getElementById('ppPromptOk');
-            okBtn.onclick = function() {
-                var val = document.getElementById('ppPromptInput').value;
-                hideAllModals();
-                okBtn.onclick = null;
-                if (onResult) { onResult(val); }
-            };
-            showModal('ppPromptModal');
-            setTimeout(function() { document.getElementById('ppPromptInput').focus(); }, 50);
-        }
-
         function showToast(message, type) {
             var toast = document.getElementById('toast');
             var toastMessage = document.getElementById('toastMessage');
@@ -3441,10 +3350,8 @@
             }
 
             if (newRole === 'dealer' && sessionData.userRole.activeDealerName) {
-                ppConfirm('Take Over Dealer', 'Take over dealer role from ' + sessionData.userRole.activeDealerName + '? They will be switched to voter.', function(ok) {
-                    if (!ok) return;
-                    _doSwitch();
-                }, 'Take Over');
+                if (!confirm('Take over dealer role from ' + sessionData.userRole.activeDealerName + '?\nThey will be switched to voter.')) return;
+                _doSwitch();
             } else {
                 _doSwitch();
             }
