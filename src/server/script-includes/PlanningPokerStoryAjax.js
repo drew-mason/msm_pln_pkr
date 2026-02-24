@@ -115,7 +115,14 @@ PlanningPokerStoryAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
             if (rmStoryId) {
                 var rmStoryGr = new GlideRecord('rm_story');
                 if (rmStoryGr.get(rmStoryId)) {
-                    rmStoryGr.setValue('story_points', storyPoints);
+                    var numericPoints = storyPoints;
+                    if (PlanningPokerConstants.VOTE_VALUES.TSHIRT_MAP.hasOwnProperty(storyPoints)) {
+                        numericPoints = String(PlanningPokerConstants.VOTE_VALUES.TSHIRT_MAP[storyPoints]);
+                    }
+                    var parsedPoints = parseInt(numericPoints, 10);
+                    if (!isNaN(parsedPoints) && parsedPoints > 0) {
+                        rmStoryGr.setValue('story_points', parsedPoints);
+                    }
                     rmStoryGr.work_notes = fullWorkNotes;
                     rmStoryGr.update();
                 }
@@ -207,44 +214,6 @@ PlanningPokerStoryAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
             
         } catch (e) {
             gs.error('[PlanningPokerStoryAjax] updateStoryDetails error: ' + e);
-            return this._buildResponse(false, PlanningPokerConstants.ERRORS.INTERNAL_ERROR, null);
-        }
-    },
-    
-    completeStory: function() {
-        try {
-            var sessionId = this.getParameter('session_id');
-            var storyId = this.getParameter('story_id');
-            var storyPoints = this.getParameter('story_points');
-            var comments = this.getParameter('comments') || '';
-            
-            var validation = this._validateStoryAction(sessionId, storyId);
-            if (!validation.isValid) {
-                return this._buildResponse(false, validation.message, null);
-            }
-            
-            var storyGr = validation.storyGr;
-            
-            storyGr.setValue('status', PlanningPokerConstants.STATUS.COMPLETED);
-            storyGr.setValue('voting_completed', new GlideDateTime());
-            if (storyPoints) {
-                storyGr.setValue('story_points', storyPoints);
-            }
-            if (comments) {
-                storyGr.setValue('dealer_comments', comments);
-            }
-            storyGr.update();
-            
-            // Auto-advance to next story
-            var nextStory = this._advanceToNextStory(sessionId);
-            
-            return this._buildResponse(true, 'Story completed successfully', {
-                storyId: storyId,
-                nextStoryId: nextStory ? nextStory.getValue('sys_id') : null
-            });
-            
-        } catch (e) {
-            gs.error('[PlanningPokerStoryAjax] completeStory error: ' + e);
             return this._buildResponse(false, PlanningPokerConstants.ERRORS.INTERNAL_ERROR, null);
         }
     },
