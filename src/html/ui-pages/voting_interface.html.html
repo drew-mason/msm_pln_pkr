@@ -1392,28 +1392,6 @@
 
 
 
-    <!-- Complete Session Confirmation Modal -->
-    <div class="pp-modal" id="completeSessionModal" role="dialog" aria-modal="true" aria-labelledby="completeSessionModalTitle">
-        <div class="pp-modal-content">
-            <div class="pp-modal-header">
-                <h3 class="pp-modal-title" id="completeSessionModalTitle">Complete Session</h3>
-                <button class="btn btn-secondary" data-dismiss="modal" aria-label="Close" onclick="loadSession();">×</button>
-            </div>
-            <div class="pp-modal-body">
-                <p id="completeSessionModalMsg" style="font-family: 'Share Tech Mono', monospace; color: rgba(200,214,229,0.8); font-size: 0.9rem; line-height: 1.6;">
-                    This will end the session for all participants and redirect everyone to the session statistics page.
-                </p>
-                <p style="font-family: 'Share Tech Mono', monospace; color: rgba(255,59,48,0.7); font-size: 0.8rem; margin-top: 0.75rem;">
-                    ⚠ This action cannot be undone.
-                </p>
-            </div>
-            <div class="pp-modal-footer">
-                <button class="btn btn-secondary" data-dismiss="modal" onclick="loadSession();">Cancel</button>
-                <button class="btn btn-sm" onclick="completeSession();" style="background: rgba(255,59,48,0.2); border-color: rgba(255,59,48,0.5); color: #ff6b6b; padding: 0.5rem 1.25rem;">◼ Complete Session</button>
-            </div>
-        </div>
-    </div>
-
     <!-- Toast Notifications -->
     <div class="toast" id="toast" role="alert" aria-live="assertive">
         <span id="toastMessage"></span>
@@ -2493,9 +2471,11 @@
                     showToast('Estimate locked: ' + points + ' pts', 'success');
                     closeAllDealerPanels();
                     if (!result.data.nextStoryId) {
-                        var msgEl = document.getElementById('completeSessionModalMsg');
-                        if (msgEl) { msgEl.textContent = 'All objectives have been estimated. Close the session to finalise results and redirect all participants to the session statistics page.'; }
-                        showModal('completeSessionModal');
+                        if (confirm('All objectives estimated.\n\nComplete the session now? (Cancel to keep session open)')) {
+                            completeSession();
+                        } else {
+                            loadSession();
+                        }
                     } else {
                         loadSession();
                     }
@@ -2738,7 +2718,7 @@
             if (easyMode) {
                 html += '<button class="btn btn-primary btn-sm" onclick="document.getElementById(\'addStoryBtn\').click();" style="padding: 0.5rem 1.25rem;">+ Add Objective</button>';
             }
-            html += '<button class="btn btn-sm" onclick="var m=document.getElementById(\'completeSessionModalMsg\');if(m){m.textContent=\'This will end the session for all participants and redirect everyone to the session statistics page.\';}showModal(\'completeSessionModal\');" style="padding: 0.5rem 1.25rem; background: rgba(255,59,48,0.15); border-color: rgba(255,59,48,0.4); color: #ff6b6b;">◼ Complete Session</button>';
+            html += '<button class="btn btn-sm" onclick="if(confirm(\'Complete the session? This will end the session for all participants.\')){completeSession();}" style="padding: 0.5rem 1.25rem; background: rgba(255,59,48,0.15); border-color: rgba(255,59,48,0.4); color: #ff6b6b;">◼ Complete Session</button>';
             html += '</div>';
             html += '</div>';
 
@@ -2754,7 +2734,6 @@
                 if (!result) { showToast('Comm failure — unable to complete session', 'error'); return; }
 
                 if (result.success) {
-                    hideAllModals();
                     window.location.href = 'x_902080_planningw_session_statistics.do?session_id=' + sessionId;
                 } else {
                     showToast(result.message || 'Error completing session', 'error');
