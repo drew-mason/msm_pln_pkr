@@ -1596,7 +1596,7 @@
                     if (target) {
                         target.classList.toggle('collapsed');
                         var arrow = elem.querySelector('.section-arrow');
-                        arrow.textContent = section.classList.contains('collapsed') ? '▶' : '▼';
+                        arrow.textContent = target.classList.contains('collapsed') ? '▶' : '▼';
                     }
                 });
             });
