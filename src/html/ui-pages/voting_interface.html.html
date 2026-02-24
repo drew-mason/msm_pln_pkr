@@ -1400,7 +1400,7 @@
                 <button class="btn btn-secondary" data-dismiss="modal" aria-label="Close">×</button>
             </div>
             <div class="pp-modal-body">
-                <p style="font-family: 'Share Tech Mono', monospace; color: rgba(200,214,229,0.8); font-size: 0.9rem; line-height: 1.6;">
+                <p id="completeSessionModalMsg" style="font-family: 'Share Tech Mono', monospace; color: rgba(200,214,229,0.8); font-size: 0.9rem; line-height: 1.6;">
                     This will end the session for all participants and redirect everyone to the session statistics page.
                 </p>
                 <p style="font-family: 'Share Tech Mono', monospace; color: rgba(255,59,48,0.7); font-size: 0.8rem; margin-top: 0.75rem;">
@@ -1408,7 +1408,7 @@
                 </p>
             </div>
             <div class="pp-modal-footer">
-                <button class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button class="btn btn-secondary" data-dismiss="modal" onclick="loadSession();">Cancel</button>
                 <button class="btn btn-sm" onclick="completeSession();" style="background: rgba(255,59,48,0.2); border-color: rgba(255,59,48,0.5); color: #ff6b6b; padding: 0.5rem 1.25rem;">◼ Complete Session</button>
             </div>
         </div>
@@ -2504,9 +2504,12 @@
                     showToast('Estimate locked: ' + points + ' pts', 'success');
                     closeAllDealerPanels();
                     if (!result.data.nextStoryId) {
-                        showToast('All missions complete \u2014 review session status', 'info');
+                        var msgEl = document.getElementById('completeSessionModalMsg');
+                        if (msgEl) { msgEl.textContent = 'All objectives have been estimated. Close the session to finalise results and redirect all participants to the session statistics page.'; }
+                        showModal('completeSessionModal');
+                    } else {
+                        loadSession();
                     }
-                    loadSession();
                 } else {
                     showToast(result.message, 'error');
                     closeAllDealerPanels();
@@ -2748,7 +2751,7 @@
             if (easyMode) {
                 html += '<button class="btn btn-primary btn-sm" onclick="document.getElementById(\'addStoryBtn\').click();" style="padding: 0.5rem 1.25rem;">+ Add Objective</button>';
             }
-            html += '<button class="btn btn-sm" onclick="showModal(\'completeSessionModal\');" style="padding: 0.5rem 1.25rem; background: rgba(255,59,48,0.15); border-color: rgba(255,59,48,0.4); color: #ff6b6b;">◼ Complete Session</button>';
+            html += '<button class="btn btn-sm" onclick="var m=document.getElementById(\'completeSessionModalMsg\');if(m){m.textContent=\'This will end the session for all participants and redirect everyone to the session statistics page.\';}showModal(\'completeSessionModal\');" style="padding: 0.5rem 1.25rem; background: rgba(255,59,48,0.15); border-color: rgba(255,59,48,0.4); color: #ff6b6b;">◼ Complete Session</button>';
             html += '</div>';
             html += '</div>';
 
