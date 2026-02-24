@@ -2893,6 +2893,18 @@
                 var actionsDiv = document.createElement('div');
                 actionsDiv.style.cssText = 'display:flex;align-items:center;gap:0.3rem;flex-shrink:0;';
                 
+                var platformLink = document.createElement('a');
+                var platformHref = story.story_ref ? '/rm_story.do?sys_id=' + story.story_ref : '/x_902080_planningw_session_stories.do?sys_id=' + story.sys_id;
+                platformLink.href = platformHref;
+                platformLink.target = '_blank';
+                platformLink.title = 'Open in platform';
+                platformLink.style.cssText = 'background:none;border:1px solid rgba(0,212,255,0.2);color:var(--primary-color);width:20px;height:20px;border-radius:3px;font-size:0.65rem;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;opacity:0.5;transition:all 0.2s;flex-shrink:0;text-decoration:none;';
+                platformLink.textContent = '⧉';
+                platformLink.addEventListener('mouseenter', function() { this.style.opacity = '1'; this.style.background = 'rgba(0,212,255,0.1)'; });
+                platformLink.addEventListener('mouseleave', function() { this.style.opacity = '0.5'; this.style.background = 'none'; });
+                platformLink.addEventListener('click', function(e) { e.stopPropagation(); });
+                actionsDiv.appendChild(platformLink);
+                
                 // Allow the user who added the story to remove it (if not current/completed)
                 var currentUserId = sessionData && sessionData.userRole ? sessionData.userRole.userId : null;
                 var canRemove = !isCurrent && story.status !== 'completed' && story.status !== 'voting' && story.added_by === currentUserId;
