@@ -449,7 +449,8 @@ PlanningPokerSessionAjax.prototype = Object.extendsObject(global.AbstractAjaxPro
                 story_points: storyGr.getValue('story_points'),
                 vote_count: storyGr.getValue('vote_count') || 0,
                 added_by: addedBy,
-                added_by_name: ''
+                added_by_name: '',
+                story_ref: storyGr.getValue('story')
             });
             if (addedBy && userIds.indexOf(addedBy) === -1) {
                 userIds.push(addedBy);
