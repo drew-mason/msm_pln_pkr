@@ -1621,13 +1621,53 @@
                 elem.addEventListener('click', function() {
                     var targetId = elem.getAttribute('data-target');
                     var target = document.getElementById(targetId);
-                    var section = elem.closest('.sidebar-section');
-                    
-                    section.classList.toggle('collapsed');
-                    var arrow = elem.querySelector('span:last-child');
-                    arrow.textContent = section.classList.contains('collapsed') ? '▶' : '▼';
+                    if (target) {
+                        target.classList.toggle('collapsed');
+                        var arrow = elem.querySelector('.section-arrow');
+                        arrow.textContent = section.classList.contains('collapsed') ? '▶' : '▼';
+                    }
                 });
             });
+
+            (function() {
+                function _bindOnce(id, evt, fn) {
+                    var el = document.getElementById(id);
+                    if (el) { el.addEventListener(evt, fn); }
+                }
+                function _closeConfirm(result) {
+                    hideModal('ppConfirmModal');
+                    var cb = _ppConfirmCallback;
+                    _ppConfirmCallback = null;
+                    if (cb) { cb(result); }
+                }
+                _bindOnce('ppConfirmOk',     'click', function() { _closeConfirm(true); });
+                _bindOnce('ppConfirmCancel', 'click', function() { _closeConfirm(false); });
+                _bindOnce('ppConfirmX',      'click', function() { _closeConfirm(false); });
+            }());
+
+            (function() {
+                function _bindOnce(id, evt, fn) {
+                    var el = document.getElementById(id);
+                    if (el) { el.addEventListener(evt, fn); }
+                }
+                function _closePrompt(confirmed) {
+                    var val = confirmed ? document.getElementById('ppPromptInput').value : null;
+                    hideModal('ppPromptModal');
+                    var cb = _ppPromptCallback;
+                    _ppPromptCallback = null;
+                    if (cb) { cb(val); }
+                }
+                _bindOnce('ppPromptOk',     'click', function() { _closePrompt(true); });
+                _bindOnce('ppPromptCancel', 'click', function() { _closePrompt(false); });
+                _bindOnce('ppPromptX',      'click', function() { _closePrompt(false); });
+                var inputEl = document.getElementById('ppPromptInput');
+                if (inputEl) {
+                    inputEl.addEventListener('keydown', function(e) {
+                        if (e.key === 'Enter') { _closePrompt(true); }
+                        if (e.key === 'Escape') { _closePrompt(false); }
+                    });
+                }
+            }());
         }
         
         // Load session data
@@ -3320,21 +3360,6 @@
         var _toastClearTimer = null;
 
         var _ppConfirmCallback = null;
-        (function() {
-            function _bindOnce(id, evt, fn) {
-                var el = document.getElementById(id);
-                if (el) { el.addEventListener(evt, fn); }
-            }
-            function _closeConfirm(result) {
-                hideModal('ppConfirmModal');
-                var cb = _ppConfirmCallback;
-                _ppConfirmCallback = null;
-                if (cb) { cb(result); }
-            }
-            _bindOnce('ppConfirmOk',     'click', function() { _closeConfirm(true); });
-            _bindOnce('ppConfirmCancel', 'click', function() { _closeConfirm(false); });
-            _bindOnce('ppConfirmX',      'click', function() { _closeConfirm(false); });
-        }());
 
         function ppConfirm(title, message, onConfirm, confirmLabel) {
             document.getElementById('ppConfirmTitle').textContent = title;
@@ -3346,29 +3371,6 @@
         }
 
         var _ppPromptCallback = null;
-        (function() {
-            function _bindOnce(id, evt, fn) {
-                var el = document.getElementById(id);
-                if (el) { el.addEventListener(evt, fn); }
-            }
-            function _closePrompt(confirmed) {
-                var val = confirmed ? document.getElementById('ppPromptInput').value : null;
-                hideModal('ppPromptModal');
-                var cb = _ppPromptCallback;
-                _ppPromptCallback = null;
-                if (cb) { cb(val); }
-            }
-            _bindOnce('ppPromptOk',     'click', function() { _closePrompt(true); });
-            _bindOnce('ppPromptCancel', 'click', function() { _closePrompt(false); });
-            _bindOnce('ppPromptX',      'click', function() { _closePrompt(false); });
-            var inputEl = document.getElementById('ppPromptInput');
-            if (inputEl) {
-                inputEl.addEventListener('keydown', function(e) {
-                    if (e.key === 'Enter') { _closePrompt(true); }
-                    if (e.key === 'Escape') { _closePrompt(false); }
-                });
-            }
-        }());
 
         function ppPrompt(title, message, onResult) {
             document.getElementById('ppPromptTitle').textContent = title;
