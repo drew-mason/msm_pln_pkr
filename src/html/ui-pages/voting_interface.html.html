@@ -684,14 +684,14 @@
             width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.75);
             backdrop-filter: blur(4px);
-            display: none;
+            display: none !important;
             align-items: center;
             justify-content: center;
             z-index: 1000;
         }
-        .pp-modal.show { display: flex; }
+        .pp-modal.pp-active { display: flex !important; }
 
-        .modal-content {
+        .pp-modal-content {
             background: linear-gradient(160deg, rgba(10, 18, 35, 0.97), rgba(5, 10, 22, 0.98));
             border: 1px solid rgba(0, 212, 255, 0.3);
             border-radius: var(--radius);
@@ -704,7 +704,7 @@
             position: relative;
         }
 
-        .modal-content::before {
+        .pp-modal-content::before {
             content: '';
             position: absolute;
             top: 0; left: 0; right: 0;
@@ -714,7 +714,7 @@
             animation: borderTrace 3s linear infinite;
         }
 
-        .modal-header {
+        .pp-modal-header {
             padding: 1rem 1.5rem;
             border-bottom: 1px solid var(--border-color);
             display: flex;
@@ -722,7 +722,7 @@
             align-items: center;
         }
 
-        .modal-title {
+        .pp-modal-title {
             font-family: 'Orbitron', monospace;
             font-size: 1rem;
             font-weight: 600;
@@ -732,9 +732,9 @@
             text-transform: uppercase;
         }
 
-        .modal-body { padding: 1.5rem; }
+        .pp-modal-body { padding: 1.5rem; }
 
-        .modal-footer {
+        .pp-modal-footer {
             padding: 1rem 1.5rem;
             border-top: 1px solid var(--border-color);
             display: flex;
@@ -1039,28 +1039,28 @@
         .story-panel,
         .section-content,
         .fixed-scroll-area,
-        .modal-body {
+        .pp-modal-body {
             scrollbar-width: thin;
             scrollbar-color: #0e7490 #0a1628;
         }
         .story-panel::-webkit-scrollbar,
         .section-content::-webkit-scrollbar,
         .fixed-scroll-area::-webkit-scrollbar,
-        .modal-body::-webkit-scrollbar {
+        .pp-modal-body::-webkit-scrollbar {
             width: 8px;
             height: 8px;
         }
         .story-panel::-webkit-scrollbar-track,
         .section-content::-webkit-scrollbar-track,
         .fixed-scroll-area::-webkit-scrollbar-track,
-        .modal-body::-webkit-scrollbar-track {
+        .pp-modal-body::-webkit-scrollbar-track {
             background: #0a1628;
             border-left: 1px solid rgba(0, 212, 255, 0.15);
         }
         .story-panel::-webkit-scrollbar-thumb,
         .section-content::-webkit-scrollbar-thumb,
         .fixed-scroll-area::-webkit-scrollbar-thumb,
-        .modal-body::-webkit-scrollbar-thumb {
+        .pp-modal-body::-webkit-scrollbar-thumb {
             background: linear-gradient(180deg, #0e7490, #065666);
             border-radius: 4px;
             border: 1px solid rgba(0, 212, 255, 0.3);
@@ -1068,7 +1068,7 @@
         .story-panel::-webkit-scrollbar-thumb:hover,
         .section-content::-webkit-scrollbar-thumb:hover,
         .fixed-scroll-area::-webkit-scrollbar-thumb:hover,
-        .modal-body::-webkit-scrollbar-thumb:hover {
+        .pp-modal-body::-webkit-scrollbar-thumb:hover {
             background: linear-gradient(180deg, #0ea5c9, #0e7490);
             border-color: rgba(0, 212, 255, 0.5);
             box-shadow: 0 0 8px rgba(0, 212, 255, 0.4);
@@ -1269,12 +1269,12 @@
 
     <!-- Modals -->
     <div class="pp-modal" id="addStoryModal" role="dialog" aria-modal="true" aria-labelledby="addStoryModalTitle">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title" id="addStoryModalTitle">Add Objective</h3>
+        <div class="pp-modal-content">
+            <div class="pp-modal-header">
+                <h3 class="pp-modal-title" id="addStoryModalTitle">Add Objective</h3>
                 <button class="btn btn-secondary" data-dismiss="modal" aria-label="Close">×</button>
             </div>
-            <div class="modal-body">
+            <div class="pp-modal-body">
                 <div class="form-group">
                     <label class="form-label">Scan Objectives</label>
                     <input type="text" class="form-control" id="storySearch" placeholder="Search by title or number...">
@@ -1287,7 +1287,7 @@
                     <textarea class="form-control" id="quickStoryDescription" placeholder="Story description" style="margin-top: 0.5rem;"></textarea>
                 </div>
             </div>
-            <div class="modal-footer">
+            <div class="pp-modal-footer">
                 <button class="btn btn-secondary" data-dismiss="modal">Cancel</button>
                 <button class="btn btn-primary" id="addSelectedStoriesBtn">Add Selected</button>
                 <button class="btn btn-success" id="quickAddStoryBtn">Quick Add</button>
@@ -1296,18 +1296,18 @@
     </div>
 
     <div class="pp-modal" id="skipStoryModal" role="dialog" aria-modal="true" aria-labelledby="skipStoryModalTitle">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title" id="skipStoryModalTitle">Bypass Objective</h3>
+        <div class="pp-modal-content">
+            <div class="pp-modal-header">
+                <h3 class="pp-modal-title" id="skipStoryModalTitle">Bypass Objective</h3>
                 <button class="btn btn-secondary" data-dismiss="modal" aria-label="Close">×</button>
             </div>
-            <div class="modal-body">
+            <div class="pp-modal-body">
                 <div class="form-group">
                     <label class="form-label">Bypass Rationale (Optional)</label>
                     <textarea class="form-control" id="skipComments" placeholder="Enter reason for skipping this story..."></textarea>
                 </div>
             </div>
-            <div class="modal-footer">
+            <div class="pp-modal-footer">
                 <button class="btn btn-secondary" data-dismiss="modal">Cancel</button>
                 <button class="btn btn-warning" id="confirmSkipStoryBtn">Confirm Bypass</button>
             </div>
@@ -1315,12 +1315,12 @@
     </div>
 
     <div class="pp-modal" id="completeStoryModal" role="dialog" aria-modal="true" aria-labelledby="completeStoryModalTitle">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title" id="completeStoryModalTitle">Lock Estimate</h3>
+        <div class="pp-modal-content">
+            <div class="pp-modal-header">
+                <h3 class="pp-modal-title" id="completeStoryModalTitle">Lock Estimate</h3>
                 <button class="btn btn-secondary" data-dismiss="modal" aria-label="Close">×</button>
             </div>
-            <div class="modal-body">
+            <div class="pp-modal-body">
                 <div id="voteSummaryInModal" style="margin-bottom: 1rem; padding: 0.75rem; background: rgba(0,212,255,0.05); border: 1px solid rgba(0,212,255,0.1); border-radius: 6px; font-family: 'Share Tech Mono', monospace; font-size: 0.8rem; color: rgba(200,214,229,0.7); white-space: pre-wrap; max-height: 200px; overflow-y: auto;"></div>
                 <div class="form-group">
                     <label class="form-label">Final Complexity Rating</label>
@@ -1334,7 +1334,7 @@
                     <textarea class="form-control" id="completionWorkNotes" rows="3" placeholder="Add notes about this estimation decision..."></textarea>
                 </div>
             </div>
-            <div class="modal-footer">
+            <div class="pp-modal-footer">
                 <button class="btn btn-secondary" data-dismiss="modal">Cancel</button>
                 <button class="btn btn-success" id="confirmCompleteStoryBtn">◆ Lock Estimate</button>
             </div>
@@ -1343,12 +1343,12 @@
 
     <!-- Complete Session Confirmation Modal -->
     <div class="pp-modal" id="completeSessionModal" role="dialog" aria-modal="true" aria-labelledby="completeSessionModalTitle">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title" id="completeSessionModalTitle">Complete Session</h3>
+        <div class="pp-modal-content">
+            <div class="pp-modal-header">
+                <h3 class="pp-modal-title" id="completeSessionModalTitle">Complete Session</h3>
                 <button class="btn btn-secondary" data-dismiss="modal" aria-label="Close">×</button>
             </div>
-            <div class="modal-body">
+            <div class="pp-modal-body">
                 <p style="font-family: 'Share Tech Mono', monospace; color: rgba(200,214,229,0.8); font-size: 0.9rem; line-height: 1.6;">
                     This will end the session for all participants and redirect everyone to the session statistics page.
                 </p>
@@ -1356,7 +1356,7 @@
                     ⚠ This action cannot be undone.
                 </p>
             </div>
-            <div class="modal-footer">
+            <div class="pp-modal-footer">
                 <button class="btn btn-secondary" data-dismiss="modal">Cancel</button>
                 <button class="btn btn-sm" onclick="completeSession();" style="background: rgba(255,59,48,0.2); border-color: rgba(255,59,48,0.5); color: #ff6b6b; padding: 0.5rem 1.25rem;">◼ Complete Session</button>
             </div>
@@ -1667,7 +1667,7 @@
             console.log('[PP-DEBUG] renderSession: session.status=' + session.status + ' currentStory.status=' + (currentStory ? currentStory.status : 'NULL') + ' role=' + (userRole ? userRole.effectiveRole : 'NULL') + ' hasRevealedVotes=' + !!revealedVotes);
             
             // Check if any modals are open — don't redirect while user is interacting
-            var modalOpen = document.querySelector('.pp-modal.show');
+            var modalOpen = document.querySelector('.pp-modal.pp-active');
             if (modalOpen) {
                 console.log('[PP-DEBUG] renderSession: modal is open (' + modalOpen.id + '), skipping full render to avoid interference');
                 return;
@@ -3128,10 +3128,10 @@
         function showModal(modalId) {
             console.log('[PP-DEBUG] showModal called:', modalId);
             // Close any other open modal first to prevent stacking
-            var openModals = document.querySelectorAll('.pp-modal.show');
+            var openModals = document.querySelectorAll('.pp-modal.pp-active');
             console.log('[PP-DEBUG] showModal: closing', openModals.length, 'open modals');
             for (var i = 0; i < openModals.length; i++) {
-                openModals[i].classList.remove('show');
+                openModals[i].classList.remove('pp-active');
             }
             
             var targetModal = document.getElementById(modalId);
@@ -3139,7 +3139,7 @@
                 console.error('[PP-DEBUG] showModal: element NOT FOUND:', modalId);
                 return;
             }
-            targetModal.classList.add('show');
+            targetModal.classList.add('pp-active');
             var computed = window.getComputedStyle(targetModal);
             console.log('[PP-DEBUG] showModal: display=' + computed.display + ' visibility=' + computed.visibility + ' zIndex=' + computed.zIndex + ' opacity=' + computed.opacity);
             // Pause polling while modal is open to prevent sessionData overwrites
@@ -3152,7 +3152,7 @@
         }
         
         function hideModal(modalId) {
-            document.getElementById(modalId).classList.remove('show');
+            document.getElementById(modalId).classList.remove('pp-active');
             resumePollingIfNeeded();
         }
         
@@ -3160,14 +3160,14 @@
             console.log('[PP-DEBUG] hideAllModals called, trace:', new Error().stack.split('\n').slice(1,4).join(' <- '));
             var modals = document.querySelectorAll('.pp-modal');
             for (var i = 0; i < modals.length; i++) {
-                modals[i].classList.remove('show');
+                modals[i].classList.remove('pp-active');
             }
             resumePollingIfNeeded();
         }
         
         function resumePollingIfNeeded() {
             // Only resume if no modals are still open
-            var anyOpen = document.querySelector('.pp-modal.show');
+            var anyOpen = document.querySelector('.pp-modal.pp-active');
             if (!anyOpen && pollPausedForModal && !pollInterval) {
                 pollPausedForModal = false;
                 startPolling();
