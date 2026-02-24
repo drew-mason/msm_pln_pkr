@@ -1296,6 +1296,23 @@
         </div>
     </div>
 
+    <!-- Confirm Dialog -->
+    <div class="modal" id="ppConfirmModal" role="dialog" aria-modal="true" aria-labelledby="ppConfirmTitle">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="ppConfirmTitle">Confirm</h3>
+                <button class="btn btn-secondary" id="ppConfirmX" aria-label="Close">×</button>
+            </div>
+            <div class="modal-body">
+                <p id="ppConfirmMsg" style="font-family: 'Share Tech Mono', monospace; color: rgba(200,214,229,0.8); font-size: 0.9rem; line-height: 1.6;"></p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="ppConfirmCancel">Cancel</button>
+                <button class="btn btn-primary" id="ppConfirmOk">Confirm</button>
+            </div>
+        </div>
+    </div>
+
     <script>
     //<![CDATA[
         // Safe AJAX response parser
@@ -1364,9 +1381,9 @@
             document.getElementById('confirmCreateSessionBtn').addEventListener('click', createSession);
             
             document.getElementById('cancelAllBtn').addEventListener('click', function() {
-                if (confirm('CONFIRM: Abort all planned missions? This action cannot be reversed.')) {
-                    cancelAllSessions();
-                }
+                ppConfirm('Abort All Missions', 'Abort all planned missions? This action cannot be reversed.', function(ok) {
+                    if (ok) { cancelAllSessions(); }
+                }, 'Abort All');
             });
             
             var dismissBtns = document.querySelectorAll('[data-dismiss="modal"]');
@@ -1667,106 +1684,97 @@
         }
         
         function goLive(sessionId) {
-            if (!confirm('Launch this mission? Crew will be able to join and vote.')) {
-                return;
-            }
-            
-            var ga = new GlideAjax('SessionManagementAjax');
-            ga.addParam('sysparm_name', 'goLiveSession');
-            ga.addParam('session_id', sessionId);
-            ga.getXML(function(response) {
-                var result = parseAjaxResponse(response);
-                if (!result) { showToast('Error going live', 'error'); return; }
-                
-                if (result.success) {
-                    showToast('Mission is now LIVE — All stations report!', 'success');
-                    loadSessions();
-                } else {
-                    showToast(result.message, 'error');
-                }
-            });
+            ppConfirm('Launch Mission', 'Launch this mission? Crew will be able to join and vote.', function(ok) {
+                if (!ok) return;
+                var ga = new GlideAjax('SessionManagementAjax');
+                ga.addParam('sysparm_name', 'goLiveSession');
+                ga.addParam('session_id', sessionId);
+                ga.getXML(function(response) {
+                    var result = parseAjaxResponse(response);
+                    if (!result) { showToast('Error going live', 'error'); return; }
+                    if (result.success) {
+                        showToast('Mission is now LIVE — All stations report!', 'success');
+                        loadSessions();
+                    } else {
+                        showToast(result.message, 'error');
+                    }
+                });
+            }, 'Launch');
         }
         
         function cancelSession(sessionId) {
-            if (!confirm('Confirm mission abort? This cannot be undone.')) {
-                return;
-            }
-            
-            var ga = new GlideAjax('SessionManagementAjax');
-            ga.addParam('sysparm_name', 'cancelSession');
-            ga.addParam('session_id', sessionId);
-            ga.getXML(function(response) {
-                var result = parseAjaxResponse(response);
-                if (!result) { showToast('Error cancelling session', 'error'); return; }
-                
-                if (result.success) {
-                    showToast('Mission aborted successfully', 'success');
-                    loadSessions();
-                } else {
-                    showToast(result.message, 'error');
-                }
-            });
+            ppConfirm('Abort Mission', 'Confirm mission abort? This cannot be undone.', function(ok) {
+                if (!ok) return;
+                var ga = new GlideAjax('SessionManagementAjax');
+                ga.addParam('sysparm_name', 'cancelSession');
+                ga.addParam('session_id', sessionId);
+                ga.getXML(function(response) {
+                    var result = parseAjaxResponse(response);
+                    if (!result) { showToast('Error cancelling session', 'error'); return; }
+                    if (result.success) {
+                        showToast('Mission aborted successfully', 'success');
+                        loadSessions();
+                    } else {
+                        showToast(result.message, 'error');
+                    }
+                });
+            }, 'Abort');
         }
         
         function deleteSession(sessionId) {
-            if (!confirm('Permanently delete this session? All stories, votes, and participants will be removed. This cannot be undone.')) {
-                return;
-            }
-
-            var ga = new GlideAjax('SessionManagementAjax');
-            ga.addParam('sysparm_name', 'deleteSession');
-            ga.addParam('session_id', sessionId);
-            ga.getXML(function(response) {
-                var result = parseAjaxResponse(response);
-                if (!result) { showToast('Error deleting session', 'error'); return; }
-
-                if (result.success) {
-                    showToast('Session permanently removed', 'success');
-                    loadSessions();
-                } else {
-                    showToast(result.message, 'error');
-                }
-            });
+            ppConfirm('Delete Session', 'Permanently delete this session? All stories, votes, and participants will be removed. This cannot be undone.', function(ok) {
+                if (!ok) return;
+                var ga = new GlideAjax('SessionManagementAjax');
+                ga.addParam('sysparm_name', 'deleteSession');
+                ga.addParam('session_id', sessionId);
+                ga.getXML(function(response) {
+                    var result = parseAjaxResponse(response);
+                    if (!result) { showToast('Error deleting session', 'error'); return; }
+                    if (result.success) {
+                        showToast('Session permanently removed', 'success');
+                        loadSessions();
+                    } else {
+                        showToast(result.message, 'error');
+                    }
+                });
+            }, 'Delete');
         }
 
         function cancelAllSessions() {
             var planningSessions = sessions.planning.filter(function(s) { return s.status === 'ready'; });
-            
+
             if (planningSessions.length === 0) {
                 showToast('No planned missions to terminate', 'info');
                 return;
             }
-            
-            if (!confirm('Confirm: Terminate all ' + planningSessions.length + ' planned missions? This cannot be undone.')) {
-                return;
-            }
-            
-            var completed = 0;
-            var failed = 0;
-            var total = planningSessions.length;
-            
-            planningSessions.forEach(function(session) {
-                var ga = new GlideAjax('SessionManagementAjax');
-                ga.addParam('sysparm_name', 'cancelSession');
-                ga.addParam('session_id', session.sys_id);
-                ga.getXML(function(response) {
-                    var result = parseAjaxResponse(response);
-                    if (result && result.success) {
-                        completed++;
-                    } else {
-                        failed++;
-                    }
-                    
-                    if (completed + failed === total) {
-                        if (failed === 0) {
-                            showToast('All ' + completed + ' missions terminated', 'success');
+
+            ppConfirm('Terminate All Missions', 'Confirm: Terminate all ' + planningSessions.length + ' planned missions? This cannot be undone.', function(ok) {
+                if (!ok) return;
+                var completed = 0;
+                var failed = 0;
+                var total = planningSessions.length;
+                planningSessions.forEach(function(session) {
+                    var ga = new GlideAjax('SessionManagementAjax');
+                    ga.addParam('sysparm_name', 'cancelSession');
+                    ga.addParam('session_id', session.sys_id);
+                    ga.getXML(function(response) {
+                        var result = parseAjaxResponse(response);
+                        if (result && result.success) {
+                            completed++;
                         } else {
-                            showToast(completed + ' terminated, ' + failed + ' failed', 'error');
+                            failed++;
                         }
-                        loadSessions();
-                    }
+                        if (completed + failed === total) {
+                            if (failed === 0) {
+                                showToast('All ' + completed + ' missions terminated', 'success');
+                            } else {
+                                showToast(completed + ' terminated, ' + failed + ' failed', 'error');
+                            }
+                            loadSessions();
+                        }
+                    });
                 });
-            });
+            }, 'Terminate All');
         }
         
         function openVoting(sessionId) {
@@ -2033,21 +2041,22 @@
         
         function removeStoryFromSession(sessionStoryId) {
             if (!editingSessionId) return;
-            if (!confirm('Remove this objective from the mission?')) return;
-            
-            var ga = new GlideAjax('SessionManagementAjax');
-            ga.addParam('sysparm_name', 'removeStory');
-            ga.addParam('session_id', editingSessionId);
-            ga.addParam('session_story_id', sessionStoryId);
-            ga.getXML(function(response) {
-                var result = parseAjaxResponse(response);
-                if (!result) { showToast('Error removing objective', 'error'); return; }
-                if (result.success) {
-                    showToast('Objective removed', 'success');
-                    refreshEditStories();
-                } else {
-                    showToast(result.message, 'error');
-                }
+            ppConfirm('Remove Objective', 'Remove this objective from the mission?', function(ok) {
+                if (!ok) return;
+                var ga = new GlideAjax('SessionManagementAjax');
+                ga.addParam('sysparm_name', 'removeStory');
+                ga.addParam('session_id', editingSessionId);
+                ga.addParam('session_story_id', sessionStoryId);
+                ga.getXML(function(response) {
+                    var result = parseAjaxResponse(response);
+                    if (!result) { showToast('Error removing objective', 'error'); return; }
+                    if (result.success) {
+                        showToast('Objective removed', 'success');
+                        refreshEditStories();
+                    } else {
+                        showToast(result.message, 'error');
+                    }
+                });
             });
         }
         
@@ -2167,6 +2176,32 @@
         
         function showModal(modalId) {
             document.getElementById(modalId).classList.add('show');
+        }
+
+        var _ppConfirmCallback = null;
+        (function() {
+            function _bindOnce(id, evt, fn) {
+                var el = document.getElementById(id);
+                if (el) { el.addEventListener(evt, fn); }
+            }
+            function _closeConfirm(result) {
+                hideAllModals();
+                var cb = _ppConfirmCallback;
+                _ppConfirmCallback = null;
+                if (cb) { cb(result); }
+            }
+            _bindOnce('ppConfirmOk',     'click', function() { _closeConfirm(true); });
+            _bindOnce('ppConfirmCancel', 'click', function() { _closeConfirm(false); });
+            _bindOnce('ppConfirmX',      'click', function() { _closeConfirm(false); });
+        }());
+
+        function ppConfirm(title, message, onConfirm, confirmLabel) {
+            document.getElementById('ppConfirmTitle').textContent = title;
+            document.getElementById('ppConfirmMsg').textContent = message;
+            var okBtn = document.getElementById('ppConfirmOk');
+            okBtn.textContent = confirmLabel || 'Confirm';
+            _ppConfirmCallback = onConfirm;
+            showModal('ppConfirmModal');
         }
         
         function hideAllModals() {
