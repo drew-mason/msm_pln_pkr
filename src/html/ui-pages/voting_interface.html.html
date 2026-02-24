@@ -692,16 +692,18 @@
         .pp-modal.pp-active { display: flex !important; }
 
         .pp-modal-content {
-            background: linear-gradient(160deg, rgba(10, 18, 35, 0.97), rgba(5, 10, 22, 0.98));
-            border: 1px solid rgba(0, 212, 255, 0.3);
-            border-radius: var(--radius);
-            max-width: 600px;
-            width: 92%;
-            max-height: 82vh;
-            overflow-y: auto;
-            box-shadow: 0 0 60px rgba(0, 212, 255, 0.15);
-            animation: warpIn 0.3s ease-out;
-            position: relative;
+            background: linear-gradient(160deg, rgba(10, 18, 35, 0.97), rgba(5, 10, 22, 0.98)) !important;
+            border: 1px solid rgba(0, 212, 255, 0.3) !important;
+            border-radius: var(--radius) !important;
+            max-width: 600px !important;
+            width: 92% !important;
+            max-height: 82vh !important;
+            overflow-y: auto !important;
+            box-shadow: 0 0 60px rgba(0, 212, 255, 0.15) !important;
+            position: relative !important;
+            opacity: 1 !important;
+            transform: none !important;
+            filter: none !important;
         }
 
         .pp-modal-content::before {
@@ -3125,7 +3127,8 @@
         // Utility functions
         var pollPausedForModal = false;
         
-        var PP_MODAL_SHOW_STYLE = 'display:flex!important;position:fixed!important;top:0!important;left:0!important;width:100%!important;height:100%!important;align-items:center!important;justify-content:center!important;z-index:99999!important;background:rgba(0,0,0,0.75)!important;backdrop-filter:blur(4px)!important;';
+        var PP_MODAL_SHOW_STYLE = 'display:flex!important;position:fixed!important;top:0!important;left:0!important;width:100%!important;height:100%!important;align-items:center!important;justify-content:center!important;z-index:99999!important;background:rgba(0,0,0,0.75)!important;backdrop-filter:blur(4px)!important;opacity:1!important;visibility:visible!important;';
+        var PP_CONTENT_SHOW_STYLE = 'display:block!important;opacity:1!important;visibility:visible!important;transform:none!important;filter:none!important;width:92%!important;max-width:600px!important;max-height:82vh!important;overflow-y:auto!important;position:relative!important;background:linear-gradient(160deg,rgba(10,18,35,0.97),rgba(5,10,22,0.98))!important;border:1px solid rgba(0,212,255,0.3)!important;border-radius:12px!important;box-shadow:0 0 60px rgba(0,212,255,0.15)!important;';
 
         function showModal(modalId) {
             console.log('[PP-DEBUG] showModal called:', modalId);
@@ -3135,6 +3138,8 @@
             for (var i = 0; i < openModals.length; i++) {
                 openModals[i].classList.remove('pp-active');
                 openModals[i].style.cssText = '';
+                var oldContent = openModals[i].querySelector('.pp-modal-content');
+                if (oldContent) oldContent.style.cssText = '';
             }
             
             var targetModal = document.getElementById(modalId);
@@ -3146,24 +3151,30 @@
             // Force inline styles to override any ServiceNow/Bootstrap CSS
             targetModal.style.cssText = PP_MODAL_SHOW_STYLE;
             
+            // Force content child to be visible too
+            var content = targetModal.querySelector('.pp-modal-content');
+            if (content) {
+                content.style.cssText = PP_CONTENT_SHOW_STYLE;
+            }
+            
             var computed = window.getComputedStyle(targetModal);
             console.log('[PP-DEBUG] showModal: display=' + computed.display + ' visibility=' + computed.visibility + ' zIndex=' + computed.zIndex + ' opacity=' + computed.opacity);
             
-            // Check modal-content child
-            var content = targetModal.querySelector('.pp-modal-content');
             if (content) {
                 var cc = window.getComputedStyle(content);
                 console.log('[PP-DEBUG] showModal content: display=' + cc.display + ' visibility=' + cc.visibility + ' opacity=' + cc.opacity + ' w=' + content.offsetWidth + ' h=' + content.offsetHeight);
             }
             
-            // Verify modal is still visible after 100ms (catch anything hiding it)
+            // Verify modal is still visible after 500ms
             setTimeout(function() {
                 var still = document.getElementById(modalId);
                 if (still) {
                     var sc = window.getComputedStyle(still);
-                    console.log('[PP-DEBUG] showModal 100ms check: display=' + sc.display + ' classes=' + still.className + ' hasInlineStyle=' + (still.style.cssText.length > 0));
+                    var sc2 = still.querySelector('.pp-modal-content');
+                    var contentInfo = sc2 ? ' content-opacity=' + window.getComputedStyle(sc2).opacity + ' content-w=' + sc2.offsetWidth + ' content-h=' + sc2.offsetHeight : ' NO CONTENT';
+                    console.log('[PP-DEBUG] showModal 500ms check: display=' + sc.display + ' classes=' + still.className + contentInfo);
                 }
-            }, 100);
+            }, 500);
             
             // Pause polling while modal is open to prevent sessionData overwrites
             if (pollInterval) {
@@ -3179,6 +3190,8 @@
             if (el) {
                 el.classList.remove('pp-active');
                 el.style.cssText = '';
+                var c = el.querySelector('.pp-modal-content');
+                if (c) c.style.cssText = '';
             }
             resumePollingIfNeeded();
         }
@@ -3189,6 +3202,8 @@
             for (var i = 0; i < modals.length; i++) {
                 modals[i].classList.remove('pp-active');
                 modals[i].style.cssText = '';
+                var c = modals[i].querySelector('.pp-modal-content');
+                if (c) c.style.cssText = '';
             }
             resumePollingIfNeeded();
         }
