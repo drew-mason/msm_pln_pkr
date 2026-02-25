@@ -9,26 +9,95 @@
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&amp;family=Share+Tech+Mono&amp;family=Rajdhani:wght@300;400;500;600;700&amp;display=swap');
 
         :root {
-            --primary-color: #00d4ff;
-            --primary-glow: rgba(0, 212, 255, 0.4);
-            --secondary-color: #0a0e17;
+            --primary-color: #ff3c3c;
+            --primary-glow: rgba(255, 60, 60, 0.4);
+            --secondary-color: #0d0d0d;
+            --success-color: #44ff66;
+            --warning-color: #ffaa00;
+            --danger-color: #ff1a1a;
+            --dark-color: #c8c8c8;
+            --light-color: rgba(13, 13, 13, 0.9);
+            --border-color: rgba(255, 60, 60, 0.25);
+            --shadow: 0 0 20px rgba(255, 60, 60, 0.15), 0 0 60px rgba(255, 60, 60, 0.05);
+            --radius: 2px;
+            --sw-accent1: #cc0000;
+            --sw-accent2: #880000;
+            --sw-accent3: #ff6666;
+            --saber-blue: #4488ff;
+            --saber-green: #44ff66;
+            --saber-red: #ff3c3c;
+            --grid-color: rgba(255, 60, 60, 0.04);
+            --holo-blue: rgba(255, 60, 60, 0.08);
+            --bg-base: #0a0a0a;
+        }
+
+        body[data-theme="rebel"] {
+            --primary-color: #6fcf44;
+            --primary-glow: rgba(111, 207, 68, 0.4);
+            --secondary-color: #0e1008;
+            --success-color: #6fcf44;
+            --warning-color: #ffcc44;
+            --danger-color: #ff5522;
+            --dark-color: #d4c9a8;
+            --light-color: rgba(14, 16, 8, 0.9);
+            --border-color: rgba(111, 207, 68, 0.25);
+            --shadow: 0 0 20px rgba(111, 207, 68, 0.15), 0 0 60px rgba(111, 207, 68, 0.05);
+            --radius: 2px;
+            --sw-accent1: #4a8a28;
+            --sw-accent2: #8b6914;
+            --sw-accent3: #c8a84a;
+            --saber-blue: #4488ff;
+            --saber-green: #6fcf44;
+            --saber-red: #ff5522;
+            --grid-color: rgba(111, 207, 68, 0.04);
+            --holo-blue: rgba(111, 207, 68, 0.08);
+            --bg-base: #090b05;
+        }
+
+        body[data-theme="hologram"] {
+            --primary-color: #00cfff;
+            --primary-glow: rgba(0, 207, 255, 0.5);
+            --secondary-color: #020d18;
+            --success-color: #00ff88;
+            --warning-color: #ffaa00;
+            --danger-color: #ff3366;
+            --dark-color: #a8ddf0;
+            --light-color: rgba(2, 13, 24, 0.92);
+            --border-color: rgba(0, 207, 255, 0.3);
+            --shadow: 0 0 25px rgba(0, 207, 255, 0.2), 0 0 60px rgba(0, 207, 255, 0.08);
+            --radius: 0px;
+            --sw-accent1: #005f80;
+            --sw-accent2: #0088bb;
+            --sw-accent3: #44ddff;
+            --saber-blue: #00cfff;
+            --saber-green: #44ff88;
+            --saber-red: #ff3366;
+            --grid-color: rgba(0, 207, 255, 0.07);
+            --holo-blue: rgba(0, 207, 255, 0.12);
+            --bg-base: #020c16;
+        }
+
+        body[data-theme="bridge"] {
+            --primary-color: #4499ff;
+            --primary-glow: rgba(68, 153, 255, 0.4);
+            --secondary-color: #060c18;
             --success-color: #00ff88;
             --warning-color: #ffaa00;
             --danger-color: #ff3366;
             --dark-color: #c8d6e5;
-            --light-color: rgba(10, 14, 27, 0.85);
-            --border-color: rgba(0, 212, 255, 0.2);
-            --shadow: 0 0 20px rgba(0, 212, 255, 0.15), 0 0 60px rgba(0, 212, 255, 0.05);
-            --radius: 4px;
-            --lcars-orange: #ff9900;
-            --lcars-purple: #cc99cc;
-            --lcars-blue: #9999ff;
-            --lcars-red: #cc6666;
-            --saber-blue: #4488ff;
+            --light-color: rgba(6, 12, 24, 0.9);
+            --border-color: rgba(68, 153, 255, 0.25);
+            --shadow: 0 0 20px rgba(68, 153, 255, 0.15), 0 0 60px rgba(68, 153, 255, 0.05);
+            --radius: 3px;
+            --sw-accent1: #ff9900;
+            --sw-accent2: #8855cc;
+            --sw-accent3: #4499ff;
+            --saber-blue: #4499ff;
             --saber-green: #44ff66;
             --saber-red: #ff4444;
-            --grid-color: rgba(0, 212, 255, 0.06);
-            --holo-blue: rgba(0, 180, 255, 0.12);
+            --grid-color: rgba(68, 153, 255, 0.05);
+            --holo-blue: rgba(68, 153, 255, 0.1);
+            --bg-base: #050810;
         }
 
         /* === TRON GRID BACKGROUND === */
@@ -88,7 +157,7 @@
         }
         body {
             font-family: 'Rajdhani', 'Share Tech Mono', monospace;
-            background-color: #050810;
+            background-color: var(--bg-base, #0a0a0a);
             color: var(--dark-color);
             line-height: 1.6;
             min-height: 100vh;
@@ -96,7 +165,7 @@
             overflow-x: hidden;
         }
 
-        /* Tron grid overlay */
+        /* Star Wars grid overlay */
         body::before {
             content: '';
             position: fixed;
@@ -137,14 +206,14 @@
             pointer-events: none;
         }
 
-        /* === HEADER — LCARS inspired === */
+        /* === HEADER === */
         .header {
-            background: linear-gradient(135deg, rgba(10, 14, 30, 0.95), rgba(15, 20, 40, 0.95));
+            background: linear-gradient(135deg, rgba(5, 5, 5, 0.97), rgba(15, 10, 10, 0.97));
             border-bottom: 2px solid var(--primary-color);
             padding: 0;
             display: flex;
             align-items: stretch;
-            box-shadow: 0 2px 30px rgba(0, 212, 255, 0.2);
+            box-shadow: 0 2px 30px var(--primary-glow);
             position: relative;
             z-index: 10;
             overflow: hidden;
@@ -155,12 +224,12 @@
             position: absolute;
             bottom: 0; left: 0; right: 0;
             height: 2px;
-            background: linear-gradient(90deg, transparent, var(--primary-color), var(--lcars-orange), var(--lcars-purple), var(--primary-color), transparent);
+            background: linear-gradient(90deg, transparent, var(--primary-color), var(--sw-accent1), var(--sw-accent2), var(--primary-color), transparent);
             background-size: 200% 100%;
             animation: borderTrace 4s linear infinite;
         }
 
-        /* LCARS bar on left side of header */
+        /* SW accent bar on left side of header */
         .lcars-bar {
             display: flex;
             align-items: stretch;
@@ -174,9 +243,9 @@
             min-height: 100%;
         }
 
-        .lcars-block:nth-child(1) { background: var(--lcars-orange); border-radius: 0 0 8px 0; }
-        .lcars-block:nth-child(2) { background: var(--lcars-purple); }
-        .lcars-block:nth-child(3) { background: var(--lcars-blue); border-radius: 0 8px 0 0; }
+        .lcars-block:nth-child(1) { background: var(--sw-accent1); border-radius: 0 0 8px 0; }
+        .lcars-block:nth-child(2) { background: var(--sw-accent2); }
+        .lcars-block:nth-child(3) { background: var(--sw-accent3); border-radius: 0 8px 0 0; }
 
         .header-inner {
             display: flex;
@@ -191,7 +260,7 @@
             font-size: 1.4rem;
             font-weight: 700;
             color: var(--primary-color);
-            text-shadow: 0 0 10px var(--primary-glow), 0 0 30px rgba(0, 212, 255, 0.2);
+            text-shadow: 0 0 10px var(--primary-glow), 0 0 30px var(--primary-glow);
             letter-spacing: 3px;
             text-transform: uppercase;
             animation: pulseGlow 3s ease-in-out infinite;
@@ -208,7 +277,7 @@
         .stardate {
             font-family: 'Share Tech Mono', monospace;
             font-size: 0.7rem;
-            color: var(--lcars-orange);
+            color: var(--sw-accent1);
             letter-spacing: 2px;
             text-transform: uppercase;
         }
@@ -953,24 +1022,74 @@
             font-size: 0.85rem;
         }
 
-        /* === THEME TOGGLE (red alert mode) === */
-        .theme-toggle {
-            background: rgba(255, 153, 0, 0.1);
-            border: 1px solid var(--lcars-orange);
-            border-radius: 50%;
-            width: 36px; height: 36px;
+        /* === THEME SWITCHER === */
+        .theme-switcher {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .theme-switcher-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--primary-color);
+            border-radius: var(--radius);
+            padding: 0.3rem 0.7rem;
             cursor: pointer;
-            font-size: 1rem;
-            color: var(--lcars-orange);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--primary-color);
             transition: all 0.3s;
             display: flex;
             align-items: center;
-            justify-content: center;
+            gap: 0.4rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
         }
 
-        .theme-toggle:hover {
-            box-shadow: 0 0 15px rgba(255, 153, 0, 0.3);
-            background: rgba(255, 153, 0, 0.2);
+        .theme-switcher-btn:hover {
+            box-shadow: 0 0 15px var(--primary-glow);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .theme-dropdown {
+            display: none;
+            position: absolute;
+            top: calc(100% + 6px);
+            right: 0;
+            background: var(--bg-base, #0a0a0a);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            min-width: 160px;
+            z-index: 1000;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+            overflow: hidden;
+        }
+
+        .theme-dropdown.open { display: block; }
+
+        .theme-option {
+            padding: 0.5rem 0.85rem;
+            cursor: pointer;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.72rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: background 0.15s;
+            color: var(--dark-color);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .theme-option:last-child { border-bottom: none; }
+        .theme-option:hover { background: rgba(255,255,255,0.08); }
+        .theme-option.active { color: var(--primary-color); }
+
+        .theme-swatch {
+            width: 10px; height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
         }
 
         /* === EASTER EGG ELEMENTS === */
@@ -1002,20 +1121,6 @@
             pointer-events: none;
             z-index: 9997;
             transition: opacity 0.15s;
-        }
-
-        /* Red alert mode */
-        .red-alert .header { border-bottom-color: var(--saber-red) !important; }
-        .red-alert .header::after {
-            background: linear-gradient(90deg, transparent, var(--saber-red), var(--danger-color), var(--saber-red), transparent) !important;
-        }
-        .red-alert .session-card::before {
-            background: linear-gradient(90deg, var(--saber-red), var(--danger-color), var(--saber-red)) !important;
-        }
-        .red-alert body::before {
-            background:
-                linear-gradient(rgba(255, 40, 40, 0.04) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255, 40, 40, 0.04) 1px, transparent 1px) !important;
         }
 
         /* Hidden crawl */
@@ -1146,9 +1251,15 @@
                 <div class="stardate" id="stardate"></div>
             </div>
             <div class="header-right">
-                <button class="theme-toggle" id="themeToggle" title="Red Alert Mode">
-                    ▲
-                </button>
+                <div class="theme-switcher" id="themeSwitcher">
+                    <button class="theme-switcher-btn" id="themeToggle">⚙ Theme</button>
+                    <div class="theme-dropdown" id="themeDropdown">
+                        <div class="theme-option" data-theme="imperial"><span class="theme-swatch" style="background:#ff3c3c;"></span> Imperial</div>
+                        <div class="theme-option" data-theme="rebel"><span class="theme-swatch" style="background:#6fcf44;"></span> Rebel</div>
+                        <div class="theme-option" data-theme="hologram"><span class="theme-swatch" style="background:#00cfff;"></span> Hologram</div>
+                        <div class="theme-option" data-theme="bridge"><span class="theme-swatch" style="background:#4499ff;"></span> Bridge</div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -1365,7 +1476,7 @@
         
         // Event listeners
         function initializeEventListeners() {
-            document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+            initThemeSwitcher();
             
             var tabs = document.querySelectorAll('.tab');
             tabs.forEach(function(tab) {
@@ -2227,22 +2338,38 @@
             }, 3000);
         }
         
-        function toggleTheme() {
-            var body = document.body;
-            body.classList.toggle('red-alert');
-            var themeToggle = document.getElementById('themeToggle');
-            
-            if (body.classList.contains('red-alert')) {
-                themeToggle.textContent = '◆';
-                themeToggle.style.borderColor = 'var(--saber-red)';
-                themeToggle.style.color = 'var(--saber-red)';
-                showToast('RED ALERT — All hands to battle stations', 'error');
-            } else {
-                themeToggle.textContent = '▲';
-                themeToggle.style.borderColor = '';
-                themeToggle.style.color = '';
-                showToast('Standing down from Red Alert', 'info');
-            }
+        function initThemeSwitcher() {
+            var btn = document.getElementById('themeToggle');
+            var dropdown = document.getElementById('themeDropdown');
+            var options = document.querySelectorAll('.theme-option');
+            var saved = localStorage.getItem('pp_theme') || 'imperial';
+            applyTheme(saved);
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                dropdown.classList.toggle('open');
+            });
+            options.forEach(function(opt) {
+                opt.addEventListener('click', function() {
+                    var theme = opt.getAttribute('data-theme');
+                    applyTheme(theme);
+                    dropdown.classList.remove('open');
+                });
+            });
+            document.addEventListener('click', function() {
+                dropdown.classList.remove('open');
+            });
+        }
+
+        function applyTheme(theme) {
+            document.body.setAttribute('data-theme', theme);
+            localStorage.setItem('pp_theme', theme);
+            var options = document.querySelectorAll('.theme-option');
+            options.forEach(function(opt) {
+                opt.classList.toggle('active', opt.getAttribute('data-theme') === theme);
+            });
+            var labels = { imperial: 'Imperial', rebel: 'Rebel', hologram: 'Hologram', bridge: 'Bridge' };
+            var btn = document.getElementById('themeToggle');
+            if (btn) btn.textContent = '\u2699 ' + (labels[theme] || 'Theme');
         }
         
         function escapeHtml(text) {
