@@ -897,7 +897,7 @@
         }
 
         .collapsible { cursor: pointer; }
-        .collapsed .section-content { display: none; }
+        .section-content.collapsed { display: none; }
         .collapsed .section-content + div { display: none; }
 
         /* Bot indicator badge */
@@ -1307,15 +1307,8 @@
                 </div>
             </div>
 
-        </div>
-
-            <!-- Voting Cards -->
-            <div class="voting-cards" id="votingCards"></div>
-        </div>
-
-        <div class="sidebar">
-            <!-- Vote Results -->
-            <div class="sidebar-section" id="voteResultsSection" style="display: none;">
+            <!-- Vote Results (shown in main story area when votes are revealed) -->
+            <div class="sidebar-section" id="voteResultsSection" style="display: none; margin-top: 1rem;">
                 <div class="section-header">
                     <span>Vote Results</span>
                 </div>
@@ -1325,6 +1318,13 @@
                 </div>
             </div>
 
+        </div>
+
+            <!-- Voting Cards -->
+            <div class="voting-cards" id="votingCards"></div>
+        </div>
+ 
+        <div class="sidebar">
             <!-- Dealers -->
             <div class="sidebar-section">
                 <div class="section-header collapsible" data-target="dealersContent">
