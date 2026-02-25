@@ -9,95 +9,42 @@
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&amp;family=Share+Tech+Mono&amp;family=Rajdhani:wght@300;400;500;600;700&amp;display=swap');
 
         :root {
-            --primary-color: #ff3c3c;
-            --primary-glow: rgba(255, 60, 60, 0.4);
-            --secondary-color: #0d0d0d;
-            --success-color: #44ff66;
-            --warning-color: #ffaa00;
-            --danger-color: #ff1a1a;
-            --dark-color: #c8c8c8;
-            --light-color: rgba(13, 13, 13, 0.9);
-            --border-color: rgba(255, 60, 60, 0.25);
-            --shadow: 0 0 20px rgba(255, 60, 60, 0.15), 0 0 60px rgba(255, 60, 60, 0.05);
-            --radius: 2px;
-            --sw-accent1: #cc0000;
-            --sw-accent2: #880000;
-            --sw-accent3: #ff6666;
-            --saber-blue: #4488ff;
-            --saber-green: #44ff66;
-            --saber-red: #ff3c3c;
-            --grid-color: rgba(255, 60, 60, 0.04);
-            --holo-blue: rgba(255, 60, 60, 0.08);
-            --bg-base: #0a0a0a;
-        }
-
-        body[data-theme="rebel"] {
-            --primary-color: #6fcf44;
-            --primary-glow: rgba(111, 207, 68, 0.4);
-            --secondary-color: #0e1008;
-            --success-color: #6fcf44;
-            --warning-color: #ffcc44;
-            --danger-color: #ff5522;
-            --dark-color: #d4c9a8;
-            --light-color: rgba(14, 16, 8, 0.9);
-            --border-color: rgba(111, 207, 68, 0.25);
-            --shadow: 0 0 20px rgba(111, 207, 68, 0.15), 0 0 60px rgba(111, 207, 68, 0.05);
-            --radius: 2px;
-            --sw-accent1: #4a8a28;
-            --sw-accent2: #8b6914;
-            --sw-accent3: #c8a84a;
-            --saber-blue: #4488ff;
-            --saber-green: #6fcf44;
-            --saber-red: #ff5522;
-            --grid-color: rgba(111, 207, 68, 0.04);
-            --holo-blue: rgba(111, 207, 68, 0.08);
-            --bg-base: #090b05;
-        }
-
-        body[data-theme="hologram"] {
-            --primary-color: #00cfff;
-            --primary-glow: rgba(0, 207, 255, 0.5);
-            --secondary-color: #020d18;
-            --success-color: #00ff88;
-            --warning-color: #ffaa00;
-            --danger-color: #ff3366;
-            --dark-color: #a8ddf0;
-            --light-color: rgba(2, 13, 24, 0.92);
-            --border-color: rgba(0, 207, 255, 0.3);
-            --shadow: 0 0 25px rgba(0, 207, 255, 0.2), 0 0 60px rgba(0, 207, 255, 0.08);
-            --radius: 0px;
-            --sw-accent1: #005f80;
-            --sw-accent2: #0088bb;
-            --sw-accent3: #44ddff;
-            --saber-blue: #00cfff;
-            --saber-green: #44ff88;
-            --saber-red: #ff3366;
-            --grid-color: rgba(0, 207, 255, 0.07);
-            --holo-blue: rgba(0, 207, 255, 0.12);
-            --bg-base: #020c16;
-        }
-
-        body[data-theme="bridge"] {
-            --primary-color: #4499ff;
-            --primary-glow: rgba(68, 153, 255, 0.4);
-            --secondary-color: #060c18;
+            --primary-color: #00d4ff;
+            --primary-glow: rgba(0, 212, 255, 0.4);
+            --secondary-color: #0a0e17;
             --success-color: #00ff88;
             --warning-color: #ffaa00;
             --danger-color: #ff3366;
             --dark-color: #c8d6e5;
-            --light-color: rgba(6, 12, 24, 0.9);
-            --border-color: rgba(68, 153, 255, 0.25);
-            --shadow: 0 0 20px rgba(68, 153, 255, 0.15), 0 0 60px rgba(68, 153, 255, 0.05);
-            --radius: 3px;
+            --light-color: rgba(10, 14, 27, 0.85);
+            --border-color: rgba(0, 212, 255, 0.2);
+            --shadow: 0 0 20px rgba(0, 212, 255, 0.15), 0 0 60px rgba(0, 212, 255, 0.05);
+            --radius: 4px;
+            --lcars-orange: #ff9900;
+            --lcars-purple: #cc99cc;
+            --lcars-blue: #9999ff;
+            --lcars-red: #cc6666;
             --sw-accent1: #ff9900;
-            --sw-accent2: #8855cc;
-            --sw-accent3: #4499ff;
-            --saber-blue: #4499ff;
-            --saber-green: #44ff66;
-            --saber-red: #ff4444;
-            --grid-color: rgba(68, 153, 255, 0.05);
-            --holo-blue: rgba(68, 153, 255, 0.1);
+            --sw-accent2: #cc99cc;
+            --sw-accent3: #9999ff;
+            --grid-color: rgba(0, 212, 255, 0.06);
             --bg-base: #050810;
+        }
+
+        body.red-alert {
+            --primary-color: #ff3333;
+            --primary-glow: rgba(255, 51, 51, 0.5);
+            --secondary-color: #1a0505;
+            --danger-color: #ff6666;
+            --border-color: rgba(255, 51, 51, 0.3);
+            --shadow: 0 0 25px rgba(255, 51, 51, 0.3), 0 0 60px rgba(255, 51, 51, 0.1);
+            --lcars-orange: #ff3333;
+            --lcars-purple: #cc6666;
+            --sw-accent1: #ff3333;
+            --sw-accent2: #cc6666;
+            --sw-accent3: #ff6666;
+            --grid-color: rgba(255, 51, 51, 0.08);
+        }
         }
 
         /* === TRON GRID BACKGROUND === */
@@ -1022,74 +969,28 @@
             font-size: 0.85rem;
         }
 
-        /* === THEME SWITCHER === */
-        .theme-switcher {
-            position: relative;
-            display: flex;
-            align-items: center;
-        }
-
-        .theme-switcher-btn {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--primary-color);
-            border-radius: var(--radius);
-            padding: 0.3rem 0.7rem;
+        /* === THEME TOGGLE === */
+        .theme-toggle {
+            background: rgba(255, 153, 0, 0.1);
+            border: 1px solid var(--lcars-orange);
+            border-radius: 50%;
+            width: 36px; height: 36px;
             cursor: pointer;
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 0.7rem;
-            color: var(--primary-color);
+            font-size: 1rem;
+            color: var(--lcars-orange);
             transition: all 0.3s;
             display: flex;
             align-items: center;
-            gap: 0.4rem;
-            letter-spacing: 1px;
-            text-transform: uppercase;
+            justify-content: center;
         }
-
-        .theme-switcher-btn:hover {
-            box-shadow: 0 0 15px var(--primary-glow);
-            background: rgba(255, 255, 255, 0.1);
+        .theme-toggle:hover {
+            box-shadow: 0 0 15px rgba(255, 153, 0, 0.3);
         }
-
-        .theme-dropdown {
-            display: none;
-            position: absolute;
-            top: calc(100% + 6px);
-            right: 0;
-            background: var(--bg-base, #0a0a0a);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius);
-            min-width: 160px;
-            z-index: 1000;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-            overflow: hidden;
-        }
-
-        .theme-dropdown.open { display: block; }
-
-        .theme-option {
-            padding: 0.5rem 0.85rem;
-            cursor: pointer;
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 0.72rem;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            transition: background 0.15s;
-            color: var(--dark-color);
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-        }
-
-        .theme-option:last-child { border-bottom: none; }
-        .theme-option:hover { background: rgba(255,255,255,0.08); }
-        .theme-option.active { color: var(--primary-color); }
-
-        .theme-swatch {
-            width: 10px; height: 10px;
-            border-radius: 50%;
-            flex-shrink: 0;
+        body.red-alert .theme-toggle {
+            background: rgba(255, 51, 51, 0.2);
+            border-color: #ff3333;
+            color: #ff3333;
+            animation: pulseGlow 1s ease-in-out infinite;
         }
 
         /* === EASTER EGG ELEMENTS === */
@@ -1251,15 +1152,9 @@
                 <div class="stardate" id="stardate"></div>
             </div>
             <div class="header-right">
-                <div class="theme-switcher" id="themeSwitcher">
-                    <button class="theme-switcher-btn" id="themeToggle">⚙ Theme</button>
-                    <div class="theme-dropdown" id="themeDropdown">
-                        <div class="theme-option" data-theme="imperial"><span class="theme-swatch" style="background:#ff3c3c;"></span> Imperial</div>
-                        <div class="theme-option" data-theme="rebel"><span class="theme-swatch" style="background:#6fcf44;"></span> Rebel</div>
-                        <div class="theme-option" data-theme="hologram"><span class="theme-swatch" style="background:#00cfff;"></span> Hologram</div>
-                        <div class="theme-option" data-theme="bridge"><span class="theme-swatch" style="background:#4499ff;"></span> Bridge</div>
-                    </div>
-                </div>
+                <button class="theme-toggle" id="themeToggle" title="Red Alert Mode">
+                    ⚠
+                </button>
             </div>
         </div>
     </div>
@@ -2340,36 +2235,18 @@
         
         function initThemeSwitcher() {
             var btn = document.getElementById('themeToggle');
-            var dropdown = document.getElementById('themeDropdown');
-            var options = document.querySelectorAll('.theme-option');
-            var saved = localStorage.getItem('pp_theme') || 'imperial';
-            applyTheme(saved);
-            btn.addEventListener('click', function(e) {
-                e.stopPropagation();
-                dropdown.classList.toggle('open');
-            });
-            options.forEach(function(opt) {
-                opt.addEventListener('click', function() {
-                    var theme = opt.getAttribute('data-theme');
-                    applyTheme(theme);
-                    dropdown.classList.remove('open');
-                });
-            });
-            document.addEventListener('click', function() {
-                dropdown.classList.remove('open');
-            });
-        }
+            if (!btn) return;
 
-        function applyTheme(theme) {
-            document.body.setAttribute('data-theme', theme);
-            localStorage.setItem('pp_theme', theme);
-            var options = document.querySelectorAll('.theme-option');
-            options.forEach(function(opt) {
-                opt.classList.toggle('active', opt.getAttribute('data-theme') === theme);
+            var saved = localStorage.getItem('pp_red_alert');
+            if (saved === 'true') {
+                document.body.classList.add('red-alert');
+            }
+
+            btn.addEventListener('click', function() {
+                document.body.classList.toggle('red-alert');
+                var isRedAlert = document.body.classList.contains('red-alert');
+                localStorage.setItem('pp_red_alert', isRedAlert);
             });
-            var labels = { imperial: 'Imperial', rebel: 'Rebel', hologram: 'Hologram', bridge: 'Bridge' };
-            var btn = document.getElementById('themeToggle');
-            if (btn) btn.textContent = '\u2699 ' + (labels[theme] || 'Theme');
         }
         
         function escapeHtml(text) {
