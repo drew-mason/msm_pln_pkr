@@ -2127,10 +2127,16 @@
         }
         
         // AMB real-time updates
+        // Accepts clients with either the legacy subscribe() API or the newer
+        // addSubscription() API introduced in the Washington/Xanadu AMB library.
+        function hasAMBSubscribeMethod(c) {
+            return c && (typeof c.subscribe === 'function' || typeof c.addSubscription === 'function');
+        }
+
         function resolveAMBClient() {
-            try { if (top.g_ambClient && typeof top.g_ambClient.subscribe === 'function') return top.g_ambClient; } catch(e) {}
-            try { if (parent.g_ambClient && typeof parent.g_ambClient.subscribe === 'function') return parent.g_ambClient; } catch(e) {}
-            if (window.g_ambClient && typeof window.g_ambClient.subscribe === 'function') return window.g_ambClient;
+            try { if (hasAMBSubscribeMethod(top.g_ambClient)) return top.g_ambClient; } catch(e) {}
+            try { if (hasAMBSubscribeMethod(parent.g_ambClient)) return parent.g_ambClient; } catch(e) {}
+            if (hasAMBSubscribeMethod(window.g_ambClient)) return window.g_ambClient;
             return null;
         }
 
@@ -2148,7 +2154,15 @@
                         initAMB(sid, client);
                     } else if (attempts >= 40) {
                         clearInterval(interval);
-                        console.error('[PP-AMB] g_ambClient not available after 20s, falling back to polling');
+                        // Log available keys on g_ambClient to aid future debugging
+                        try {
+                            var c = window.g_ambClient;
+                            try { c = top.g_ambClient || c; } catch(e2) {}
+                            if (c) {
+                                console.warn('[PP-AMB] g_ambClient present but no subscribe/addSubscription. Available keys: ' + Object.keys(c).join(', '));
+                            }
+                        } catch(e) {}
+                        console.error('[PP-AMB] AMB client not ready after 20s, falling back to polling');
                         startPollingFallback();
                     }
                 }, 500);
@@ -2169,10 +2183,19 @@
         function initAMB(sid, client) {
             var channelName = '/x_902080_planningw/session/' + sid;
             ambClient = client;
-            ambClient.subscribe(channelName, function(message) {
+            var handler = function(message) {
                 handleAMBMessage(JSON.parse(message.data));
-            });
-            console.log('[PP-AMB] Subscribed to', channelName);
+            };
+            if (typeof client.subscribe === 'function') {
+                client.subscribe(channelName, handler);
+                console.log('[PP-AMB] Subscribed via subscribe() to', channelName);
+            } else if (typeof client.addSubscription === 'function') {
+                client.addSubscription(channelName, handler);
+                console.log('[PP-AMB] Subscribed via addSubscription() to', channelName);
+            } else {
+                console.error('[PP-AMB] No known subscription method on AMB client — falling back to polling');
+                startPollingFallback();
+            }
         }
 
         function handleAMBMessage(data) {
