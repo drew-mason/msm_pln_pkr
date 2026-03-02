@@ -14,10 +14,6 @@ PlanningPokerSessionAjax.prototype = Object.extendsObject(global.AbstractAjaxPro
             var sessionId = sessionGr.getValue('sys_id');
             var userId = gs.getUserID();
             
-            // Update heartbeat and clean up stale participants
-            this._updateHeartbeat(sessionId);
-            this._cleanupStaleParticipants(sessionId);
-            
             // Build session data
             var data = {
                 session: this._buildSessionInfo(sessionGr),
@@ -51,10 +47,6 @@ PlanningPokerSessionAjax.prototype = Object.extendsObject(global.AbstractAjaxPro
             
             var sessionGr = validation.sessionGr;
             var sessionId = sessionGr.getValue('sys_id');
-            
-            // Update heartbeat for current user and clean up stale participants
-            this._updateHeartbeat(sessionId);
-            this._cleanupStaleParticipants(sessionId);
             
             var currentStory = this._getCurrentStory(sessionId);
             if (!currentStory) {
@@ -479,7 +471,7 @@ PlanningPokerSessionAjax.prototype = Object.extendsObject(global.AbstractAjaxPro
         return stories;
     },
     
-    // Update last_seen timestamp for the current user's participant record
+    // @deprecated — heartbeat writes are no longer needed; presence is managed via AMB leaveSession
     _updateHeartbeat: function(sessionId) {
         var userId = gs.getUserID();
         var partGr = new GlideRecord('x_902080_planningw_session_participant');
@@ -489,23 +481,18 @@ PlanningPokerSessionAjax.prototype = Object.extendsObject(global.AbstractAjaxPro
         partGr.setLimit(1);
         partGr.query();
         if (partGr.next()) {
-            partGr.setValue('last_seen', new GlideDateTime());
             partGr.setValue('is_online', true);
             partGr.setWorkflow(false);
             partGr.update();
         }
     },
     
-    // Mark participants as offline if they haven't polled in 15+ seconds
+    // @deprecated — stale participant cleanup is no longer needed; presence is managed via AMB
     _cleanupStaleParticipants: function(sessionId) {
-        var cutoff = new GlideDateTime();
-        cutoff.addSeconds(-15);
-        
         var staleGr = new GlideRecord('x_902080_planningw_session_participant');
         staleGr.addQuery('session', sessionId);
         staleGr.addQuery('status', PlanningPokerConstants.STATUS.ACTIVE);
         staleGr.addQuery('is_online', true);
-        staleGr.addQuery('last_seen', '<', cutoff);
         staleGr.query();
         while (staleGr.next()) {
             staleGr.setValue('is_online', false);

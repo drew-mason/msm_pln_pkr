@@ -414,6 +414,7 @@ DemoSessionAjax.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
                 added.push(botInfo.firstName + ' ' + botInfo.lastName);
             }
 
+            new PlanningPokerAMB().publishSessionState(sessionId);
             return this._buildResponse(true, 'Bot voters added', {
                 added: added,
                 addedCount: added.length,
@@ -474,6 +475,7 @@ DemoSessionAjax.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
 
             this._createParticipant(sessionId, botInfo.userId, 'voter', false);
 
+            new PlanningPokerAMB().publishSessionState(sessionId);
             return this._buildResponse(true, 'Bot dealer added', {
                 name: botInfo.firstName + ' ' + botInfo.lastName,
                 userId: botInfo.userId
@@ -586,6 +588,7 @@ DemoSessionAjax.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
             storyGr.setValue('vote_count', totalVotes);
             storyGr.update();
 
+            new PlanningPokerAMB().publishSessionState(sessionId);
             return this._buildResponse(true, 'Bot votes cast', {
                 votedCount: votedCount,
                 skippedCount: skippedCount,
@@ -668,6 +671,7 @@ DemoSessionAjax.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
                 nextOrder++;
             }
 
+            new PlanningPokerAMB().publishSessionState(sessionId);
             return this._buildResponse(true, 'Bot stories added', {
                 addedCount: added.length,
                 stories: added
@@ -715,6 +719,7 @@ DemoSessionAjax.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
                 voteGr.deleteMultiple();
             }
 
+            new PlanningPokerAMB().publishSessionState(sessionId);
             return this._buildResponse(true, 'Bots removed', {
                 removedCount: removedCount
             });

@@ -42,6 +42,7 @@ PlanningPokerStoryAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
             otherStoriesGr.setValue('is_current_story', false);
             otherStoriesGr.updateMultiple();
             
+            new PlanningPokerAMB().publishSessionState(sessionId);
             return this._buildResponse(true, 'Voting started successfully', {
                 storyId: storyId,
                 sessionStatus: sessionGr.getValue('status')
@@ -131,6 +132,7 @@ PlanningPokerStoryAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
             // Auto-advance to next pending story
             var nextStory = this._advanceToNextStory(sessionId);
             
+            new PlanningPokerAMB().publishSessionState(sessionId);
             return this._buildResponse(true, 'Story points set successfully', {
                 storyId: storyId,
                 storyPoints: storyPoints,
@@ -206,6 +208,7 @@ PlanningPokerStoryAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
             storyGr.setValue(field, value);
             storyGr.update();
             
+            new PlanningPokerAMB().publishSessionState(sessionId);
             return this._buildResponse(true, 'Story details updated successfully', {
                 storyId: storyId,
                 field: field,
@@ -238,6 +241,7 @@ PlanningPokerStoryAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
             // Auto-advance to next story
             var nextStory = this._advanceToNextStory(sessionId);
             
+            new PlanningPokerAMB().publishSessionState(sessionId);
             return this._buildResponse(true, 'Story skipped successfully', {
                 storyId: storyId,
                 nextStoryId: nextStory ? nextStory.getValue('sys_id') : null
@@ -270,6 +274,7 @@ PlanningPokerStoryAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
             sessionGr.setValue('active', false);
             sessionGr.update();
             
+            new PlanningPokerAMB().publishSessionState(sessionId);
             return this._buildResponse(true, 'Session stopped successfully', null);
             
         } catch (e) {
@@ -307,6 +312,7 @@ PlanningPokerStoryAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
             sessionGr.setValue('current_story', storyId);
             sessionGr.update();
             
+            new PlanningPokerAMB().publishSessionState(sessionId);
             return this._buildResponse(true, 'Switched to story successfully', {
                 storyId: storyId
             });

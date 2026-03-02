@@ -1551,8 +1551,7 @@
 
         // Global variables
         var sessionData = null;
-        var pollInterval = null;
-        var pollFailCount = 0;
+        var ambClient = null;
         var sessionId = getUrlParameter('session_id');
         var storySearchDebounce = null;
         var selectedStoryIds = [];
@@ -1568,7 +1567,7 @@
             
             initializeEventListeners();
             loadSession();
-            startPolling();
+            initAMB(sessionId);
         });
         
         // Event listeners setup
@@ -2127,106 +2126,75 @@
             });
         }
         
-        // Polling for real-time updates
-        function startPolling() {
-            pollInterval = setInterval(function() {
-                pollVotingStatus();
-            }, 3000);
-        }
-        
-        function pollVotingStatus() {
-            var ga = new GlideAjax('PlanningPokerSessionAjax');
-            ga.addParam('sysparm_name', 'getVotingStatus');
-            ga.addParam('session_id', sessionId);
-            ga.getXML(function(response) {
-                var result = parseAjaxResponse(response);
-                if (!result) {
-                    pollFailCount++;
-                    if (pollFailCount >= 3) {
-                        showToast('Connection lost \u2014 retrying...', 'error');
-                    }
-                    return;
-                }
-                
-                pollFailCount = 0;
-                var d = result.data;
-                
-                // Detect state changes that require a full session reload:
-                // 1. Current story changed (new story selected by dealer)
-                // 2. Story status changed (pending→voting, voting→revealed, etc.)
-                // 3. Session had no story but now has one (or vice versa)
-                // 4. Session status changed
-                var needsReload = false;
-                var currentStoryId = sessionData && sessionData.currentStory ? sessionData.currentStory.sys_id : null;
-                var currentStoryStatus = sessionData && sessionData.currentStory ? sessionData.currentStory.status : null;
-                var currentSessionStatus = sessionData && sessionData.session ? sessionData.session.status : null;
-                
-                if (result.success && d) {
-                    // Check if a story appeared or disappeared
-                    if (d.hasCurrentStory && !currentStoryId) {
-                        needsReload = true;
-                    } else if (!d.hasCurrentStory && currentStoryId) {
-                        needsReload = true;
-                    }
-                    
-                    // Check if story changed
-                    if (d.hasCurrentStory && d.storyId && d.storyId !== currentStoryId) {
-                        needsReload = true;
-                    }
-                    
-                    // Check if story status changed (e.g. pending→voting, voting→revealed)
-                    if (d.hasCurrentStory && d.storyStatus && d.storyStatus !== currentStoryStatus) {
-                        needsReload = true;
-                    }
-                    
-                    // Check if session status changed (e.g. ready→live, live→completed)
-                    if (d.sessionStatus && d.sessionStatus !== currentSessionStatus) {
-                        needsReload = true;
-                    }
-                    
-                    // Check if participant list changed (user joined or left)
-                    if (d.participants && sessionData && sessionData.participants) {
-                        if (d.participants.length !== sessionData.participants.length) {
-                            needsReload = true;
-                        }
-                    }
-                }
-                
-                if (needsReload) {
-                    loadSession();
-                    return;
-                }
-                
-                // No state change — just update vote indicators and story content
-                if (result.success && d && d.hasCurrentStory) {
-                    updateVotingIndicators(d.participants);
-                    
-                    // Update story content for non-editing users (propagate dealer edits)
-                    if (!activeEditField && sessionData && sessionData.currentStory) {
-                        var cs = sessionData.currentStory;
-                        var changed = false;
-                        if (d.storyTitle !== undefined && d.storyTitle !== cs.story_title) {
-                            cs.story_title = d.storyTitle;
-                            changed = true;
-                        }
-                        if (d.storyDescription !== undefined && d.storyDescription !== cs.story_description) {
-                            cs.story_description = d.storyDescription;
-                            changed = true;
-                        }
-                        if (d.acceptanceCriteria !== undefined && d.acceptanceCriteria !== cs.acceptance_criteria) {
-                            cs.acceptance_criteria = d.acceptanceCriteria;
-                            changed = true;
-                        }
-                        if (d.dealerComments !== undefined && d.dealerComments !== cs.dealer_comments) {
-                            cs.dealer_comments = d.dealerComments;
-                            changed = true;
-                        }
-                        if (changed) {
-                            renderCurrentStory(cs);
-                        }
-                    }
-                }
+        // AMB real-time updates
+        function initAMB(sid) {
+            var channelName = '/x_902080_planningw/session/' + sid;
+            ambClient = new GlideAMBClient();
+            ambClient.subscribe(channelName, function(message) {
+                handleAMBMessage(JSON.parse(message.data));
             });
+            ambClient.connect();
+        }
+
+        function handleAMBMessage(data) {
+            var topic = data.topic;
+            if (topic === 'session_state') {
+                processVotingStatusUpdate(data);
+            } else if (topic === 'participant_joined' || topic === 'participant_left') {
+                loadSession();
+            } else if (topic === 'presence_update') {
+                updatePresenceIndicator(data.userId, data.isOnline);
+            }
+        }
+
+        function processVotingStatusUpdate(d) {
+            var structuralChange = false;
+            var currentStoryId = sessionData && sessionData.currentStory ? sessionData.currentStory.sys_id : null;
+            var currentStoryStatus = sessionData && sessionData.currentStory ? sessionData.currentStory.status : null;
+            var currentSessionStatus = sessionData && sessionData.session ? sessionData.session.status : null;
+
+            if (d.hasCurrentStory && !currentStoryId) { structuralChange = true; }
+            else if (!d.hasCurrentStory && currentStoryId) { structuralChange = true; }
+            if (d.hasCurrentStory && d.storyId && d.storyId !== currentStoryId) { structuralChange = true; }
+            if (d.hasCurrentStory && d.storyStatus && d.storyStatus !== currentStoryStatus) { structuralChange = true; }
+            if (d.sessionStatus && d.sessionStatus !== currentSessionStatus) { structuralChange = true; }
+            if (d.participants && sessionData && sessionData.participants) {
+                if (d.participants.length !== sessionData.participants.length) { structuralChange = true; }
+            }
+
+            if (structuralChange) {
+                loadSession();
+                return;
+            }
+
+            if (d.hasCurrentStory) {
+                updateVotingIndicators(d.participants);
+                if (!activeEditField && sessionData && sessionData.currentStory) {
+                    var cs = sessionData.currentStory;
+                    var changed = false;
+                    if (d.storyTitle !== undefined && d.storyTitle !== cs.story_title) { cs.story_title = d.storyTitle; changed = true; }
+                    if (d.storyDescription !== undefined && d.storyDescription !== cs.story_description) { cs.story_description = d.storyDescription; changed = true; }
+                    if (d.acceptanceCriteria !== undefined && d.acceptanceCriteria !== cs.acceptance_criteria) { cs.acceptance_criteria = d.acceptanceCriteria; changed = true; }
+                    if (d.dealerComments !== undefined && d.dealerComments !== cs.dealer_comments) { cs.dealer_comments = d.dealerComments; changed = true; }
+                    if (changed) { renderCurrentStory(cs); }
+                }
+            }
+        }
+
+        function handleAMBReconnect() {
+            var ajax = new GlideAjax('PlanningPokerSessionAjax');
+            ajax.addParam('sysparm_name', 'getVotingStatus');
+            ajax.addParam('session_id', sessionId);
+            ajax.getXMLAnswer(function(response) {
+                processVotingStatusUpdate(JSON.parse(response));
+            });
+        }
+
+        function updatePresenceIndicator(userId, isOnline) {
+            var indicator = document.getElementById('presence-' + userId);
+            if (indicator) {
+                indicator.className = isOnline ? 'presence-dot online' : 'presence-dot offline';
+            }
         }
         
         // Update voting indicators
@@ -3260,7 +3228,6 @@
         }
         
         // Utility functions
-        var pollPausedForModal = false;
         
         var PP_MODAL_SHOW_STYLE = 'display:flex!important;position:fixed!important;top:0!important;left:0!important;width:100%!important;height:100%!important;align-items:center!important;justify-content:center!important;z-index:99999!important;background:rgba(0,0,0,0.75)!important;backdrop-filter:blur(4px)!important;opacity:1!important;visibility:visible!important;';
         var PP_CONTENT_SHOW_STYLE = 'display:block!important;opacity:1!important;visibility:visible!important;filter:none!important;width:92vw!important;min-width:320px!important;max-width:600px!important;min-height:150px!important;max-height:82vh!important;overflow-y:auto!important;position:fixed!important;top:50%!important;left:50%!important;transform:translate(-50%,-50%)!important;background:linear-gradient(160deg,rgba(10,18,35,0.97),rgba(5,10,22,0.98))!important;border:1px solid rgba(0,212,255,0.3)!important;border-radius:12px!important;box-shadow:0 0 60px rgba(0,212,255,0.15)!important;z-index:100000!important;box-sizing:border-box!important;';
@@ -3294,13 +3261,12 @@
             
             var computed = window.getComputedStyle(targetModal);
             console.log('[PP-DEBUG] showModal: display=' + computed.display + ' visibility=' + computed.visibility + ' zIndex=' + computed.zIndex + ' opacity=' + computed.opacity);
-            
+
             if (content) {
                 var cc = window.getComputedStyle(content);
                 console.log('[PP-DEBUG] showModal content: display=' + cc.display + ' visibility=' + cc.visibility + ' opacity=' + cc.opacity + ' w=' + content.offsetWidth + ' h=' + content.offsetHeight);
             }
-            
-            // Verify modal is still visible after 500ms
+
             setTimeout(function() {
                 var still = document.getElementById(modalId);
                 if (still) {
@@ -3310,16 +3276,8 @@
                     console.log('[PP-DEBUG] showModal 500ms check: display=' + sc.display + ' classes=' + still.className + contentInfo);
                 }
             }, 500);
-            
-            // Pause polling while modal is open to prevent sessionData overwrites
-            if (pollInterval) {
-                clearInterval(pollInterval);
-                pollInterval = null;
-                pollPausedForModal = true;
-                console.log('[PP-DEBUG] showModal: polling paused');
-            }
         }
-        
+
         function hideModal(modalId) {
             var el = document.getElementById(modalId);
             if (el) {
@@ -3328,9 +3286,8 @@
                 var c = el.querySelector('.pp-modal-content');
                 if (c) c.style.cssText = '';
             }
-            resumePollingIfNeeded();
         }
-        
+
         function hideAllModals() {
             console.log('[PP-DEBUG] hideAllModals called, trace:', new Error().stack.split('\n').slice(1,4).join(' <- '));
             var modals = document.querySelectorAll('.pp-modal');
@@ -3339,16 +3296,6 @@
                 modals[i].style.cssText = '';
                 var c = modals[i].querySelector('.pp-modal-content');
                 if (c) c.style.cssText = '';
-            }
-            resumePollingIfNeeded();
-        }
-        
-        function resumePollingIfNeeded() {
-            // Only resume if no modals are still open
-            var anyOpen = document.querySelector('.pp-modal.pp-active');
-            if (!anyOpen && pollPausedForModal && !pollInterval) {
-                pollPausedForModal = false;
-                startPolling();
             }
         }
         
@@ -3459,11 +3406,10 @@
         
         // Cleanup on page unload — notify server that user left
         window.addEventListener('beforeunload', function() {
-            if (pollInterval) {
-                clearInterval(pollInterval);
+            if (ambClient) {
+                ambClient.disconnect();
             }
             // Fire-and-forget leave notification
-            // For tab close: heartbeat cleanup marks user offline within 15s
             if (sessionId) {
                 try {
                     var ga = new GlideAjax('SessionParticipantAjax');

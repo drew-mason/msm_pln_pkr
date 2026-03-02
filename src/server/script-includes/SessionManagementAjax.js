@@ -376,6 +376,7 @@ SessionManagementAjax.prototype = Object.extendsObject(global.AbstractAjaxProces
                 }
             }
             
+            new PlanningPokerAMB().publishSessionState(sessionId);
             return this._buildResponse(true, 'Added ' + addedCount + ' stories, skipped ' + skippedCount, {
                 addedCount: addedCount,
                 skippedCount: skippedCount
@@ -431,6 +432,7 @@ SessionManagementAjax.prototype = Object.extendsObject(global.AbstractAjaxProces
                 // Delete session story
                 storyGr.deleteRecord();
                 
+                new PlanningPokerAMB().publishSessionState(sessionId);
                 return this._buildResponse(true, 'Story removed successfully', null);
             } else {
                 return this._buildResponse(false, 'Story not found', null);

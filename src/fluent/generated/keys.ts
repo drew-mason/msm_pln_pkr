@@ -57,6 +57,10 @@ declare global {
                         table: 'sys_scope_privilege'
                         id: 'fd09f47b83877a50c97cc2d6feaad3ad'
                     }
+                    planning_poker_amb_channel: {
+                        table: 'glide_amb_config'
+                        id: 'b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5'
+                    }
                     fibonacci_method: {
                         table: 'x_902080_planningw_scoring_method'
                         id: '4b30e1c799c0469aabb6fb5427b4ec60'
@@ -100,6 +104,10 @@ declare global {
                     si_planning_poker_constants: {
                         table: 'sys_script_include'
                         id: 'd0d97fcefa6e40de91bcca26baca4aa7'
+                    }
+                    si_planning_poker_amb: {
+                        table: 'sys_script_include'
+                        id: 'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4'
                     }
                     si_planning_poker_security: {
                         table: 'sys_script_include'
@@ -582,15 +590,6 @@ declare global {
                         }
                     },
                     {
-                        table: 'sys_documentation'
-                        id: '49b18d97a93c42c99a4274601c71320e'
-                        key: {
-                            name: 'x_902080_planningw_session_participant'
-                            element: 'last_seen'
-                            language: 'en'
-                        }
-                    },
-                    {
                         table: 'sys_dictionary'
                         id: '49fcccc1e9934f53b0afa10d9c57dfc8'
                         key: {
@@ -655,14 +654,6 @@ declare global {
                         key: {
                             name: 'x_902080_planningw_session_voter_groups'
                             element: 'NULL'
-                        }
-                    },
-                    {
-                        table: 'sys_dictionary'
-                        id: '58a01c9266954b5ca135198cc75b0355'
-                        key: {
-                            name: 'x_902080_planningw_session_participant'
-                            element: 'last_seen'
                         }
                     },
                     {

@@ -41,9 +41,6 @@ export const x_902080_planningw_session_participant = Table({
             label: 'Joined At',
             mandatory: true
         }),
-        last_seen: DateTimeColumn({ 
-            label: 'Last Seen'
-        }),
         is_presenter: BooleanColumn({ 
             label: 'Is Presenter',
             default: false

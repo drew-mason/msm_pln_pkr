@@ -108,6 +108,8 @@ PlanningPokerVotingAjax.prototype = Object.extendsObject(global.AbstractAjaxProc
                 gs.debug('[PlanningPokerVotingAjax] Created new vote for user: ' + userId);
             }
             
+            new PlanningPokerAMB().publishSessionState(sessionId);
+
             return this._buildResponse(true, 'Vote cast successfully', {
                 voteValue: voteValue,
                 numericValue: numericValue
@@ -180,6 +182,8 @@ PlanningPokerVotingAjax.prototype = Object.extendsObject(global.AbstractAjaxProc
             var voteUtils = new PlanningPokerVoteUtils();
             var summary = voteUtils.calculateVoteSummary(votes);
             
+            new PlanningPokerAMB().publishSessionState(sessionId);
+
             return this._buildResponse(true, 'Votes revealed successfully', {
                 votes: votes,
                 summary: summary
@@ -245,6 +249,7 @@ PlanningPokerVotingAjax.prototype = Object.extendsObject(global.AbstractAjaxProc
             
             gs.debug('[PlanningPokerVotingAjax] Reset ' + deletedCount + ' votes for story: ' + storyId);
             
+            new PlanningPokerAMB().publishSessionState(sessionId);
             return this._buildResponse(true, 'Votes reset successfully', {
                 deletedVotes: deletedCount,
                 newStatus: 'voting'

@@ -47,7 +47,6 @@ SessionParticipantAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
                     participantGr.setValue('joined_at', new GlideDateTime());
                 }
                 participantGr.setValue('is_online', true);
-                participantGr.setValue('last_seen', new GlideDateTime());
                 participantGr.update();
                 
                 var role = participantGr.getValue('role');
@@ -56,6 +55,7 @@ SessionParticipantAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
                     role = role.split('.').pop();
                 }
                 
+                new PlanningPokerAMB().publishParticipantJoined(sessionId, userId, gs.getUserDisplayName(), role);
                 return this._buildResponse(true, 'Rejoined session successfully', {
                     sessionId: sessionId,
                     role: role,
@@ -77,11 +77,11 @@ SessionParticipantAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
                 participantGr.setValue('status', 'active');
                 participantGr.setValue('joined_at', new GlideDateTime());
                 participantGr.setValue('is_online', true);
-                participantGr.setValue('last_seen', new GlideDateTime());
                 participantGr.insert();
                 
                 gs.debug('[SessionParticipantAjax] User ' + userId + ' joined session ' + sessionId + ' as ' + role);
                 
+                new PlanningPokerAMB().publishParticipantJoined(sessionId, userId, gs.getUserDisplayName(), role);
                 return this._buildResponse(true, 'Joined session successfully', {
                     sessionId: sessionId,
                     role: role,
@@ -116,6 +116,8 @@ SessionParticipantAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
                 participantGr.setValue('is_online', false);
                 participantGr.update();
                 
+                new PlanningPokerAMB().publishParticipantLeft(sessionId, userId);
+                new PlanningPokerAMB().publishPresenceUpdate(sessionId, userId, false);
                 return this._buildResponse(true, 'Left session successfully', null);
             } else {
                 return this._buildResponse(false, 'Participant record not found', null);
@@ -242,6 +244,7 @@ SessionParticipantAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
                     newRole = newRole.split('.').pop();
                 }
                 
+                new PlanningPokerAMB().publishSessionState(sessionId);
                 return this._buildResponse(true, 'Role switched to ' + newRole, {
                     newRole: newRole
                 });
@@ -302,6 +305,7 @@ SessionParticipantAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
                 participantGr.setValue('role', newRole);
                 participantGr.update();
                 
+                new PlanningPokerAMB().publishSessionState(sessionId);
                 return this._buildResponse(true, 'Participant role changed to ' + newRole, null);
             } else {
                 return this._buildResponse(false, 'Participant not found', null);
