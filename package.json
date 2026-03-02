@@ -9,6 +9,10 @@
         "transform": "now-sdk transform",
         "types": "now-sdk dependencies"
     },
+    "dependencies": {
+        "react": "18.2.0",
+        "react-dom": "18.2.0"
+    },
     "devDependencies": {
         "@servicenow/sdk": "4.2.0",
         "@servicenow/glide": "26.0.1",

@@ -12,17 +12,17 @@ PlanningPokerSecurity.prototype = {
             // Admin roles always have access
             if (this.hasAdminAccess(userId)) return true;
 
-            var sessionGr = new GlideRecord('x_902080_planningw_planning_session');
+            var sessionGr = new GlideRecord('pp_planning_session');
             if (!sessionGr.get(sessionId)) return false;
 
             // Check if user is session dealer
             if (this.isSessionDealer(sessionGr, userId)) return true;
 
             // Check if user has active participant record
-            var participantGr = new GlideRecord('x_902080_planningw_session_participant');
+            var participantGr = new GlideRecord('pp_session_participant');
             participantGr.addQuery('session', sessionId);
             participantGr.addQuery('user', userId);
-            participantGr.addQuery('status', PlanningPokerConstants.STATUS.ACTIVE);
+            participantGr.addQuery('status', 'active');
             participantGr.query();
             
             if (participantGr.next()) return true;
@@ -33,13 +33,7 @@ PlanningPokerSecurity.prototype = {
             }
 
             // Legacy role fallback
-            var roles = [
-                PlanningPokerConstants.ROLES.ADMIN,
-                PlanningPokerConstants.ROLES.FACILITATOR,
-                'x_902080_planningw.dealer',
-                'x_902080_planningw.voter',
-                'x_902080_planningw.spectator'
-            ];
+            var roles = ['admin', 'pp_admin', 'pp_facilitator', 'pp_dealer', 'pp_voter', 'pp_spectator'];
             return this.hasAppRole(userId, roles);
 
         } catch (e) {
@@ -57,14 +51,14 @@ PlanningPokerSecurity.prototype = {
             // Admin always can manage
             if (this.hasAdminAccess(userId)) return true;
 
-            var sessionGr = new GlideRecord('x_902080_planningw_planning_session');
+            var sessionGr = new GlideRecord('pp_planning_session');
             if (!sessionGr.get(sessionId)) return false;
 
             // Check if user is session creator/dealer
             if (this.isSessionDealer(sessionGr, userId)) return true;
 
             // Check if user has been promoted to dealer role in this session
-            var partGr = new GlideRecord('x_902080_planningw_session_participant');
+            var partGr = new GlideRecord('pp_session_participant');
             partGr.addQuery('session', sessionId);
             partGr.addQuery('user', userId);
             partGr.addQuery('role', 'dealer');
@@ -98,7 +92,7 @@ PlanningPokerSecurity.prototype = {
             
             var roleData = this.getUserRole(sessionId, userId);
             var role = roleData.role;
-            return (role === PlanningPokerConstants.ROLES.DEALER || role === PlanningPokerConstants.ROLES.VOTER);
+            return (role === 'dealer' || role === 'voter');
 
         } catch (e) {
             gs.error('[PlanningPokerSecurity] canVote error: ' + String(e.message));
@@ -113,7 +107,7 @@ PlanningPokerSecurity.prototype = {
             
             // 1. Get explicit participant role
             var participantRole = null;
-            var participantGr = new GlideRecord('x_902080_planningw_session_participant');
+            var participantGr = new GlideRecord('pp_session_participant');
             participantGr.addQuery('session', sessionId);
             participantGr.addQuery('user', userId);
             participantGr.setLimit(1);
@@ -121,31 +115,20 @@ PlanningPokerSecurity.prototype = {
             
             if (participantGr.next()) {
                 participantRole = participantGr.getValue('role');
-                // Normalize role if it contains scope prefix
-                if (participantRole && participantRole.indexOf('.') > -1) {
-                    participantRole = participantRole.split('.').pop();
-                }
             }
 
-            // 2. Check Dealer permissions (Owner, Facilitator, or Group)
+            // 2. Check Dealer permissions
             var isDealer = this.canManageSession(sessionId, userId);
 
             // 3. Determine Effective Role
-            // If explicit role exists, prefer it, unless they are a dealer but joined as voter? 
-            // Usually dealer privs override unless explicitly in spectator mode?
-            // For now, mirroring logic: Explicit role takes precedence, but if no role & isDealer -> Dealer.
-            
             var effectiveRole = participantRole;
             
             if (!effectiveRole) {
                 if (isDealer) {
-                    effectiveRole = PlanningPokerConstants.ROLES.DEALER;
+                    effectiveRole = 'dealer';
                 } else {
-                    effectiveRole = PlanningPokerConstants.ROLES.SPECTATOR;
+                    effectiveRole = 'spectator';
                 }
-            } else if (isDealer && participantRole === PlanningPokerConstants.ROLES.VOTER) {
-                 // Even if listed as voter, if they have dealer rights, they can act as dealer?
-                 // Keeping it simple: return object allowing caller to decide
             }
 
             return {
@@ -157,7 +140,7 @@ PlanningPokerSecurity.prototype = {
         } catch (e) {
             gs.error('[PlanningPokerSecurity] getUserRole error: ' + String(e.message));
             return {
-                role: PlanningPokerConstants.ROLES.SPECTATOR,
+                role: 'spectator',
                 isDealer: false,
                 participantRole: null
             };
@@ -171,7 +154,7 @@ PlanningPokerSecurity.prototype = {
             
             // 1. Collect all allowed group IDs
             var groupIds = [];
-            var voterGroupGr = new GlideRecord('x_902080_planningw_session_voter_groups');
+            var voterGroupGr = new GlideRecord('pp_session_voter_groups');
             voterGroupGr.addQuery('session', sessionId);
             voterGroupGr.query();
             
@@ -181,7 +164,7 @@ PlanningPokerSecurity.prototype = {
             
             if (groupIds.length === 0) return false;
 
-            // 2. Single query to check if user is in ANY of these groups
+            // 2. Check if user is in any of these groups
             var memberGr = new GlideRecord('sys_user_grmember');
             memberGr.addQuery('user', userId);
             memberGr.addQuery('group', 'IN', groupIds);
@@ -199,7 +182,7 @@ PlanningPokerSecurity.prototype = {
     // Check if session has voter group restrictions
     sessionHasVoterGroups: function(sessionId) {
         try {
-            var voterGroupGr = new GlideRecord('x_902080_planningw_session_voter_groups');
+            var voterGroupGr = new GlideRecord('pp_session_voter_groups');
             voterGroupGr.addQuery('session', sessionId);
             voterGroupGr.setLimit(1);
             voterGroupGr.query();
@@ -215,15 +198,14 @@ PlanningPokerSecurity.prototype = {
     // Helper: Check if user has admin access
     hasAdminAccess: function(userId) {
         userId = userId || gs.getUserID();
-        return this.hasAppRole(userId, [PlanningPokerConstants.ROLES.ADMIN, 'admin']);
+        return this.hasAppRole(userId, ['admin', 'pp_admin']);
     },
 
     // Helper: Check if user has specific app roles
     hasAppRole: function(userId, roles) {
         if (!userId || !roles) return false;
         
-        // gs.hasRole only checks the current user — the 2nd param does NOT override the user.
-        // For the current user, use gs.hasRole directly.
+        // For the current user, use gs.hasRole directly
         if (userId === gs.getUserID()) {
             for (var i = 0; i < roles.length; i++) {
                 if (gs.hasRole(roles[i])) {
@@ -241,22 +223,6 @@ PlanningPokerSecurity.prototype = {
         roleGr.setLimit(1);
         roleGr.query();
         return roleGr.hasNext();
-    },
-
-    // Helper: Check if user is in group
-    isUserInGroup: function(userId, groupId) {
-        try {
-            var groupMemberGr = new GlideRecord('sys_user_grmember');
-            groupMemberGr.addQuery('user', userId);
-            groupMemberGr.addQuery('group', groupId);
-            groupMemberGr.query();
-            
-            return groupMemberGr.next();
-
-        } catch (e) {
-            gs.error('[PlanningPokerSecurity] isUserInGroup error: ' + String(e.message));
-            return false;
-        }
     },
 
     type: 'PlanningPokerSecurity'

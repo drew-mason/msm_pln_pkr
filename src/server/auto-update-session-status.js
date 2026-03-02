@@ -23,8 +23,8 @@ export function autoUpdateSessionStatus(current, previous) {
             return; // Nothing meaningful to process
         }
 
-        // Use GlideAggregate to count stories by status for the session
-        var agg = new GlideAggregate('x_902080_planningw_session_stories');
+        // Use GlideAggregate to count stories by status for the session - UPDATED TO GLOBAL TABLE
+        var agg = new GlideAggregate('pp_session_stories');
         agg.addQuery('session', sessionId);
         agg.addAggregate('COUNT', 'status');
         agg.groupBy('status');
@@ -48,8 +48,8 @@ export function autoUpdateSessionStatus(current, previous) {
             totalStories += statusCounts[s];
         }
 
-        // Count total votes for this session
-        var voteAgg = new GlideAggregate('x_902080_planningw_planning_vote');
+        // Count total votes for this session - UPDATED TO GLOBAL TABLE
+        var voteAgg = new GlideAggregate('pp_planning_vote');
         voteAgg.addQuery('session', sessionId);
         voteAgg.addAggregate('COUNT');
         voteAgg.query();
@@ -58,8 +58,8 @@ export function autoUpdateSessionStatus(current, previous) {
             totalVotes = parseInt(voteAgg.getAggregate('COUNT'));
         }
 
-        // Update session counter fields
-        var sessionGr = new GlideRecord('x_902080_planningw_planning_session');
+        // Update session counter fields - UPDATED TO GLOBAL TABLE
+        var sessionGr = new GlideRecord('pp_planning_session');
         if (sessionGr.get(sessionId)) {
             var currentSessionStatus = sessionGr.getValue('status');
             
@@ -71,7 +71,6 @@ export function autoUpdateSessionStatus(current, previous) {
             sessionGr.setValue('total_votes', totalVotes);
 
             // Auto-complete session only when ALL stories have a terminal status
-            // 'revealed' is NOT terminal — dealer still needs to lock estimate or bypass
             if ((pendingCount === 0 && votingCount === 0 && revealedCount === 0) && totalStories > 0) {
                 // Skip if session is already completed or cancelled (idempotent check)
                 if (currentSessionStatus !== 'completed' && currentSessionStatus !== 'cancelled') {
