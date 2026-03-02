@@ -2132,6 +2132,9 @@
             if (typeof window.GlideAMBClient !== 'undefined') return window.GlideAMBClient;
             try { if (typeof top.GlideAMBClient !== 'undefined') return top.GlideAMBClient; } catch(e) {}
             try { if (typeof parent.GlideAMBClient !== 'undefined') return parent.GlideAMBClient; } catch(e) {}
+            if (typeof window.GlideAmbClient !== 'undefined') return window.GlideAmbClient;
+            try { if (typeof top.GlideAmbClient !== 'undefined') return top.GlideAmbClient; } catch(e) {}
+            try { if (typeof parent.GlideAmbClient !== 'undefined') return parent.GlideAmbClient; } catch(e) {}
             return null;
         }
 
@@ -2147,10 +2150,22 @@
                     if (AMBCtor) {
                         clearInterval(interval);
                         initAMB(sid, AMBCtor);
-                    } else if (attempts >= 40) {
-                        clearInterval(interval);
-                        console.error('[PP-AMB] GlideAMBClient not available after 20s, falling back to polling');
-                        startPollingFallback();
+                    } else {
+                        if (attempts === 1 || attempts === 4 || attempts === 10) {
+                            var keys = [];
+                            try {
+                                keys = Object.keys(top).filter(function(k) {
+                                    return /amb|glide/i.test(k);
+                                });
+                            } catch(e) { keys = ['(cross-origin blocked)']; }
+                            console.log('[PP-AMB] attempt', attempts, '— AMB-related globals on top:', keys.join(', ') || '(none)');
+                            console.log('[PP-AMB] window.GlideAMBClient=', typeof window.GlideAMBClient, 'window.GlideAmbClient=', typeof window.GlideAmbClient);
+                        }
+                        if (attempts >= 40) {
+                            clearInterval(interval);
+                            console.error('[PP-AMB] GlideAMBClient not available after 20s, falling back to polling');
+                            startPollingFallback();
+                        }
                     }
                 }, 500);
             }
