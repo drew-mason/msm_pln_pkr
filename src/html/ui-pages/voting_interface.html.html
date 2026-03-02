@@ -2174,6 +2174,7 @@
                 handleAMBMessage(JSON.parse(message.data));
             });
             ambClient.connect();
+            console.log('[PP-AMB] Subscribed to', channelName);
         }
 
         function handleAMBMessage(data) {
