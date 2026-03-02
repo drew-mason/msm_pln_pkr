@@ -2127,19 +2127,29 @@
         }
         
         // AMB real-time updates
+        function resolveGlideAMBClient() {
+            if (typeof GlideAMBClient !== 'undefined') return GlideAMBClient;
+            if (typeof window.GlideAMBClient !== 'undefined') return window.GlideAMBClient;
+            try { if (typeof top.GlideAMBClient !== 'undefined') return top.GlideAMBClient; } catch(e) {}
+            try { if (typeof parent.GlideAMBClient !== 'undefined') return parent.GlideAMBClient; } catch(e) {}
+            return null;
+        }
+
         function waitForAMBClient(sid) {
-            if (typeof GlideAMBClient !== 'undefined') {
-                initAMB(sid);
+            var AMBCtor = resolveGlideAMBClient();
+            if (AMBCtor) {
+                initAMB(sid, AMBCtor);
             } else {
                 var attempts = 0;
                 var interval = setInterval(function() {
                     attempts++;
-                    if (typeof GlideAMBClient !== 'undefined') {
+                    var AMBCtor = resolveGlideAMBClient();
+                    if (AMBCtor) {
                         clearInterval(interval);
-                        initAMB(sid);
-                    } else if (attempts >= 20) {
+                        initAMB(sid, AMBCtor);
+                    } else if (attempts >= 40) {
                         clearInterval(interval);
-                        console.error('[PP-AMB] GlideAMBClient not available after 10s, falling back to polling');
+                        console.error('[PP-AMB] GlideAMBClient not available after 20s, falling back to polling');
                         startPollingFallback();
                     }
                 }, 500);
@@ -2148,13 +2158,18 @@
 
         function startPollingFallback() {
             setInterval(function() {
-                handleAMBReconnect();
+                var ajax = new GlideAjax('PlanningPokerSessionAjax');
+                ajax.addParam('sysparm_name', 'getVotingStatus');
+                ajax.addParam('session_id', sessionId);
+                ajax.getXMLAnswer(function(response) {
+                    processVotingStatusUpdate(JSON.parse(response));
+                });
             }, 3000);
         }
 
-        function initAMB(sid) {
+        function initAMB(sid, AMBCtor) {
             var channelName = '/x_902080_planningw/session/' + sid;
-            ambClient = new GlideAMBClient();
+            ambClient = new AMBCtor();
             ambClient.subscribe(channelName, function(message) {
                 handleAMBMessage(JSON.parse(message.data));
             });
