@@ -1567,7 +1567,7 @@
             
             initializeEventListeners();
             loadSession();
-            initAMB(sessionId);
+            waitForAMBClient(sessionId);
         });
         
         // Event listeners setup
@@ -2127,6 +2127,31 @@
         }
         
         // AMB real-time updates
+        function waitForAMBClient(sid) {
+            if (typeof GlideAMBClient !== 'undefined') {
+                initAMB(sid);
+            } else {
+                var attempts = 0;
+                var interval = setInterval(function() {
+                    attempts++;
+                    if (typeof GlideAMBClient !== 'undefined') {
+                        clearInterval(interval);
+                        initAMB(sid);
+                    } else if (attempts >= 20) {
+                        clearInterval(interval);
+                        console.error('[PP-AMB] GlideAMBClient not available after 10s, falling back to polling');
+                        startPollingFallback();
+                    }
+                }, 500);
+            }
+        }
+
+        function startPollingFallback() {
+            setInterval(function() {
+                handleAMBReconnect();
+            }, 3000);
+        }
+
         function initAMB(sid) {
             var channelName = '/x_902080_planningw/session/' + sid;
             ambClient = new GlideAMBClient();
