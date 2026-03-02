@@ -2128,9 +2128,9 @@
         
         // AMB real-time updates
         function resolveAMBClient() {
-            try { if (top.g_ambClient) return top.g_ambClient; } catch(e) {}
-            try { if (parent.g_ambClient) return parent.g_ambClient; } catch(e) {}
-            if (window.g_ambClient) return window.g_ambClient;
+            try { if (top.g_ambClient && typeof top.g_ambClient.subscribe === 'function') return top.g_ambClient; } catch(e) {}
+            try { if (parent.g_ambClient && typeof parent.g_ambClient.subscribe === 'function') return parent.g_ambClient; } catch(e) {}
+            if (window.g_ambClient && typeof window.g_ambClient.subscribe === 'function') return window.g_ambClient;
             return null;
         }
 
