@@ -2189,7 +2189,12 @@
                 ajax.addParam('session_id', sessionId);
                 ajax.getXMLAnswer(function(response) {
                     try {
-                        processVotingStatusUpdate(JSON.parse(response));
+                        var result = JSON.parse(response);
+                        // getXMLAnswer returns _buildResponse wrapper {success, message, data}
+                        // processVotingStatusUpdate expects the flat payload (like AMB sends)
+                        if (result && result.success && result.data) {
+                            processVotingStatusUpdate(result.data);
+                        }
                     } catch(e) {
                         console.error('[PP-Poll] Error processing poll:', e);
                     }
@@ -2250,36 +2255,52 @@
         }
 
         function processVotingStatusUpdate(d) {
-            var structuralChange = false;
-            var currentStoryId = sessionData && sessionData.currentStory ? sessionData.currentStory.sys_id : null;
-            var currentStoryStatus = sessionData && sessionData.currentStory ? sessionData.currentStory.status : null;
-            var currentSessionStatus = sessionData && sessionData.session ? sessionData.session.status : null;
+            if (!sessionData) return;
+            
+            var currentStoryId = sessionData.currentStory ? sessionData.currentStory.sys_id : null;
+            var currentStoryStatus = sessionData.currentStory ? sessionData.currentStory.status : null;
+            var currentSessionStatus = sessionData.session ? sessionData.session.status : null;
 
-            if (d.hasCurrentStory && !currentStoryId) { structuralChange = true; }
-            else if (!d.hasCurrentStory && currentStoryId) { structuralChange = true; }
-            if (d.hasCurrentStory && d.storyId && d.storyId !== currentStoryId) { structuralChange = true; }
-            if (d.hasCurrentStory && d.storyStatus && d.storyStatus !== currentStoryStatus) { structuralChange = true; }
-            if (d.sessionStatus && d.sessionStatus !== currentSessionStatus) { structuralChange = true; }
-            if (d.participants && sessionData && sessionData.participants) {
-                if (d.participants.length !== sessionData.participants.length) { structuralChange = true; }
-            }
+            // Detect changes that require a full session reload (new scoring values, story queue, etc.)
+            var needsFullReload = false;
+            if (d.hasCurrentStory && !currentStoryId) { needsFullReload = true; }       // new story appeared
+            else if (!d.hasCurrentStory && currentStoryId) { needsFullReload = true; }  // story removed
+            if (d.hasCurrentStory && d.storyId && d.storyId !== currentStoryId) { needsFullReload = true; }  // different story
+            if (d.hasCurrentStory && d.storyStatus && d.storyStatus !== currentStoryStatus) { needsFullReload = true; }  // story status change (voting→revealed)
+            if (d.sessionStatus && d.sessionStatus !== currentSessionStatus) { needsFullReload = true; }  // session status change
 
-            if (structuralChange) {
+            if (needsFullReload) {
                 loadSession();
                 return;
             }
 
-            if (d.hasCurrentStory) {
-                updateVotingIndicators(d.participants);
-                if (!activeEditField && sessionData && sessionData.currentStory) {
-                    var cs = sessionData.currentStory;
-                    var changed = false;
-                    if (d.storyTitle !== undefined && d.storyTitle !== cs.story_title) { cs.story_title = d.storyTitle; changed = true; }
-                    if (d.storyDescription !== undefined && d.storyDescription !== cs.story_description) { cs.story_description = d.storyDescription; changed = true; }
-                    if (d.acceptanceCriteria !== undefined && d.acceptanceCriteria !== cs.acceptance_criteria) { cs.acceptance_criteria = d.acceptanceCriteria; changed = true; }
-                    if (d.dealerComments !== undefined && d.dealerComments !== cs.dealer_comments) { cs.dealer_comments = d.dealerComments; changed = true; }
-                    if (changed) { renderCurrentStory(cs); }
+            // For participant and story field changes, update sessionData inline (no double-fetch)
+            var needsRerender = false;
+            
+            // Update participants inline if count changed (bot add/remove, join/leave)
+            if (d.participants && sessionData.participants) {
+                if (d.participants.length !== sessionData.participants.length) {
+                    sessionData.participants = d.participants;
+                    needsRerender = true;
                 }
+            }
+
+            // Update voting indicators
+            if (d.participants) {
+                updateVotingIndicators(d.participants);
+            }
+
+            // Update story fields inline (title, description, AC, comments)
+            if (d.hasCurrentStory && !activeEditField && sessionData.currentStory) {
+                var cs = sessionData.currentStory;
+                if (d.storyTitle !== undefined && d.storyTitle !== cs.story_title) { cs.story_title = d.storyTitle; needsRerender = true; }
+                if (d.storyDescription !== undefined && d.storyDescription !== cs.story_description) { cs.story_description = d.storyDescription; needsRerender = true; }
+                if (d.acceptanceCriteria !== undefined && d.acceptanceCriteria !== cs.acceptance_criteria) { cs.acceptance_criteria = d.acceptanceCriteria; needsRerender = true; }
+                if (d.dealerComments !== undefined && d.dealerComments !== cs.dealer_comments) { cs.dealer_comments = d.dealerComments; needsRerender = true; }
+            }
+
+            if (needsRerender) {
+                renderSession();
             }
         }
 
@@ -2288,7 +2309,14 @@
             ajax.addParam('sysparm_name', 'getVotingStatus');
             ajax.addParam('session_id', sessionId);
             ajax.getXMLAnswer(function(response) {
-                processVotingStatusUpdate(JSON.parse(response));
+                try {
+                    var result = JSON.parse(response);
+                    if (result && result.success && result.data) {
+                        processVotingStatusUpdate(result.data);
+                    }
+                } catch(e) {
+                    console.error('[PP-AMB] Reconnect poll error:', e);
+                }
             });
         }
 

@@ -8,6 +8,7 @@ export const planning_poker_amb_channel = Record({
         channel_name: '/x_902080_planningw/session',
         supports_pattern: true,
         active: true,
-        description: 'Planning Poker real-time session updates channel'
+        description: 'Planning Poker real-time session updates channel',
+        can_subscribe: 'gs.isLoggedIn()'
     }
 })
