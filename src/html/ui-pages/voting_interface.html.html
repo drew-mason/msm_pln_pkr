@@ -2134,7 +2134,7 @@
             });
         }
         
-        // Real-time updates via polling (3-second interval)
+        // Real-time updates via polling (2-second interval)
         var pollingActive = false;
         function startPolling() {
             if (pollingActive) return;
@@ -2153,7 +2153,7 @@
                         console.error('[PP-Poll] Error processing poll:', e);
                     }
                 });
-            }, 3000);
+            }, 2000);
         }
 
         function processVotingStatusUpdate(d) {
