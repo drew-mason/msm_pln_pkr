@@ -1551,7 +1551,6 @@
 
         // Global variables
         var sessionData = null;
-        var ambClient = null;
         var sessionId = getUrlParameter('session_id');
         var storySearchDebounce = null;
         var selectedStoryIds = [];
@@ -1567,7 +1566,7 @@
             
             initializeEventListeners();
             loadSession();
-            waitForAMBClient(sessionId);
+            startPolling();
         });
         
         // Event listeners setup
@@ -2120,7 +2119,7 @@
                 
                 if (result.success) {
                     showToast('Vote registered: ' + voteValue, 'success');
-                    // Immediately update our own voting indicator (don't wait for AMB roundtrip)
+                    // Immediately update our own voting indicator (don't wait for polling roundtrip)
                     var myUserId = sessionData && sessionData.userRole ? sessionData.userRole.userId : null;
                     if (myUserId) {
                         var indicator = document.getElementById('vote-indicator-' + myUserId);
@@ -2135,52 +2134,9 @@
             });
         }
         
-        // AMB real-time updates
-        // ServiceNow AMB client API has changed across versions:
-        //   Legacy (pre-Washington):  client.subscribe(channel, handler)
-        //                             client.addSubscription(channel, handler)
-        //   Washington/Xanadu+:      client.getChannel(channel).subscribe(handler)
-        //                             client.subscribeToEvent(channel, handler)
-        function isValidAMBClient(c) {
-            if (!c) return false;
-            return (typeof c.subscribe === 'function' ||
-                    typeof c.addSubscription === 'function' ||
-                    typeof c.subscribeToEvent === 'function' ||
-                    typeof c.getChannel === 'function');
-        }
-
-        function resolveAMBClient() {
-            try { if (isValidAMBClient(top.g_ambClient)) return top.g_ambClient; } catch(e) {}
-            try { if (isValidAMBClient(parent.g_ambClient)) return parent.g_ambClient; } catch(e) {}
-            if (isValidAMBClient(window.g_ambClient)) return window.g_ambClient;
-            return null;
-        }
-
-        function waitForAMBClient(sid) {
-            var client = resolveAMBClient();
-            if (client) {
-                initAMB(sid, client);
-            } else {
-                var attempts = 0;
-                var interval = setInterval(function() {
-                    attempts++;
-                    var client = resolveAMBClient();
-                    if (client) {
-                        clearInterval(interval);
-                        initAMB(sid, client);
-                    } else if (attempts >= 40) {
-                        clearInterval(interval);
-                        console.error('[PP-AMB] AMB client not ready after 20s');
-                    }
-                }, 500);
-            }
-            // Always start polling safety net — ensures voters see updates
-            // even when AMB is unavailable (direct URL, iframe isolation, etc.)
-            startPollingSafetyNet();
-        }
-
+        // Real-time updates via polling (3-second interval)
         var pollingActive = false;
-        function startPollingSafetyNet() {
+        function startPolling() {
             if (pollingActive) return;
             pollingActive = true;
             setInterval(function() {
@@ -2190,8 +2146,6 @@
                 ajax.getXMLAnswer(function(response) {
                     try {
                         var result = JSON.parse(response);
-                        // getXMLAnswer returns _buildResponse wrapper {success, message, data}
-                        // processVotingStatusUpdate expects the flat payload (like AMB sends)
                         if (result && result.success && result.data) {
                             processVotingStatusUpdate(result.data);
                         }
@@ -2199,59 +2153,7 @@
                         console.error('[PP-Poll] Error processing poll:', e);
                     }
                 });
-            }, 5000);
-        }
-
-        function startPollingFallback() {
-            startPollingSafetyNet();
-        }
-
-        function initAMB(sid, client) {
-            var channelName = '/x_902080_planningw/session/' + sid;
-            ambClient = client;
-            var handler = function(message) {
-                handleAMBMessage(JSON.parse(message.data));
-            };
-            // Washington/Xanadu+: getChannel() returns a channel object with subscribe()
-            if (typeof client.getChannel === 'function') {
-                var ch = client.getChannel(channelName);
-                if (ch && typeof ch.subscribe === 'function') {
-                    ch.subscribe(handler);
-                    console.log('[PP-AMB] Subscribed via getChannel().subscribe() to', channelName);
-                    return;
-                }
-            }
-            // Washington/Xanadu+: direct subscribeToEvent()
-            if (typeof client.subscribeToEvent === 'function') {
-                client.subscribeToEvent(channelName, handler);
-                console.log('[PP-AMB] Subscribed via subscribeToEvent() to', channelName);
-                return;
-            }
-            // Legacy: subscribe()
-            if (typeof client.subscribe === 'function') {
-                client.subscribe(channelName, handler);
-                console.log('[PP-AMB] Subscribed via subscribe() to', channelName);
-                return;
-            }
-            // Legacy: addSubscription()
-            if (typeof client.addSubscription === 'function') {
-                client.addSubscription(channelName, handler);
-                console.log('[PP-AMB] Subscribed via addSubscription() to', channelName);
-                return;
-            }
-            console.error('[PP-AMB] No known subscription method on AMB client — falling back to polling');
-            startPollingFallback();
-        }
-
-        function handleAMBMessage(data) {
-            var topic = data.topic;
-            if (topic === 'session_state') {
-                processVotingStatusUpdate(data);
-            } else if (topic === 'participant_joined' || topic === 'participant_left') {
-                loadSession();
-            } else if (topic === 'presence_update') {
-                updatePresenceIndicator(data.userId, data.isOnline);
-            }
+            }, 3000);
         }
 
         function processVotingStatusUpdate(d) {
@@ -2302,22 +2204,6 @@
             if (needsRerender) {
                 renderSession();
             }
-        }
-
-        function handleAMBReconnect() {
-            var ajax = new GlideAjax('PlanningPokerSessionAjax');
-            ajax.addParam('sysparm_name', 'getVotingStatus');
-            ajax.addParam('session_id', sessionId);
-            ajax.getXMLAnswer(function(response) {
-                try {
-                    var result = JSON.parse(response);
-                    if (result && result.success && result.data) {
-                        processVotingStatusUpdate(result.data);
-                    }
-                } catch(e) {
-                    console.error('[PP-AMB] Reconnect poll error:', e);
-                }
-            });
         }
 
         function updatePresenceIndicator(userId, isOnline) {
@@ -3536,9 +3422,6 @@
         
         // Cleanup on page unload — notify server that user left
         window.addEventListener('beforeunload', function() {
-            if (ambClient) {
-                ambClient.disconnect();
-            }
             // Fire-and-forget leave notification
             if (sessionId) {
                 try {
