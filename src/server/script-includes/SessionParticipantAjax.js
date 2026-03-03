@@ -321,7 +321,7 @@ SessionParticipantAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
     _demoteExistingDealers: function(sessionId, excludeUserId) {
         var dealerGr = new GlideRecord('x_902080_planningw_session_participant');
         dealerGr.addQuery('session', sessionId);
-        dealerGr.addQuery('role', 'dealer');
+        dealerGr.addQuery('role', 'CONTAINS', 'dealer');
         dealerGr.addQuery('status', 'active');
         if (excludeUserId) {
             dealerGr.addQuery('user', '!=', excludeUserId);
@@ -338,7 +338,7 @@ SessionParticipantAjax.prototype = Object.extendsObject(global.AbstractAjaxProce
     _hasActiveDealer: function(sessionId) {
         var dealerGr = new GlideRecord('x_902080_planningw_session_participant');
         dealerGr.addQuery('session', sessionId);
-        dealerGr.addQuery('role', 'dealer');
+        dealerGr.addQuery('role', 'CONTAINS', 'dealer');
         dealerGr.addQuery('status', 'active');
         dealerGr.setLimit(1);
         dealerGr.query();

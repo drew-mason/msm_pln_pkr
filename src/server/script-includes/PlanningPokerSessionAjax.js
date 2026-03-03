@@ -14,6 +14,9 @@ PlanningPokerSessionAjax.prototype = Object.extendsObject(global.AbstractAjaxPro
             var sessionId = sessionGr.getValue('sys_id');
             var userId = gs.getUserID();
             
+            // Ensure the current user is marked active/online before querying participants
+            this._ensurePresence(sessionId, userId, sessionGr);
+            
             // Build session data
             var data = {
                 session: this._buildSessionInfo(sessionGr),
@@ -188,6 +191,8 @@ PlanningPokerSessionAjax.prototype = Object.extendsObject(global.AbstractAjaxPro
                 role = 'dealer';
             } else if (role === PlanningPokerConstants.ROLES.VOTER || (role && role.indexOf('voter') > -1)) {
                 role = 'voter';
+            } else if (role === PlanningPokerConstants.ROLES.SPECTATOR || (role && role.indexOf('spectator') > -1)) {
+                role = 'spectator';
             }
             
             // Detect bot participants by username convention
@@ -228,11 +233,12 @@ PlanningPokerSessionAjax.prototype = Object.extendsObject(global.AbstractAjaxPro
         }
         
         // Any participant with dealer role has permission (promoted dealers)
+        // Use CONTAINS to handle scope-prefixed values (e.g. x_902080_planningw.dealer)
         var partGr = new GlideRecord('x_902080_planningw_session_participant');
         partGr.addQuery('session', sessionId);
         partGr.addQuery('status', PlanningPokerConstants.STATUS.ACTIVE);
         partGr.addQuery('is_online', true);
-        partGr.addQuery('role', 'dealer');
+        partGr.addQuery('role', 'CONTAINS', 'dealer');
         partGr.query();
         while (partGr.next()) {
             dealerSet[partGr.getValue('user')] = true;
@@ -315,6 +321,8 @@ PlanningPokerSessionAjax.prototype = Object.extendsObject(global.AbstractAjaxPro
             normalizedEffectiveRole = 'dealer';
         } else if (effectiveRole === PlanningPokerConstants.ROLES.VOTER || (effectiveRole && effectiveRole.indexOf('voter') > -1)) {
             normalizedEffectiveRole = 'voter';
+        } else if (effectiveRole === PlanningPokerConstants.ROLES.SPECTATOR || (effectiveRole && effectiveRole.indexOf('spectator') > -1)) {
+            normalizedEffectiveRole = 'spectator';
         }
         
         var isDealer = roleData.isDealer;
@@ -469,6 +477,65 @@ PlanningPokerSessionAjax.prototype = Object.extendsObject(global.AbstractAjaxPro
         }
 
         return stories;
+    },
+    
+    // Ensure the current user has an active, online participant record.
+    // Handles page refreshes (where beforeunload fired leaveSession) and
+    // direct navigation to the voting interface by session creators.
+    _ensurePresence: function(sessionId, userId, sessionGr) {
+        try {
+            var partGr = new GlideRecord('x_902080_planningw_session_participant');
+            partGr.addQuery('session', sessionId);
+            partGr.addQuery('user', userId);
+            partGr.setLimit(1);
+            partGr.query();
+            
+            if (partGr.next()) {
+                // Re-activate if needed
+                var needsUpdate = false;
+                if (partGr.getValue('status') !== 'active') {
+                    partGr.setValue('status', 'active');
+                    partGr.setValue('joined_at', new GlideDateTime());
+                    needsUpdate = true;
+                }
+                if (partGr.getValue('is_online') != 'true') {
+                    partGr.setValue('is_online', true);
+                    needsUpdate = true;
+                }
+                if (needsUpdate) {
+                    partGr.setWorkflow(false);
+                    partGr.update();
+                }
+            } else {
+                // No participant record — create one for the session dealer/facilitator
+                var security = new PlanningPokerSecurity();
+                var isDealer = security.isSessionDealer(sessionGr, userId);
+                var role = isDealer ? 'dealer' : 'voter';
+                
+                // If spectators are allowed and user has no voter-group membership,
+                // fall back to spectator (mirrors _determineJoinRole logic)
+                if (!isDealer) {
+                    var hasVoterGroups = security.sessionHasVoterGroups(sessionId);
+                    if (hasVoterGroups && !security.isUserInVoterGroup(sessionId, userId)) {
+                        var allowSpectators = sessionGr.getValue('allow_spectators') == 'true';
+                        role = allowSpectators ? 'spectator' : null;
+                    }
+                }
+                
+                if (role) {
+                    partGr.initialize();
+                    partGr.setValue('session', sessionId);
+                    partGr.setValue('user', userId);
+                    partGr.setValue('role', role);
+                    partGr.setValue('status', 'active');
+                    partGr.setValue('joined_at', new GlideDateTime());
+                    partGr.setValue('is_online', true);
+                    partGr.insert();
+                }
+            }
+        } catch (e) {
+            gs.error('[PlanningPokerSessionAjax] _ensurePresence error: ' + e);
+        }
     },
     
     // @deprecated — heartbeat writes are no longer needed; presence is managed via AMB leaveSession
