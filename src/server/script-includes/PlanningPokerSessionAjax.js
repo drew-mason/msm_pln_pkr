@@ -334,11 +334,12 @@ PlanningPokerSessionAjax.prototype = Object.extendsObject(global.AbstractAjaxPro
         var canSwitchToDealer = isDealer && participantRole !== PlanningPokerConstants.ROLES.DEALER;
         
         // Find current active dealer name (for UI context)
+        // Use CONTAINS to handle scope-prefixed values (e.g. x_902080_planningw.dealer)
         var activeDealerName = '';
         if (canSwitchToDealer) {
             var activeDealerGr = new GlideRecord('x_902080_planningw_session_participant');
             activeDealerGr.addQuery('session', sessionId);
-            activeDealerGr.addQuery('role', PlanningPokerConstants.ROLES.DEALER);
+            activeDealerGr.addQuery('role', 'CONTAINS', 'dealer');
             activeDealerGr.addQuery('status', PlanningPokerConstants.STATUS.ACTIVE);
             activeDealerGr.setLimit(1);
             activeDealerGr.query();

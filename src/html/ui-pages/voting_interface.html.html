@@ -2120,6 +2120,15 @@
                 
                 if (result.success) {
                     showToast('Vote registered: ' + voteValue, 'success');
+                    // Immediately update our own voting indicator (don't wait for AMB roundtrip)
+                    var myUserId = sessionData && sessionData.userRole ? sessionData.userRole.userId : null;
+                    if (myUserId) {
+                        var indicator = document.getElementById('vote-indicator-' + myUserId);
+                        if (indicator) {
+                            indicator.classList.add('voted');
+                            indicator.textContent = '✓';
+                        }
+                    }
                 } else {
                     showToast(result.message, 'error');
                 }
@@ -2161,22 +2170,35 @@
                         initAMB(sid, client);
                     } else if (attempts >= 40) {
                         clearInterval(interval);
-                        console.error('[PP-AMB] AMB client not ready after 20s, falling back to polling');
-                        startPollingFallback();
+                        console.error('[PP-AMB] AMB client not ready after 20s');
                     }
                 }, 500);
             }
+            // Always start polling safety net — ensures voters see updates
+            // even when AMB is unavailable (direct URL, iframe isolation, etc.)
+            startPollingSafetyNet();
         }
 
-        function startPollingFallback() {
+        var pollingActive = false;
+        function startPollingSafetyNet() {
+            if (pollingActive) return;
+            pollingActive = true;
             setInterval(function() {
                 var ajax = new GlideAjax('PlanningPokerSessionAjax');
                 ajax.addParam('sysparm_name', 'getVotingStatus');
                 ajax.addParam('session_id', sessionId);
                 ajax.getXMLAnswer(function(response) {
-                    processVotingStatusUpdate(JSON.parse(response));
+                    try {
+                        processVotingStatusUpdate(JSON.parse(response));
+                    } catch(e) {
+                        console.error('[PP-Poll] Error processing poll:', e);
+                    }
                 });
-            }, 3000);
+            }, 5000);
+        }
+
+        function startPollingFallback() {
+            startPollingSafetyNet();
         }
 
         function initAMB(sid, client) {

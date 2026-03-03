@@ -64,10 +64,11 @@ PlanningPokerSecurity.prototype = {
             if (this.isSessionDealer(sessionGr, userId)) return true;
 
             // Check if user has been promoted to dealer role in this session
+            // Use CONTAINS to handle scope-prefixed values (e.g. x_902080_planningw.dealer)
             var partGr = new GlideRecord('x_902080_planningw_session_participant');
             partGr.addQuery('session', sessionId);
             partGr.addQuery('user', userId);
-            partGr.addQuery('role', 'dealer');
+            partGr.addQuery('role', 'CONTAINS', 'dealer');
             partGr.setLimit(1);
             partGr.query();
             if (partGr.next()) return true;
