@@ -112,11 +112,12 @@ PlanningPokerSecurity.prototype = {
         try {
             userId = userId || gs.getUserID();
             
-            // 1. Get explicit participant role
+            // 1. Get explicit participant role (active participants only)
             var participantRole = null;
             var participantGr = new GlideRecord('x_902080_planningw_session_participant');
             participantGr.addQuery('session', sessionId);
             participantGr.addQuery('user', userId);
+            participantGr.addQuery('status', 'active');
             participantGr.setLimit(1);
             participantGr.query();
             

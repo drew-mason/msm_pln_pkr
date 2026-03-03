@@ -329,9 +329,15 @@ PlanningPokerSessionAjax.prototype = Object.extendsObject(global.AbstractAjaxPro
         var participantRole = roleData.participantRole;
         var isAdmin = security.hasAdminAccess(userId);
         
+        // Normalize participantRole for comparison (strip scope prefix if present)
+        var normalizedParticipantRole = participantRole;
+        if (participantRole && participantRole.indexOf('.') > -1) {
+            normalizedParticipantRole = participantRole.split('.').pop();
+        }
+        
         // Logic for UI switching
-        var canSwitchToVoter = isDealer && participantRole === PlanningPokerConstants.ROLES.DEALER;
-        var canSwitchToDealer = isDealer && participantRole !== PlanningPokerConstants.ROLES.DEALER;
+        var canSwitchToVoter = isDealer && normalizedParticipantRole === PlanningPokerConstants.ROLES.DEALER;
+        var canSwitchToDealer = isDealer && normalizedParticipantRole !== PlanningPokerConstants.ROLES.DEALER;
         
         // Find current active dealer name (for UI context)
         // Use CONTAINS to handle scope-prefixed values (e.g. x_902080_planningw.dealer)
