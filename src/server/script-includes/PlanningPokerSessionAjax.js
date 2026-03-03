@@ -28,9 +28,12 @@ PlanningPokerSessionAjax.prototype = Object.extendsObject(global.AbstractAjaxPro
                 revealedVotes: null
             };
             
-            // If story is revealed, get votes and statistics
+            // If story is revealed and user is dealer, get votes and statistics
             if (data.currentStory && data.currentStory.status === PlanningPokerConstants.STATUS.REVEALED) {
-                data.revealedVotes = this._getRevealedVotes(data.currentStory.sys_id);
+                var userRoleData = data.userRole;
+                if (userRoleData && userRoleData.effectiveRole === 'dealer') {
+                    data.revealedVotes = this._getRevealedVotes(data.currentStory.sys_id);
+                }
             }
             
             return this._buildResponse(true, 'Session retrieved', data);

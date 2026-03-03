@@ -1744,8 +1744,11 @@
                 renderCurrentStory(currentStory);
                 renderVotingCards(scoringValues, currentStory);
                 
-                if (revealedVotes) {
+                if (revealedVotes && role === 'dealer') {
                     renderVoteResults(revealedVotes);
+                } else {
+                    var voteResultsSection = document.getElementById('voteResultsSection');
+                    if (voteResultsSection) voteResultsSection.style.display = 'none';
                 }
             } else {
                 document.getElementById('currentStoryCard').style.display = 'none';
