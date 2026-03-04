@@ -642,6 +642,20 @@
             box-shadow: 0 0 10px rgba(0, 255, 136, 0.4);
         }
 
+        .vote-indicator.revealed {
+            width: auto;
+            min-width: 24px;
+            padding: 0 6px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.7rem;
+            letter-spacing: 0.5px;
+            background: rgba(0, 212, 255, 0.18);
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+        }
+
         .vote-results {
             margin-bottom: 1rem;
         }
@@ -1744,7 +1758,7 @@
                 renderCurrentStory(currentStory);
                 renderVotingCards(scoringValues, currentStory);
                 
-                if (revealedVotes && role === 'dealer') {
+                if (revealedVotes && userRole.effectiveRole === 'dealer') {
                     renderVoteResults(revealedVotes);
                 } else {
                     var voteResultsSection = document.getElementById('voteResultsSection');
@@ -2216,20 +2230,42 @@
             }
         }
         
+        // Build a lookup map of userId → vote_value from revealed votes
+        function getRevealedVoteLookup() {
+            var lookup = {};
+            if (sessionData && sessionData.revealedVotes && sessionData.revealedVotes.votes) {
+                sessionData.revealedVotes.votes.forEach(function(v) {
+                    lookup[v.voter] = v.vote_value || '?';
+                });
+            }
+            return lookup;
+        }
+
         // Update voting indicators
         function updateVotingIndicators(participants) {
+            var isRevealed = sessionData && sessionData.currentStory && sessionData.currentStory.status === 'revealed';
+            var voteLookup = isRevealed ? getRevealedVoteLookup() : {};
+
             participants.forEach(function(participant) {
                 var indicator = document.getElementById('vote-indicator-' + participant.userId);
                 if (indicator) {
                     // Active dealer always keeps green checkmark
                     if (participant.role === 'dealer') {
                         indicator.classList.add('voted');
+                        indicator.classList.remove('revealed');
                         indicator.textContent = '✓';
+                    } else if (isRevealed && voteLookup[participant.userId]) {
+                        // Show actual vote value when revealed
+                        indicator.classList.remove('voted');
+                        indicator.classList.add('revealed');
+                        indicator.textContent = voteLookup[participant.userId];
                     } else if (participant.hasVoted) {
                         indicator.classList.add('voted');
+                        indicator.classList.remove('revealed');
                         indicator.textContent = '✓';
                     } else {
                         indicator.classList.remove('voted');
+                        indicator.classList.remove('revealed');
                         indicator.textContent = '';
                     }
                 }
@@ -2326,10 +2362,17 @@
             indicator.className = 'vote-indicator';
             indicator.id = 'vote-indicator-' + participant.userId;
             
+            var isRevealed = sessionData && sessionData.currentStory && sessionData.currentStory.status === 'revealed';
+            var voteLookup = isRevealed ? getRevealedVoteLookup() : {};
+
             // Active dealer gets a green checkmark (like voted indicator)
             if (participant.role === 'dealer') {
                 indicator.classList.add('voted');
                 indicator.textContent = '✓';
+            } else if (isRevealed && voteLookup[participant.userId]) {
+                // Show actual vote value when revealed
+                indicator.classList.add('revealed');
+                indicator.textContent = voteLookup[participant.userId];
             } else if (participant.hasVoted) {
                 indicator.classList.add('voted');
                 indicator.textContent = '✓';
