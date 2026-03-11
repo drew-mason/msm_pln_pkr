@@ -758,13 +758,6 @@
             loadStatistics();
         });
 
-                    btn.addEventListener('click', function() {
-                
-                
-                localStorage.setItem('pp_red_alert', isRedAlert);
-            });
-        }
-
         function loadStatistics() {
             var ga = new GlideAjax('SessionStatisticsAjax');
             ga.addParam('sysparm_name', 'getSessionStatistics');
