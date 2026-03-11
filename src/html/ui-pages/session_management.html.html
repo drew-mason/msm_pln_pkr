@@ -492,16 +492,81 @@
         /* Utils */
         .hidden { display: none !important; }
         .text-center { text-align: center; }
+
+        /* Session meta info */
+        .session-meta {
+            display: flex; gap: 12px; margin: 8px 0; font-size: 13px;
+            color: rgba(255,255,255,0.5);
+        }
+
+        /* Edit tabs */
+        .edit-tabs { display: flex; border-bottom: 1px solid rgba(255,255,255,0.12); margin-bottom: 20px; }
+        .edit-tab {
+            padding: 8px 16px; background: none; border: none; cursor: pointer;
+            font-size: 14px; font-weight: 500; color: rgba(255,255,255,0.5);
+            border-bottom: 2px solid transparent; margin-bottom: -1px;
+            transition: all 0.2s; text-transform: uppercase; letter-spacing: 1px;
+        }
+        .edit-tab.active { color: var(--md-primary); border-bottom-color: var(--md-primary); }
+        .edit-tab-content { display: none; }
+        .edit-tab-content.active { display: block; animation: fadeIn 0.3s ease-out; }
+
+        /* Drag handle */
+        .drag-handle { cursor: grab; color: rgba(255,255,255,0.3); font-size: 16px; user-select: none; }
+        .drag-handle:active { cursor: grabbing; }
+
+        /* Story status */
+        .story-status {
+            font-size: 11px; padding: 2px 8px; border-radius: var(--radius);
+            background-color: rgba(187,134,252,0.1); color: var(--md-primary);
+            text-transform: uppercase; letter-spacing: 0.5px;
+            border: 1px solid rgba(187,134,252,0.2);
+        }
+
+        /* Story search */
+        .story-search-container { position: relative; margin-bottom: 16px; }
+        .story-search-input {
+            width: 100%; padding: 8px 12px; background-color: var(--md-surface-2);
+            border: 1px solid rgba(255,255,255,0.12); border-radius: var(--radius);
+            font-size: 14px; color: var(--md-on-surface);
+        }
+        .story-search-input:focus { outline: none; border-color: var(--md-primary); background-color: var(--md-surface-3); }
+        .story-search-results {
+            position: absolute; top: 100%; left: 0; right: 0;
+            background-color: var(--md-surface); border: 1px solid rgba(255,255,255,0.1);
+            border-top: none; border-radius: 0 0 var(--radius) var(--radius);
+            max-height: 250px; overflow-y: auto; z-index: 10;
+            box-shadow: var(--md-shadow-8); display: none;
+        }
+        .story-search-results.show { display: block; }
+        .search-result-item {
+            padding: 8px 12px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05);
+            display: flex; justify-content: space-between; align-items: center;
+            font-size: 14px; transition: background 0.15s;
+        }
+        .search-result-item:last-child { border-bottom: none; }
+        .search-result-item:hover { background-color: rgba(255,255,255,0.04); }
+        .search-result-item.disabled { opacity: 0.38; cursor: not-allowed; }
+
+        /* Manual story form */
+        .manual-story-form { display: flex; gap: 8px; margin-top: 16px; align-items: flex-end; }
+        .manual-story-form .form-group { margin-bottom: 0; flex: 1; }
+
+        /* Story count badge */
+        .story-count-badge {
+            display: inline-block; padding: 2px 8px; border-radius: var(--radius);
+            font-size: 11px; background-color: rgba(187,134,252,0.12);
+            color: var(--md-primary); border: 1px solid rgba(187,134,252,0.25); margin-left: 8px;
+        }
+
+        /* Empty stories */
+        .empty-stories {
+            text-align: center; padding: 32px; color: rgba(255,255,255,0.3);
+            font-size: 14px;
+        }
 </style>
 </head>
 <body>
-    
-
-    <!-- Hyperspace overlay -->
-    
-    
-
-    
 
     <div class="main-content">
         <div class="page-header">

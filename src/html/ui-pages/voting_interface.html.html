@@ -492,6 +492,305 @@
         /* Utils */
         .hidden { display: none !important; }
         .text-center { text-align: center; }
+
+        /* Header layout */
+        .header-left { display: flex; align-items: center; gap: 12px; }
+        .header-right { display: flex; align-items: center; gap: 12px; }
+
+        /* Page layout */
+        html, body { height: 100vh; overflow: hidden; }
+        .main-content {
+            display: flex;
+            height: calc(100vh - 64px);
+            gap: 16px;
+            padding: 16px 24px;
+            position: relative;
+            z-index: 1;
+            overflow: hidden;
+            max-width: none;
+        }
+        .story-column { flex: 2; display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+        .story-panel {
+            flex: 1; background-color: var(--md-surface); border-radius: var(--radius);
+            border: 1px solid rgba(255,255,255,0.05); box-shadow: var(--md-shadow-2);
+            overflow-y: auto; position: relative; min-height: 0; padding: 16px;
+        }
+        .sidebar { width: 320px; flex-shrink: 0; display: flex; flex-direction: column; gap: 12px; overflow: hidden; max-width: 400px; }
+
+        /* Dealer controls */
+        .dealer-controls {
+            background-color: var(--md-surface); border: 1px solid rgba(255,255,255,0.05);
+            border-radius: var(--radius); padding: 12px; box-shadow: var(--md-shadow-2);
+            display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;
+        }
+
+        /* Story card */
+        .story-card {
+            background-color: var(--md-surface); border: 1px solid rgba(255,255,255,0.05);
+            border-radius: var(--radius); padding: 20px; box-shadow: var(--md-shadow-2);
+            margin-bottom: 12px; position: relative;
+        }
+        .story-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .story-title { font-size: 18px; font-weight: 500; margin-bottom: 12px; color: var(--md-on-bg); }
+        .story-description { margin-bottom: 16px; line-height: 1.6; color: var(--md-on-surface); font-size: 14px; }
+        .acceptance-criteria {
+            background-color: var(--md-surface-2); border: 1px solid rgba(255,255,255,0.05);
+            padding: 12px; border-radius: var(--radius); margin-bottom: 16px;
+        }
+        .acceptance-criteria h4 { margin-bottom: 8px; color: var(--md-secondary); text-transform: uppercase; letter-spacing: 1px; font-size: 12px; }
+
+        /* Voting cards container */
+        .voting-cards {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(85px, 1fr));
+            gap: 10px; padding: 12px; flex-shrink: 0;
+            background-color: var(--md-surface); border: 1px solid rgba(255,255,255,0.05);
+            border-radius: var(--radius); margin-top: 8px;
+        }
+
+        /* Sidebar sections */
+        .sidebar-section {
+            background-color: var(--md-surface); border: 1px solid rgba(255,255,255,0.05);
+            border-radius: var(--radius); box-shadow: var(--md-shadow-2);
+            position: relative; overflow: visible; flex-shrink: 0;
+        }
+        .sidebar-section.flex-fill { flex: 1; min-height: 80px; display: flex; flex-direction: column; flex-shrink: 1; overflow: hidden; }
+        .sidebar-section.flex-fill > .section-content { flex: 1; min-height: 0; overflow-y: scroll; }
+        .section-header {
+            padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.08);
+            font-size: 13px; font-weight: 500; color: var(--md-primary);
+            text-transform: uppercase; letter-spacing: 1px; display: flex;
+            justify-content: space-between; align-items: center; cursor: pointer;
+        }
+        .section-content { padding: 10px 14px; background-color: var(--md-surface-2); }
+        .section-arrow { font-size: 11px; transition: transform 0.2s; color: var(--md-primary); }
+        .fixed-scroll-area { overflow-y: scroll !important; }
+        .collapsible { cursor: pointer; }
+        .section-content.collapsed { display: none; }
+
+        /* Participant subsections */
+        .participant-subsection { border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 8px; margin-bottom: 8px; }
+        .participant-subsection:last-child { border-bottom: none; padding-bottom: 0; margin-bottom: 0; }
+        .subsection-header {
+            padding: 6px 10px; background-color: rgba(187,134,252,0.06);
+            border: 1px solid rgba(187,134,252,0.12); border-radius: var(--radius);
+            font-size: 12px; font-weight: 500; color: var(--md-primary);
+            text-transform: uppercase; letter-spacing: 1px; display: flex;
+            justify-content: space-between; align-items: center; cursor: pointer;
+            margin-bottom: 8px; transition: all 0.2s;
+        }
+        .subsection-header:hover { background-color: rgba(187,134,252,0.1); border-color: rgba(187,134,252,0.2); }
+        .subsection-header .section-arrow { font-size: 11px; transition: transform 0.2s; }
+        .participant-list { list-style: none; }
+
+        /* Participant items */
+        .participant-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 8px; border-bottom: 1px solid rgba(255,255,255,0.05);
+            border-radius: var(--radius); transition: background 0.15s;
+        }
+        .participant-item:hover { background-color: rgba(255,255,255,0.03); }
+        .participant-item:last-child { border-bottom: none; }
+        .participant-name { font-weight: 500; font-size: 14px; color: var(--md-on-bg); }
+        .participant-role {
+            font-size: 11px; padding: 2px 8px; border-radius: var(--radius);
+            text-transform: uppercase; letter-spacing: 0.5px;
+            background-color: rgba(187,134,252,0.12); color: var(--md-primary);
+            border: 1px solid rgba(187,134,252,0.25);
+        }
+
+        /* Vote indicators */
+        .vote-indicator {
+            width: 24px; height: 24px; border-radius: 50%;
+            background-color: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.12);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 12px; color: var(--md-on-surface); transition: all 0.3s; flex-shrink: 0;
+        }
+        .vote-indicator.voted {
+            background-color: rgba(3,218,198,0.15); border-color: var(--md-secondary);
+            color: var(--md-secondary); box-shadow: 0 0 8px rgba(3,218,198,0.3);
+        }
+        .vote-indicator.revealed {
+            width: auto; min-width: 24px; padding: 0 6px; border-radius: 12px;
+            font-weight: 700; font-size: 11px; background-color: rgba(187,134,252,0.12);
+            border-color: var(--md-primary); color: var(--md-primary);
+        }
+
+        /* Vote results */
+        .vote-summary { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+        .stat-card {
+            text-align: center; padding: 12px;
+            background-color: var(--md-surface-2); border: 1px solid rgba(255,255,255,0.05);
+            border-radius: var(--radius);
+        }
+        .vote-distribution { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+        .vote-chip {
+            background-color: rgba(187,134,252,0.1); border: 1px solid rgba(187,134,252,0.25);
+            color: var(--md-primary); padding: 4px 10px; border-radius: var(--radius);
+            font-size: 12px; letter-spacing: 0.5px;
+        }
+
+        /* Dealer inline panels */
+        .dealer-inline-panel {
+            display: none; background-color: var(--md-surface);
+            border: 1px solid rgba(255,255,255,0.08); border-radius: var(--radius);
+            margin-top: 8px; overflow: hidden;
+        }
+        .dealer-inline-panel.panel-active { display: block; }
+        .dealer-panel-header {
+            padding: 8px 14px; border-bottom: 1px solid rgba(255,255,255,0.08);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .dealer-panel-title {
+            font-size: 14px; font-weight: 500; color: var(--md-primary);
+            letter-spacing: 0.5px; text-transform: uppercase;
+        }
+        .dealer-panel-body { padding: 12px 14px; }
+        .dealer-panel-footer {
+            padding: 8px 14px; border-top: 1px solid rgba(255,255,255,0.08);
+            display: flex; gap: 8px; justify-content: flex-end;
+        }
+
+        /* PP Modals */
+        .pp-modal {
+            position: fixed !important; top: 0 !important; left: 0 !important;
+            width: 100% !important; height: 100% !important;
+            background: rgba(0,0,0,0.6); display: none !important;
+            align-items: center !important; justify-content: center !important;
+            z-index: 1000 !important;
+        }
+        .pp-modal.pp-active { display: flex !important; }
+        .pp-modal-content {
+            background-color: var(--md-surface) !important; border-radius: var(--radius) !important;
+            min-width: 320px !important; max-width: 600px !important; width: 92vw !important;
+            max-height: 85vh !important; overflow-y: auto !important;
+            box-shadow: var(--md-shadow-16) !important; position: fixed !important;
+            top: 50% !important; left: 50% !important; transform: translate(-50%,-50%) !important;
+            display: block !important; z-index: 100000 !important;
+        }
+        .pp-modal-header {
+            padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.08);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .pp-modal-title { font-size: 18px; font-weight: 500; color: var(--md-primary); }
+        .pp-modal-body { padding: 20px; }
+        .pp-modal-footer {
+            padding: 12px 20px; border-top: 1px solid rgba(255,255,255,0.08);
+            display: flex; gap: 8px; justify-content: flex-end;
+        }
+
+        /* Button variants */
+        .btn-warning {
+            background-color: #F9A825; color: #000;
+            box-shadow: var(--md-shadow-2);
+        }
+        .btn-warning:hover:not(:disabled) { box-shadow: var(--md-shadow-4); filter: brightness(1.08); }
+
+        /* Voting card (generated by JS) */
+        .voting-card {
+            background-color: var(--md-surface-2); border: 2px solid rgba(255,255,255,0.08);
+            border-radius: 8px; padding: 16px; text-align: center; cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4,0,0.2,1); font-size: 18px; font-weight: 500;
+            color: var(--md-on-surface); position: relative;
+        }
+        .voting-card:hover {
+            border-color: var(--md-primary); transform: translateY(-3px);
+            box-shadow: var(--md-shadow-4); color: var(--md-primary);
+        }
+        .voting-card.selected {
+            background-color: rgba(187,134,252,0.15); color: var(--md-primary);
+            border-color: var(--md-primary); box-shadow: var(--md-shadow-8);
+        }
+        .voting-card.special {
+            background-color: rgba(249,168,37,0.1); border-color: rgba(249,168,37,0.3);
+            color: #F9A825;
+        }
+
+        /* Bot Controls */
+        .droid-bay-controls { display: flex; flex-direction: column; gap: 6px; padding: 8px 0; }
+        .droid-bay-controls .btn { padding: 6px 10px; font-size: 12px; width: 100%; text-align: left; display: flex; align-items: center; gap: 8px; }
+        .droid-bay-controls .btn-bot-add {
+            background-color: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.25);
+            color: #A78BFA;
+        }
+        .droid-bay-controls .btn-bot-add:hover { background-color: rgba(139,92,246,0.2); }
+        .droid-bay-controls .btn-bot-action {
+            background-color: rgba(187,134,252,0.08); border: 1px solid rgba(187,134,252,0.25);
+            color: var(--md-primary);
+        }
+        .droid-bay-controls .btn-bot-action:hover { background-color: rgba(187,134,252,0.16); }
+        .droid-bay-controls .btn-bot-danger {
+            background-color: rgba(207,102,121,0.08); border: 1px solid rgba(207,102,121,0.2);
+            color: var(--md-error);
+        }
+        .droid-bay-controls .btn-bot-danger:hover { background-color: rgba(207,102,121,0.16); }
+
+        /* Bot badge */
+        .bot-badge {
+            display: inline-block; font-size: 10px; padding: 1px 5px; border-radius: 3px;
+            background-color: rgba(139,92,246,0.15); border: 1px solid rgba(139,92,246,0.3);
+            color: #A78BFA; text-transform: uppercase; letter-spacing: 0.5px; margin-left: 6px;
+        }
+
+        /* WYSIWYG toolbar */
+        .wysiwyg-toolbar {
+            display: none; background-color: var(--md-surface-3);
+            border: 1px solid rgba(255,255,255,0.08); border-bottom: none;
+            border-radius: var(--radius) var(--radius) 0 0;
+            padding: 4px 6px; gap: 2px; flex-wrap: wrap; align-items: center;
+        }
+        .wysiwyg-toolbar.active { display: flex; }
+        .wysiwyg-toolbar .toolbar-group { display: flex; gap: 1px; padding: 0 4px; border-right: 1px solid rgba(255,255,255,0.06); }
+        .wysiwyg-toolbar .toolbar-group:last-child { border-right: none; }
+        .wysiwyg-toolbar button {
+            background: transparent; border: 1px solid transparent; border-radius: 3px;
+            color: var(--md-on-surface); cursor: pointer; width: 28px; height: 26px;
+            font-size: 13px; display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s; padding: 0;
+        }
+        .wysiwyg-toolbar button:hover { background-color: rgba(187,134,252,0.08); border-color: rgba(187,134,252,0.15); color: var(--md-primary); }
+        .wysiwyg-toolbar button.active { background-color: rgba(187,134,252,0.12); border-color: rgba(187,134,252,0.25); color: var(--md-primary); }
+        .wysiwyg-editor-wrap { position: relative; }
+        .wysiwyg-editor-wrap .editable-field { border-radius: 0 0 var(--radius) var(--radius); }
+
+        /* Editable fields */
+        .editable-field {
+            border: 1px solid transparent; border-radius: var(--radius);
+            padding: 4px 6px; margin: -4px -6px; transition: border-color 0.2s, background 0.2s;
+            outline: none; min-height: 1.4em; white-space: pre-wrap;
+        }
+        .editable-field.rich-text { min-height: 80px; white-space: normal; }
+        .editable-field.rich-text ul, .editable-field.rich-text ol { margin: 4px 0; padding-left: 24px; }
+        .editable-field.rich-text a { color: var(--md-primary); text-decoration: underline; }
+        .editable-field.rich-text blockquote { border-left: 3px solid rgba(187,134,252,0.3); padding-left: 10px; margin: 4px 0; color: rgba(255,255,255,0.5); }
+        .editable-field:hover { border-color: rgba(255,255,255,0.1); background-color: rgba(255,255,255,0.02); }
+        .editable-field:focus { border-color: var(--md-primary); background-color: rgba(187,134,252,0.04); }
+        .editable-field.saving { border-color: #F9A825; }
+        .editable-field.saved { border-color: var(--md-secondary); }
+        .editable-field[data-placeholder]:empty::before { content: attr(data-placeholder); color: rgba(255,255,255,0.2); font-style: italic; }
+
+        /* Scrollbars */
+        .story-panel, .section-content, .fixed-scroll-area, .pp-modal-body {
+            scrollbar-width: thin; scrollbar-color: rgba(187,134,252,0.3) var(--md-surface);
+        }
+        .story-panel::-webkit-scrollbar, .section-content::-webkit-scrollbar,
+        .fixed-scroll-area::-webkit-scrollbar, .pp-modal-body::-webkit-scrollbar { width: 6px; }
+        .story-panel::-webkit-scrollbar-track, .section-content::-webkit-scrollbar-track,
+        .fixed-scroll-area::-webkit-scrollbar-track, .pp-modal-body::-webkit-scrollbar-track { background: var(--md-surface); }
+        .story-panel::-webkit-scrollbar-thumb, .section-content::-webkit-scrollbar-thumb,
+        .fixed-scroll-area::-webkit-scrollbar-thumb, .pp-modal-body::-webkit-scrollbar-thumb {
+            background: rgba(187,134,252,0.25); border-radius: 3px;
+        }
+        .story-panel::-webkit-scrollbar-thumb:hover, .section-content::-webkit-scrollbar-thumb:hover,
+        .fixed-scroll-area::-webkit-scrollbar-thumb:hover, .pp-modal-body::-webkit-scrollbar-thumb:hover {
+            background: rgba(187,134,252,0.4);
+        }
+
+        @media (max-width: 768px) {
+            .main-content { flex-direction: column; padding: 12px; overflow: auto; height: auto; }
+            .story-column { flex: none; }
+            .sidebar { max-width: none; width: 100%; overflow-y: visible; }
+            .voting-cards { grid-template-columns: repeat(auto-fit, minmax(65px, 1fr)); }
+        }
 </style>
 </head>
 <body>
@@ -526,28 +825,28 @@
 
             <!-- Dealer Controls (visible only to dealers) -->
             <div class="dealer-controls" id="dealerControls" style="display: none;">
-                <button class="btn btn-success" id="startVotingBtn">◇ Engage Voting</button>
-                <button class="btn btn-primary" id="revealVotesBtn">◇ Decloak Votes</button>
-                <button class="btn btn-warning" id="resetVotesBtn">↺ Reset Sensors</button>
-                <button class="btn btn-secondary" id="skipStoryBtn">⏭ Bypass Story</button>
+                <button class="btn btn-success" id="startVotingBtn">▶ Start Voting</button>
+                <button class="btn btn-primary" id="revealVotesBtn">◇ Reveal Votes</button>
+                <button class="btn btn-warning" id="resetVotesBtn">↺ Reset Votes</button>
+                <button class="btn btn-secondary" id="skipStoryBtn">⏭ Skip Story</button>
                 <button class="btn btn-success" id="completeStoryBtn">◆ Lock Estimate</button>
             </div>
 
-            <!-- Inline Bypass Story Panel -->
+            <!-- Inline Skip Story Panel -->
             <div class="dealer-inline-panel" id="skipStoryPanel">
                 <div class="dealer-panel-header">
-                    <span class="dealer-panel-title">Bypass Story</span>
+                    <span class="dealer-panel-title">Skip Story</span>
                     <button class="btn btn-secondary" style="padding:0.2rem 0.5rem; font-size:0.75rem;" id="skipPanelClose">✕</button>
                 </div>
                 <div class="dealer-panel-body">
                     <div class="form-group" style="margin-bottom:0.5rem;">
-                        <label class="form-label">Bypass Rationale (Optional)</label>
+                        <label class="form-label">Skip Reason (Optional)</label>
                         <textarea class="form-control" id="skipComments" rows="2" placeholder="Enter reason for skipping this story..."></textarea>
                     </div>
                 </div>
                 <div class="dealer-panel-footer">
                     <button class="btn btn-secondary" id="skipPanelCancel">Cancel</button>
-                    <button class="btn btn-warning" id="confirmSkipStoryBtn">Confirm Bypass</button>
+                    <button class="btn btn-warning" id="confirmSkipStoryBtn">Confirm Skip</button>
                 </div>
             </div>
 
@@ -638,10 +937,10 @@
         </div>
  
         <div class="sidebar">
-            <!-- Voter Manifest - Single card with collapsible sections -->
+            <!-- Participants - Single card with collapsible sections -->
             <div class="sidebar-section flex-fill">
                 <div class="section-header collapsible" data-target="participantsContent">
-                    <span>Voter Manifest <span id="totalParticipantCount" style="font-size: 0.75rem; opacity: 0.6;"></span></span>
+                    <span>Participants <span id="totalParticipantCount" style="font-size: 0.75rem; opacity: 0.6;"></span></span>
                     <span class="section-arrow">▼</span>
                 </div>
                 <div class="section-content fixed-scroll-area" id="participantsContent" style="max-height: 400px;">
@@ -672,28 +971,28 @@
                 </div>
             </div>
 
-            <!-- Droid Bay (admin only) -->
+            <!-- Bot Controls (admin only) -->
             <div class="sidebar-section" id="droidBaySection" style="display: none;">
                 <div class="section-header collapsible" data-target="droidBayContent">
-                    <span>Droid Bay</span>
+                    <span>Bot Controls</span>
                     <span class="section-arrow">▼</span>
                 </div>
                 <div class="section-content" id="droidBayContent">
                     <div class="droid-bay-controls">
                         <button class="btn btn-bot-add" id="addBotVotersBtn" title="Add bot voters to session">
-                            <span>🤖</span> Deploy Voter Droids
+                            <span>🤖</span> Add Bot Voters
                         </button>
                         <button class="btn btn-bot-add" id="addBotDealerBtn" title="Add a bot dealer that adds stories">
-                            <span>🤖</span> Deploy Dealer Droid
+                            <span>🤖</span> Add Bot Dealer
                         </button>
                         <button class="btn btn-bot-action" id="triggerBotVotesBtn" title="All bot voters cast random votes">
-                            <span>◇</span> Trigger Droid Votes
+                            <span>◇</span> Trigger Bot Votes
                         </button>
                         <button class="btn btn-bot-action" id="triggerBotStoriesBtn" title="Bot dealer adds sample stories">
-                            <span>◇</span> Trigger Droid Stories
+                            <span>◇</span> Trigger Bot Stories
                         </button>
                         <button class="btn btn-bot-danger" id="removeBotsBtn" title="Remove all bots from session">
-                            <span>✕</span> Recall All Droids
+                            <span>✕</span> Remove All Bots
                         </button>
                     </div>
                 </div>
@@ -726,7 +1025,7 @@
             </div>
             <div class="pp-modal-body">
                 <div class="form-group">
-                    <label class="form-label">Scan Storys</label>
+                    <label class="form-label">Search Stories</label>
                     <input type="text" class="form-control" id="storySearch" placeholder="Search by title or number...">
                 </div>
                 <div id="storySearchResults"></div>
@@ -904,7 +1203,7 @@
             // Add Selected stories button
             document.getElementById('addSelectedStoriesBtn').addEventListener('click', addSelectedStoriesToSession);
             
-            // Bot (Droid Bay) controls - admin only
+            // Bot (Bot Controls) controls - admin only
             document.getElementById('addBotVotersBtn').addEventListener('click', addBotVoters);
             document.getElementById('addBotDealerBtn').addEventListener('click', addBotDealer);
             document.getElementById('triggerBotVotesBtn').addEventListener('click', triggerBotVotes);
@@ -1005,7 +1304,7 @@
                 document.getElementById('dealerControls').style.display = 'none';
             }
             
-            // Show Droid Bay for admins
+            // Show Bot Controls for admins
             document.getElementById('droidBaySection').style.display = userRole.isAdmin ? '' : 'none';
             
             // Render current story
@@ -1727,7 +2026,7 @@
             
             var btn = document.getElementById('revealVotesBtn');
             btn.disabled = true;
-            btn.textContent = 'Decloaking...';
+            btn.textContent = 'Revealing...';
             
             var ga = new GlideAjax('PlanningPokerVotingAjax');
             ga.addParam('sysparm_name', 'revealVotes');
@@ -1807,7 +2106,7 @@
             ga.addParam('comments', comments);
             ga.getXML(function(response) {
                 confirmBtn.disabled = false;
-                confirmBtn.textContent = 'Confirm Bypass';
+                confirmBtn.textContent = 'Confirm Skip';
                 var result = parseAjaxResponse(response);
                 if (!result) { showToast('Comm failure — bypass error', 'error'); closeAllDealerPanels(); return; }
                 
@@ -1936,7 +2235,7 @@
             completeBtn.disabled = (status !== 'revealed');
         }
         
-        // --- Droid Bay (Bot) Controls ---
+        // --- Bot Controls (Bot) Controls ---
         
         function addBotVoters() {
             var btn = document.getElementById('addBotVotersBtn');
@@ -1949,9 +2248,9 @@
             ga.addParam('count', '3');
             ga.getXML(function(response) {
                 btn.disabled = false;
-                btn.innerHTML = '<span>🤖</span> Deploy Voter Droids';
+                btn.innerHTML = '<span>🤖</span> Add Bot Voters';
                 var result = parseAjaxResponse(response);
-                if (!result) { showToast('Droid deployment comm failure', 'error'); return; }
+                if (!result) { showToast('Bot deployment failed', 'error'); return; }
                 if (result.success) {
                     var data = result.data;
                     if (data.addedCount > 0) {
@@ -1976,9 +2275,9 @@
             ga.addParam('session_id', sessionId);
             ga.getXML(function(response) {
                 btn.disabled = false;
-                btn.innerHTML = '<span>🤖</span> Deploy Dealer Droid';
+                btn.innerHTML = '<span>🤖</span> Add Bot Dealer';
                 var result = parseAjaxResponse(response);
-                if (!result) { showToast('Droid deployment comm failure', 'error'); return; }
+                if (!result) { showToast('Bot deployment failed', 'error'); return; }
                 if (result.success) {
                     showToast('Dealer droid ' + result.data.name + ' deployed', 'success');
                     loadSession();
@@ -1991,16 +2290,16 @@
         function triggerBotVotes() {
             var btn = document.getElementById('triggerBotVotesBtn');
             btn.disabled = true;
-            btn.textContent = '⏳ Droids voting…';
+            btn.textContent = '⏳ Bots voting…';
             
             var ga = new GlideAjax('DemoSessionAjax');
             ga.addParam('sysparm_name', 'triggerBotVotes');
             ga.addParam('session_id', sessionId);
             ga.getXML(function(response) {
                 btn.disabled = false;
-                btn.innerHTML = '<span>◇</span> Trigger Droid Votes';
+                btn.innerHTML = '<span>◇</span> Trigger Bot Votes';
                 var result = parseAjaxResponse(response);
-                if (!result) { showToast('Droid voting comm failure', 'error'); return; }
+                if (!result) { showToast('Bot voting failed', 'error'); return; }
                 if (result.success) {
                     var data = result.data;
                     if (data.votedCount > 0) {
@@ -2028,9 +2327,9 @@
             ga.addParam('count', '3');
             ga.getXML(function(response) {
                 btn.disabled = false;
-                btn.innerHTML = '<span>◇</span> Trigger Droid Stories';
+                btn.innerHTML = '<span>◇</span> Trigger Bot Stories';
                 var result = parseAjaxResponse(response);
-                if (!result) { showToast('Droid story comm failure', 'error'); return; }
+                if (!result) { showToast('Bot story generation failed', 'error'); return; }
                 if (result.success) {
                     showToast(result.data.addedCount + ' objectives added to queue', 'success');
                     loadSession();
@@ -2050,9 +2349,9 @@
             ga.addParam('session_id', sessionId);
             ga.getXML(function(response) {
                 btn.disabled = false;
-                btn.innerHTML = '<span>✕</span> Recall All Droids';
+                btn.innerHTML = '<span>✕</span> Remove All Bots';
                 var result = parseAjaxResponse(response);
-                if (!result) { showToast('Droid recall comm failure', 'error'); return; }
+                if (!result) { showToast('Bot removal failed', 'error'); return; }
                 if (result.success) {
                     showToast(result.data.removedCount + ' droid' + (result.data.removedCount > 1 ? 's' : '') + ' recalled', 'success');
                     loadSession();

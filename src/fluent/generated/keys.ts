@@ -5,6 +5,10 @@ declare global {
         namespace Internal {
             interface Keys extends KeysRegistry {
                 explicit: {
+                    '26e21ebb8343ba50c97cc2d6feaad331': {
+                        table: 'sys_scope_privilege'
+                        id: '26e21ebb8343ba50c97cc2d6feaad331'
+                    }
                     '67e8f47b83877a50c97cc2d6feaad382': {
                         table: 'sys_scope_privilege'
                         id: '67e8f47b83877a50c97cc2d6feaad382'
@@ -17,9 +21,21 @@ declare global {
                         table: 'sys_scope_privilege'
                         id: '74e4c933830b7a50c97cc2d6feaad37a'
                     }
+                    '7ac2d6bb8343ba50c97cc2d6feaad34c': {
+                        table: 'sys_scope_privilege'
+                        id: '7ac2d6bb8343ba50c97cc2d6feaad34c'
+                    }
                     '9aa586338303ba50c97cc2d6feaad31e': {
                         table: 'sys_scope_privilege'
                         id: '9aa586338303ba50c97cc2d6feaad31e'
+                    }
+                    a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6: {
+                        table: 'sys_scope_privilege'
+                        id: 'a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6'
+                    }
+                    a3f5c933830b7a50c97cc2d6feaad38b: {
+                        table: 'sys_scope_privilege'
+                        id: 'a3f5c933830b7a50c97cc2d6feaad38b'
                     }
                     a7e48d33830b7a50c97cc2d6feaad3c2: {
                         table: 'sys_scope_privilege'
@@ -57,10 +73,6 @@ declare global {
                         table: 'sys_scope_privilege'
                         id: 'fd09f47b83877a50c97cc2d6feaad3ad'
                     }
-                    planning_poker_amb_channel: {
-                        table: 'glide_amb_config'
-                        id: 'b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5'
-                    }
                     fibonacci_method: {
                         table: 'x_902080_planningw_scoring_method'
                         id: '4b30e1c799c0469aabb6fb5427b4ec60'
@@ -85,6 +97,10 @@ declare global {
                         table: 'sys_module'
                         id: 'b8f02cf4241f425f9740e214282c7c1e'
                     }
+                    planning_poker_amb_channel: {
+                        table: 'sys_amb_channel'
+                        id: '6b9887dc30534c3d8c6ad0976c9a1581'
+                    }
                     powers_method: {
                         table: 'x_902080_planningw_scoring_method'
                         id: '185391bad45c45e3982746055b0e68ed'
@@ -101,13 +117,13 @@ declare global {
                         table: 'sys_script_include'
                         id: '702e5c09c97d485ca9ebbad73c3fdda3'
                     }
-                    si_planning_poker_constants: {
-                        table: 'sys_script_include'
-                        id: 'd0d97fcefa6e40de91bcca26baca4aa7'
-                    }
                     si_planning_poker_amb: {
                         table: 'sys_script_include'
                         id: 'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4'
+                    }
+                    si_planning_poker_constants: {
+                        table: 'sys_script_include'
+                        id: 'd0d97fcefa6e40de91bcca26baca4aa7'
                     }
                     si_planning_poker_security: {
                         table: 'sys_script_include'
@@ -168,6 +184,14 @@ declare global {
                     'src_server_script-includes_PlanningPokerAjax_js': {
                         table: 'sys_module'
                         id: 'e5f92146029d49fba0d6454506953e62'
+                    }
+                    'src_server_script-includes_PlanningPokerAMB_js': {
+                        table: 'sys_module'
+                        id: '2f406e3e9fea4361b37c8f2e54ea9523'
+                    }
+                    'src_server_script-includes_PlanningPokerConstants_js': {
+                        table: 'sys_module'
+                        id: '86822cc572bc49a88161cf7cf71ecbfe'
                     }
                     'src_server_script-includes_PlanningPokerSecurity_js': {
                         table: 'sys_module'
@@ -259,6 +283,15 @@ declare global {
                         key: {
                             name: 'x_902080_planningw_session_stories'
                             element: 'presenter'
+                        }
+                    },
+                    {
+                        table: 'sys_documentation'
+                        id: '0c554caef06142cfa5bdf55acd78e2b1'
+                        key: {
+                            name: 'x_902080_planningw_session_stories'
+                            element: 'added_by'
+                            language: 'en'
                         }
                     },
                     {
@@ -619,6 +652,14 @@ declare global {
                         id: '500f50a63d054d32954e6b6a1c1c73e4'
                         key: {
                             name: 'x_902080_planningw_planning_vote'
+                        }
+                    },
+                    {
+                        table: 'sys_dictionary'
+                        id: '52fe7aed162e4b1c9a25ca00c62297f0'
+                        key: {
+                            name: 'x_902080_planningw_session_stories'
+                            element: 'added_by'
                         }
                     },
                     {

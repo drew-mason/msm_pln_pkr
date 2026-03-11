@@ -492,6 +492,61 @@
         /* Utils */
         .hidden { display: none !important; }
         .text-center { text-align: center; }
+
+        /* Join page specific */
+        .join-container {
+            background-color: var(--md-surface); border-radius: var(--radius);
+            padding: 40px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: var(--md-shadow-4); width: 100%; max-width: 520px;
+            text-align: center; position: relative; z-index: 1;
+        }
+        .title {
+            font-size: 24px; font-weight: 500; color: var(--md-primary);
+            margin-bottom: 8px; letter-spacing: 0.5px;
+        }
+        .subtitle {
+            color: rgba(255,255,255,0.5); margin-bottom: 32px;
+            font-size: 14px;
+        }
+        .session-info {
+            background-color: var(--md-surface-2); border: 1px solid rgba(255,255,255,0.05);
+            border-radius: var(--radius); padding: 20px; margin-bottom: 20px;
+            text-align: left; display: none;
+        }
+        .session-name {
+            font-size: 18px; font-weight: 500; margin-bottom: 8px;
+            color: var(--md-on-bg);
+        }
+        .session-details {
+            color: rgba(255,255,255,0.5); margin-bottom: 12px; font-size: 14px;
+        }
+        .error-message {
+            background-color: rgba(207,102,121,0.08); border: 1px solid rgba(207,102,121,0.2);
+            color: var(--md-error); padding: 12px 16px; border-radius: var(--radius);
+            margin-bottom: 12px; display: none; font-size: 14px;
+        }
+        .success-message {
+            background-color: rgba(3,218,198,0.08); border: 1px solid rgba(3,218,198,0.2);
+            color: var(--md-secondary); padding: 12px 16px; border-radius: var(--radius);
+            margin-bottom: 12px; display: none; font-size: 14px;
+        }
+        .loading { display: none; margin: 16px 0; }
+        .spinner {
+            border: 3px solid rgba(255,255,255,0.1); border-top: 3px solid var(--md-primary);
+            border-radius: 50%; width: 30px; height: 30px;
+            animation: spin 1s linear infinite; margin: 0 auto;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .loading p { font-size: 13px; color: rgba(255,255,255,0.5); margin-top: 8px; }
+        .help-text { font-size: 12px; color: rgba(255,255,255,0.35); margin-top: 12px; }
+        .back-link { margin-top: 24px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.08); }
+        .back-link a { color: var(--md-primary); text-decoration: none; font-size: 14px; transition: all 0.2s; }
+        .back-link a:hover { filter: brightness(1.2); }
+
+        @media (max-width: 768px) {
+            .join-container { margin: 16px; padding: 24px; }
+            .title { font-size: 20px; }
+        }
 </style>
 </head>
 <body>
